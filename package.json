@@ -1,11 +1,25 @@
 {
   "name": "presentationtools-aps",
   "version": "1.0.0",
-  "description": "",
+  "api_version": "1.0.0",
+  "support": {
+    "action": true,
+    "feedback": false,
+    "preset": false
+  },
+  "shortname": "APS",
+  "keywords": [
+    "presentation",
+    "Auto Presentation Switcher"
+  ],
+  "homepage": "https://presentationtools.com/",
+  "manufacturer": "PresentationTools",
+  "product": "Auto Presentation Switcher",
+  "description": "Module to control Auto Presentation Switcher",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Mohammad Ahmad <eng.ma90@gmail.com>",
   "license": "MIT"
 }
