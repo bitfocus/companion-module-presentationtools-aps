@@ -107,13 +107,13 @@ instance.prototype.actions = function () {
                     type: 'dropdown',
                     label: 'Navigate',
                     id: 'Navigate',
-                    default: 'NextFS',
+                    default: 'Navigation_NextFS',
                     choices: [
-                        { id: 'NextFS', label: 'Next in fullscreen' },
-                        { id: 'PrevFS', label: 'Prev in fullscreen' },
-                        { id: 'NextNoFS', label: 'Next without putting to fullscreen' },
-                        { id: 'CurrentFS', label: 'put current in fullscreen' },
-                        { id: 'CloseOthers', label: 'Close all except current presentation' }
+                        { id: 'Navigation_NextFS', label: 'Next in fullscreen' },
+                        { id: 'Navigation_PrevFS', label: 'Prev in fullscreen' },
+                        { id: 'Navigation_NextNoFS', label: 'Next without putting to fullscreen' },
+                        { id: 'Navigation_CurrentFS', label: 'Put current in fullscreen' },
+                        { id: 'Navigation_CloseOthers', label: 'Close all except current' }
                     ]
                 }
             ]
@@ -125,12 +125,12 @@ instance.prototype.actions = function () {
                     type: 'dropdown',
                     label: 'Key',
                     id: 'Key',
-                    default: 'LeftKey',
+                    default: 'Key_Left',
                     choices: [
-                        { id: 'LeftKey', label: 'Left Arrow' },
-                        { id: 'RightKey', label: 'Right Arrow' },
-                        { id: 'EscapeKey', label: 'Escape' },
-                        { id: 'BKey', label: 'B' }
+                        { id: 'Key_Left', label: 'Left Arrow' },
+                        { id: 'Key_Right', label: 'Right Arrow' },
+                        { id: 'Key_Esc', label: 'Escape' },
+                        { id: 'Key_B', label: 'B' }
                     ]
                 }
             ]
@@ -144,7 +144,7 @@ instance.prototype.action = function (action) {
     var self = this;
     var opt = action.options;
     var cmd = '';
-
+    var terminationChar = '$';
     switch (action.action) {
         case 'Navigation':
             cmd = opt.Navigate
@@ -153,8 +153,8 @@ instance.prototype.action = function (action) {
             cmd = opt.Key
             break;
     };
-    cmd += '$';
-    if (cmd !== undefined && cmd != '$') {
+    cmd += terminationChar;
+    if (cmd !== undefined && cmd != terminationChar) {
         if (self.socket !== undefined && self.socket.connected) {
             self.socket.send(cmd);
         }
