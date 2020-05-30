@@ -96,16 +96,6 @@ instance.prototype.config_fields = function () {
     ]
 }
 
-instance.prototype.destroy = function () {
-    var self = this;
-
-    if (self.socket !== undefined) {
-        self.socket.destroy();
-    }
-
-    self.debug("destroy", self.id);;
-}
-
 instance.prototype.actions = function () {
     var self = this;
 
@@ -135,6 +125,7 @@ instance.prototype.actions = function () {
                     type: 'dropdown',
                     label: 'Key',
                     id: 'Key',
+                    default: 'LeftKey',
                     choices: [
                         { id: 'LeftKey', label: 'Left Arrow' },
                         { id: 'RightKey', label: 'Right Arrow' },
@@ -170,14 +161,15 @@ instance.prototype.action = function (action) {
     }
 }
 
+instance.prototype.destroy = function () {
+    var self = this;
 
+    if (self.socket !== undefined) {
+        self.socket.destroy();
+    }
 
-
-
-
-
-
-
+    self.debug("destroy", self.id);;
+}
 
 instance_skel.extendedBy(instance);
 exports = module.exports = instance;
