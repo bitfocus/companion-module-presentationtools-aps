@@ -111,31 +111,35 @@ instance.prototype.actions = function () {
 
     actions = {
         'Navigation': {
-            label: 'Navigation',
+            label: 'Navigation & tabs',
             options: [
                 {
                     type: 'dropdown',
                     label: 'Navigate',
-                    id: 'navigate',
+                    id: 'Navigate',
                     default: 'NextFS',
                     choices: [
-                        { id: 'NextFS', label: 'Next fullscreen' },
-                        { id: 'PrevFS', label: 'Prev fullscreen' },
-                        { id: 'NextNoFS', label: 'Next without putting to fullscreen' }
+                        { id: 'NextFS', label: 'Next in fullscreen' },
+                        { id: 'PrevFS', label: 'Prev in fullscreen' },
+                        { id: 'NextNoFS', label: 'Next without putting to fullscreen' },
+                        { id: 'CurrentFS', label: 'put current in fullscreen' },
+                        { id: 'CloseOthers', label: 'Close all except current presentation' }
                     ]
                 }
             ]
         },
-        'SeamlessMode': {
-            label: 'Set Seamless Mode ON/OFF',
+        'Keystrokes': {
+            label: 'Simulate keystrokes',
             options: [
                 {
                     type: 'dropdown',
-                    label: 'Seamless Mode',
-                    id: 'seamless',
+                    label: 'Key',
+                    id: 'Key',
                     choices: [
-                        { id: 'on', label: 'ON' },
-                        { id: 'off', label: 'OF' }
+                        { id: 'LeftKey', label: 'Left Arrow' },
+                        { id: 'RightKey', label: 'Right Arrow' },
+                        { id: 'EscapeKey', label: 'Escape' },
+                        { id: 'BKey', label: 'B' }
                     ]
                 }
             ]
@@ -152,7 +156,10 @@ instance.prototype.action = function (action) {
 
     switch (action.action) {
         case 'Navigation':
-            cmd = opt.navigate
+            cmd = opt.Navigate
+            break;
+        case 'Keystrokes':
+            cmd = opt.Key
             break;
     };
     cmd += '$';
