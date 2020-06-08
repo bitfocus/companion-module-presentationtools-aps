@@ -119,7 +119,7 @@ instance.prototype.actions = function () {
             ]
         },
         'Keystrokes': {
-            label: 'Simulate keystrokes',
+            label: 'Simulate keystroke',
             options: [
                 {
                     type: 'dropdown',
@@ -127,8 +127,8 @@ instance.prototype.actions = function () {
                     id: 'Key',
                     default: 'Key_Left',
                     choices: [
-                        { id: 'Key_Left', label: 'Left Arrow' },
                         { id: 'Key_Right', label: 'Right Arrow' },
+                        { id: 'Key_Left', label: 'Left Arrow' },
                         { id: 'Key_Esc', label: 'Escape' },
                         { id: 'Key_B', label: 'B' }
                     ]
