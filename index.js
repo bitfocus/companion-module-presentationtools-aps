@@ -102,25 +102,13 @@ instance.prototype.actions = function () {
     var self = this;
 
     actions = {
-        'Navigation': {
-            label: 'Navigation & tabs',
-            options: [
-                {
-                    type: 'dropdown',
-                    label: 'Navigate',
-                    id: 'Navigate',
-                    default: 'Navigation_NextFS',
-                    choices: [
-                        { id: 'Navigation_NextFS', label: 'Next in fullscreen' },
-                        { id: 'Navigation_PrevFS', label: 'Prev in fullscreen' },
-                        { id: 'Navigation_NextNoFS', label: 'Next without putting to fullscreen' },
-                        { id: 'Navigation_CurrentFS', label: 'Put current in fullscreen' },
-                        { id: 'Navigation_CloseOthers', label: 'Close all except current' }
-                    ]
-                }
-            ]
-        },
-        'Keystrokes': {
+        'Navigation_NextFS': { label: 'Next in fullscreen' },
+        'Navigation_PrevFS': { label: 'Prev in fullscreen' },
+        'Navigation_NextNoFS': { label: 'Next without putting to fullscreen' },
+        'Navigation_CurrentFS': { label: 'Put current in fullscreen' },
+        'Navigation_CloseOthers': { label: 'Close all except current' },
+
+        'Keystroke': {
             label: 'Simulate keystroke',
             options: [
                 {
@@ -144,15 +132,18 @@ instance.prototype.actions = function () {
 
 instance.prototype.action = function (action) {
     var self = this;
-    var opt = action.options;
     var cmd = '';
     var terminationChar = '$';
     switch (action.action) {
-        case 'Navigation':
-            cmd = opt.Navigate
+        case 'Navigation_NextFS':
+        case 'Navigation_PrevFS':
+        case 'Navigation_NextNoFS':
+        case 'Navigation_CurrentFS':
+        case 'Navigation_CloseOthers':
+            cmd = action.action
             break;
-        case 'Keystrokes':
-            cmd = opt.Key
+        case 'Keystroke':
+            cmd = action.options.Key
             break;
     };
     cmd += terminationChar;
