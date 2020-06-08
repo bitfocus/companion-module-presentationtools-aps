@@ -115,7 +115,7 @@ instance.prototype.actions = function () {
                     type: 'dropdown',
                     label: 'Key',
                     id: 'Key',
-                    default: 'Key_Left',
+                    default: 'Key_Right',
                     choices: [
                         { id: 'Key_Right', label: 'Right Arrow' },
                         { id: 'Key_Left', label: 'Left Arrow' },
