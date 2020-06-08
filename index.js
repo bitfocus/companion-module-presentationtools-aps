@@ -83,6 +83,7 @@ instance.prototype.config_fields = function () {
             type: 'textinput',
             id: 'host',
             label: 'Target IP (For local: 127.0.0.1)',
+            default: '127.0.0.1',
             width: 6,
             regex: self.REGEX_IP
         },
@@ -90,6 +91,7 @@ instance.prototype.config_fields = function () {
             type: 'textinput',
             id: 'port',
             label: 'Target port (Default: 4777)',
+            default: '4777',
             width: 6,
             regex: self.REGEX_PORT
         }
