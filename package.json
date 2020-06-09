@@ -7,10 +7,11 @@
     "feedback": false,
     "preset": false
   },
-  "shortname": "APS",
+  "shortname": "aps",
   "keywords": [
-    "presentation",
-    "Auto Presentation Switcher"
+    "Presentation",
+    "Show Control",
+    "Software"
   ],
   "homepage": "https://presentationtools.com/",
   "manufacturer": "PresentationTools",
