@@ -88,32 +88,25 @@ instance.prototype.initTCP = function () {
 
                 if (jsonData.action === "states") {
                     states.updateStates(self.displayStates, jsonData.data);
-                    // console.log(self.displayStates);
-                    self.checkFeedbacks("feedback_loaded");
-                    self.checkFeedbacks("feedback_displayed");
+                    self.checkFeedbacks("loaded", "displayed");
                 } else if (jsonData.action === "display") {
                     states.updateDisplayStates(self.displayStates, jsonData.data);
-                    // console.log(self.displayStates);
-                    self.checkFeedbacks("feedback_displayed");
+                    self.checkFeedbacks("displayed");
                 } else if (jsonData.action === "capture") {
                     states.uploadLoadStates(self.displayStates, jsonData.index);
                     states.updateCaptureStates(self.captureStates, jsonData.index);
-                    // console.log(self.captureStates);
-                    self.checkFeedbacks("feedback_captured");
+                    self.checkFeedbacks("captured");
                     if (self.captureTimeoutObj !== null) {
                         clearTimeout(self.captureTimeoutObj);
                     }
                     self.captureTimeoutObj = setTimeout(() => {
                         states.updateCaptureStates(self.captureStates, 999);
-                        // console.log(self.captureStates);
-                        self.checkFeedbacks("feedback_captured");
-                        self.checkFeedbacks("feedback_loaded");
+                        self.checkFeedbacks("captured", "loaded");
                         self.captureTimeoutObj = null;
                     }, 1500);
                 } else if (jsonData.action === "delete") {
                     states.updateUnloadStates(self.displayStates, jsonData.index);
-                    // console.log(self.displayStates);
-                    self.checkFeedbacks("feedback_loaded");
+                    self.checkFeedbacks("loaded");
                 }
 
             } catch (e) {
@@ -253,7 +246,11 @@ instance.prototype.feedbacks = function () {
 
 instance.prototype.presets = function () {
     var self = this;
-    self.setPresetDefinitions(presets.getPresets(self));
+    try {
+        self.setPresetDefinitions(presets.getPresets(self));
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 instance.prototype.destroy = function () {

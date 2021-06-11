@@ -2,7 +2,7 @@ var choices = require('./choices');
 exports.getFeedbacks = function (instance) {
 	var self = instance;
 	return {
-		feedback_loaded: {
+		loaded: {
             type: 'boolean',
             label: 'Change button loaded',
             description: 'Foreground and background colors when image is loaded',
@@ -23,7 +23,7 @@ exports.getFeedbacks = function (instance) {
                 return self.displayStates[feedback.options.Key].loaded;
             }
 		},
-        feedback_displayed: {
+        displayed: {
             type: 'boolean',
             label: 'Change button displayed',
             description: 'Foreground and background colors when image is displayed',
@@ -44,7 +44,7 @@ exports.getFeedbacks = function (instance) {
                 return self.displayStates[feedback.options.Key].displayed;
             }
         },
-        feedback_captured: {
+        captured: {
             type: 'boolean',
             label: 'Change button captured',
             description: 'Foreground and background colors when image is being captured',
