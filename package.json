@@ -1,11 +1,11 @@
 {
   "name": "presentationtools-aps",
-  "version": "1.0.0",
-  "api_version": "1.0.0",
+  "version": "2.0.0",
+  "api_version": "2.0.0",
   "support": {
     "action": true,
-    "feedback": false,
-    "preset": false
+    "feedback": true,
+    "preset": true
   },
   "shortname": "aps",
   "keywords": [
@@ -22,5 +22,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Mohammad Ahmad <eng.ma90@gmail.com>",
+  "contributors": [
+    "David Dabela <david.dabela@outlook.com>"
+  ],
   "license": "MIT"
 }
