@@ -1,29 +1,36 @@
 {
-  "name": "presentationtools-aps",
-  "version": "1.1.0",
-  "api_version": "1.0.0",
-  "support": {
-    "action": true,
-    "feedback": true,
-    "preset": true
-  },
-  "shortname": "aps",
-  "keywords": [
-    "Presentation",
-    "Show Control",
-    "Software"
-  ],
-  "homepage": "https://presentationtools.com/",
-  "manufacturer": "PresentationTools",
-  "product": "Auto Presentation Switcher",
-  "description": "Module to control Auto Presentation Switcher",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Mohammad Ahmad <eng.ma90@gmail.com>",
-  "contributors": [
-    "David Dabela <david.dabela@outlook.com>"
-  ],
-  "license": "MIT"
+	"name": "presentationtools-aps",
+	"version": "1.1.0",
+	"api_version": "1.0.0",
+	"support": {
+		"action": true,
+		"feedback": true,
+		"preset": true
+	},
+	"shortname": "aps",
+	"keywords": [
+		"Presentation",
+		"Show Control",
+		"Software"
+	],
+	"homepage": "https://github.com/bitfocus/companion-module-presentationtools-aps#readme",
+	"manufacturer": "PresentationTools",
+	"product": "Auto Presentation Switcher",
+	"description": "Module to control Auto Presentation Switcher",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Mohammad Ahmad <eng.ma90@gmail.com>",
+	"contributors": [
+		"David Dabela <david.dabela@outlook.com>"
+	],
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/bitfocus/companion-module-presentationtools-aps/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-presentationtools-aps.git"
+	}
 }
