@@ -1,23 +1,35 @@
 var choices = require('./choices');
 exports.generateCaptureStates = function () {
 	var cchoices = choices.getChoicesForCapture();
-	var states = new Object()
+	var states = new Object();
 	for (var i = cchoices.length - 1; i >= 0; i--) {
 		var ci = cchoices[i].id;
-		states[ci] = false
+		states[ci] = false;
 	}
-	return states
+	return states;
 }
 exports.generateDisplayStates = function () {
 	var dchoices = choices.getChoicesForDisplay();
-	var states = new Object()
+	var states = new Object();
 	for (var i = dchoices.length - 1; i >= 0; i--) {
 		var di = dchoices[i].id;
 		states[di] = new Object();
 		states[di].loaded = false;
 		states[di].displayed = false;
 	}
-	return states
+	return states;
+}
+exports.generateSlotStates = function () {
+	var schoices = choices.getChoicesForSlot();
+	var states = new Object();
+	for (var i = 20-1; i >= 0; i--) {
+		const si = schoices[i].id;
+		states[si] = new Object();
+		states[si].loaded = false;
+		states[si].exists = false;
+		states[si].opened = false;
+	}
+	return states;
 }
 function doUpdateDisplayStates(states, data) {
 	const key = "Display" + (data.displayIndex+1);
@@ -73,5 +85,13 @@ exports.updateUnloadStates = function(states, index) {
 		if (key === k) {
 			states[key].loaded = false;
 		}
+	}
+}
+exports.updateSlotStates = function(states, data) {
+	for (var i = 20; i > 0; i--) {
+		const si = 'Slot' + i;
+		states[si].loaded = data.loaded[i-1];
+		states[si].exists = data.exists[i-1];
+		states[si].opened = data.opened[i-1];
 	}
 }

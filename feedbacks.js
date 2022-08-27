@@ -64,6 +64,69 @@ exports.getFeedbacks = function (instance) {
             callback: function (feedback) {
                 return self.captureStates[feedback.options.Key];
             }
+        },
+        slot_loaded: {
+            type: 'boolean',
+            label: 'Presentation loaded',
+            description: 'Foreground and background colors when presentation is loaded',
+            options: [
+                {
+                    type: 'dropdown',
+                    label: 'Slot',
+                    id: 'Key',
+                    default: 'Slot1',
+                    choices: choices.getChoicesForSlot()
+                }
+            ],
+            style: {
+                color: self.rgb(255, 255, 255),
+                bgcolor: self.rgb(0, 255, 0)
+            },
+            callback: function (feedback) {
+                return self.slotStates[feedback.options.Key].loaded;
+            }
+        },
+        slot_displayed: {
+            type: 'boolean',
+            label: 'Presentation displayed',
+            description: 'Foreground and background colors when presentation is displayed',
+            options: [
+                {
+                    type: 'dropdown',
+                    label: 'Slot',
+                    id: 'Key',
+                    default: 'Slot1',
+                    choices: choices.getChoicesForSlot()
+                }
+            ],
+            style: {
+                color: self.rgb(255, 255, 255),
+                bgcolor: self.rgb(255, 0, 0)
+            },
+            callback: function (feedback) {
+                return self.slotStates[feedback.options.Key].opened;
+            }
+        },
+        slot_exist: {
+            type: 'boolean',
+            label: 'Presentation if exists',
+            description: 'Foreground and background colors when presentation exists',
+            options: [
+                {
+                    type: 'dropdown',
+                    label: 'Slot',
+                    id: 'Key',
+                    default: 'Slot1',
+                    choices: choices.getChoicesForSlot()
+                }
+            ],
+            style: {
+                color: self.rgb(255, 255, 255),
+                bgcolor: self.rgb(204, 204, 0)
+            },
+            callback: function (feedback) {
+                return self.slotStates[feedback.options.Key].exists;
+            }
         }
 	}
 }
