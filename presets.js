@@ -34,7 +34,7 @@ exports.getPresets = function (instance) {
 
     // Slot Presentations
     for (var i = 1; i <= 20; i++) {
-        presets.push(getPresetForSlotDisplay(`Open Slot ${i}`, `Slot ${i}`, `Slot${i}`, self.rgb(0, 255, 0), self.rgb(204, 204, 0), self.rgb(255, 0, 0)));
+        presets.push(getPresetForSlotDisplay(`Open Slot ${i}`, `Slot ${i}`, `Slot${i}`, self.rgb(204, 204, 0), self.rgb(255, 0, 0)));
     }
 
 	return presets;
@@ -167,7 +167,7 @@ function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
     };
 }
 
-function getPresetForSlotDisplay(lbl, txt, key, clr1, crl2, crl3, siz = 'auto') {
+function getPresetForSlotDisplay(lbl, txt, key, clr1, clr2, siz = 'auto') {
     return {
         category: 'Slot Presentations',
         label: lbl,
@@ -178,7 +178,6 @@ function getPresetForSlotDisplay(lbl, txt, key, clr1, crl2, crl3, siz = 'auto') 
             alignment: 'center:center',
             size: siz,
             color: 16777215
-
         },
         actions: [{
             action: 'OpenStart_Presentation_Slot',
@@ -188,7 +187,7 @@ function getPresetForSlotDisplay(lbl, txt, key, clr1, crl2, crl3, siz = 'auto') 
             }
         }],
         feedbacks: [{
-            type: 'slot_loaded',
+            type: 'slot_exist',
             options: {
                 'Key': key
             },
@@ -197,22 +196,13 @@ function getPresetForSlotDisplay(lbl, txt, key, clr1, crl2, crl3, siz = 'auto') 
                 bgcolor: clr1
             }
         },{
-            type: 'slot_exist',
-            options: {
-                'Key': key
-            },
-            style: {
-                color: 16777215,
-                bgcolor: crl2
-            }
-        },{
             type: 'slot_displayed',
             options: {
                 'Key': key
             },
             style: {
                 color: 16777215,
-                bgcolor: crl3
+                bgcolor: clr2
             }
         }]
     };

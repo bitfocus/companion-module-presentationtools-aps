@@ -49,3 +49,15 @@ Mac only:
 * Display the filenames of the presentation file currently displayed, and the files that will be used with the previous and next commands.
 #### Network Commands for 20 presentation from slot
 * Open/Start presentation from slot
+
+#### Variables
+* curr: Currently opened presentation
+* prev: Prevously opened presentation
+* next: Next presentation to be opened
+
+#### Feedbacks
+* loaded: 		is enabled when a still image is loaded in the image-banks
+* displayed:	is enabled when a still image is displayed
+* captured:		is enabled when screen is captured for saving as a still image.
+* slot_displayed: is enabled when the presentation in slot-bank is opened
+* slot_exist: is enabled when a presentation exists for a slot.

@@ -4,7 +4,8 @@ var choices = require('./choices');
 var actions = require('./actions');
 var feedbacks = require('./feedbacks');
 var states = require('./states');
-var presets = require('./presets')
+var presets = require('./presets');
+
 var debug;
 var log;
 
@@ -50,10 +51,6 @@ instance.prototype.init = function () {
     self.feedbacks();
     self.variables();
     self.presets();
-
-    self.setVariable('prev', '');
-    self.setVariable('curr', '');
-    self.setVariable('next', '');
 }
 
 instance.prototype.initTCP = function () {
@@ -123,14 +120,9 @@ instance.prototype.initTCP = function () {
                     self.setVariable('curr', jsonData.data.curr);
                     self.setVariable('next', jsonData.data.next);
                 } else if (jsonData.action === 'slots') {
+                    self.setSlotVariables(jsonData.data);
                     states.updateSlotStates(self.slotStates, jsonData.data);
-                    self.checkFeedbacks('slot_loaded', 'slot_exist', 'slot_displayed');
-                } else if (jsonData.action === 'slots_loaded') {
-
-                } else if (jsonData.action === 'slots_exists') {
-
-                } else if (jsonData.action === 'slots_opened') {
-
+                    self.checkFeedbacks('slot_exist', 'slot_displayed');
                 }
             } catch (e) {
                 console.error(e);
@@ -203,7 +195,31 @@ instance.prototype.variables = function () {
         { label: 'Current', name: 'curr' },
         { label: 'Next', name: 'next' }
     ];
-    self.setVariableDefinitions(variables)
+    for (var i = 1; i <= 20; i++) {
+        variables.push({
+            label: `Slot ${i}`, name: `slot${i}`
+        });
+    }
+
+    self.setVariableDefinitions(variables);
+
+    self.setVariable('prev', '');
+    self.setVariable('curr', '');
+    self.setVariable('next', '');
+    for (var i = 20; i > 0; i--) {
+        self.setVariable(`slot${i}`, '-');
+    }
+}
+
+instance.prototype.setSlotVariables = function (data) {
+    var self = this;
+    try {
+        for (var i = 20; i > 0; i--) {
+            self.setVariable(`slot${i}`, data.filenames[i-1]);
+        }
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 instance.prototype.presets = function () {

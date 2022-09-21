@@ -25,7 +25,6 @@ exports.generateSlotStates = function () {
 	for (var i = 20-1; i >= 0; i--) {
 		const si = schoices[i].id;
 		states[si] = new Object();
-		states[si].loaded = false;
 		states[si].exists = false;
 		states[si].opened = false;
 	}
@@ -90,7 +89,6 @@ exports.updateUnloadStates = function(states, index) {
 exports.updateSlotStates = function(states, data) {
 	for (var i = 20; i > 0; i--) {
 		const si = 'Slot' + i;
-		states[si].loaded = data.loaded[i-1];
 		states[si].exists = data.exists[i-1];
 		states[si].opened = data.opened[i-1];
 	}
