@@ -3,8 +3,8 @@ exports.getPresets = function (instance) {
 	var presets = [];
 
 	//Presentation Control
-	presets.push(getPresetForPresentationControl('Previous in full screen', 'Prev', 'Navigation_PrevFS'));
-	presets.push(getPresetForPresentationControl('Next in full screen', 'Next', 'Navigation_NextFS'));
+	presets.push(getPresetForPresentationControl('Previous in full screen', 'Prev', 'Navigation_PrevFS', {'SlideNumber': 1, 'Fullscreen': true}));
+	presets.push(getPresetForPresentationControl('Next in full screen', 'Next', 'Navigation_NextFS', {'SlideNumber': 1, 'Fullscreen': true}));
 	presets.push(getPresetForPresentationControl('Next without putting to fullscreen', 'next no fs', 'Navigation_NextNoFS'));
 	presets.push(getPresetForPresentationControl('Put current in fullscreen', 'currnt', 'Navigation_CurrentFS'));
 	presets.push(getPresetForPresentationControl('Close all except current', 'close others', 'Navigation_CloseOthers'));
@@ -26,6 +26,11 @@ exports.getPresets = function (instance) {
 	presets.push(getPresetForStillImageDisplay('Display Blackout', 'Blackout', 'Blackout', self.rgb(0, 0, 0), self.rgb(255, 0, 0), '14'));
 	presets.push(getPresetForStillImageDisplay('Freeze', 'Freeze', 'Freeze', self.rgb(0, 51, 153), self.rgb(255, 0, 0), '18'));
 	presets.push(getPresetForStillImageExit());
+
+    // Presentation Files
+    presets.push(getPresetForPresentationFiles(self.label, 'Previous', 'prev', self.rgb(0, 0, 0)));
+    presets.push(getPresetForPresentationFiles(self.label, 'Current', 'curr', self.rgb(255, 0, 0)));
+    presets.push(getPresetForPresentationFiles(self.label, 'Next', 'next', self.rgb(0, 153, 0)));
 
 	return presets;
 }
@@ -139,5 +144,20 @@ function getPresetForStillImageExit() {
 
         },
         actions: [{ action: 'ExitImages' }]
+    };
+}
+
+function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
+    return {
+        category: 'Presentation Files',
+        label: lbl,
+        bank: {
+            style: 'text',
+            text: `$(${instanceLabel}:${txt})`,
+            alignment: 'center:center',
+            size: 'auto',
+            color: 16777215,
+            bgcolor: cr
+        }
     };
 }
