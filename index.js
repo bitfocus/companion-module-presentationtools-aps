@@ -91,9 +91,9 @@ instance.prototype.initTCP = function () {
                 return;
             // data is Buffer object
             try {
-                console.log(message);
+                // console.log(message);
                 let jsonData = JSON.parse(message);
-                console.log(jsonData);
+                // console.log(jsonData);
                 if (jsonData.action === 'states') {
                     states.updateStates(self.displayStates, jsonData.data);
                     self.checkFeedbacks('loaded', 'displayed');
@@ -167,7 +167,7 @@ instance.prototype.actions = function () {
 }
 
 instance.prototype.action = function (action) {
-    console.log(action);
+    // console.log(action);
 
     var self = this;
     var cmd = '';
@@ -176,7 +176,7 @@ instance.prototype.action = function (action) {
     cmd += terminationChar;
     if (cmd !== undefined && cmd !== terminationChar) {
         if (self.socket !== undefined && self.socket.connected) {
-            console.log(cmd);
+            // console.log(cmd);
             self.socket.send(cmd);
         }
     }
@@ -203,23 +203,35 @@ instance.prototype.variables = function () {
 
     self.setVariableDefinitions(variables);
 
-    self.setVariable('prev', '');
-    self.setVariable('curr', '');
-    self.setVariable('next', '');
-    for (var i = 20; i > 0; i--) {
-        self.setVariable(`slot${i}`, '-');
-    }
-}
-
-instance.prototype.setSlotVariables = function (data) {
-    var self = this;
+    const values = {
+        prev: '',
+        curr: '',
+        next: '',
+    };
     try {
         for (var i = 20; i > 0; i--) {
-            self.setVariable(`slot${i}`, data.filenames[i-1]);
+            values[`slot${i}`] = data.filenames[i-1];
         }
     } catch (err) {
         console.log(err);
     }
+
+    self.setVariables(values);
+}
+
+instance.prototype.setSlotVariables = function (data) {
+    var self = this;
+    const values = {}
+
+    try {
+        for (var i = 20; i > 0; i--) {
+            values[`slot${i}`] = data.filenames[i-1];
+        }
+    } catch (err) {
+        console.log(err);
+    }
+
+    self.setVariables(values);
 }
 
 instance.prototype.presets = function () {
