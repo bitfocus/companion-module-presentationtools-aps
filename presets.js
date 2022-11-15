@@ -32,6 +32,11 @@ exports.getPresets = function (instance) {
     presets.push(getPresetForPresentationFiles(self.label, 'Current', 'curr', self.rgb(255, 0, 0)));
     presets.push(getPresetForPresentationFiles(self.label, 'Next', 'next', self.rgb(0, 153, 0)));
 
+	//Slot Presentations
+	for (let i = 1; i <= 20; i++) {
+		presets.push(getPresetforSlotPresentation(self.label, `Slot ${i}`, `slot${i}`, i, self.rgb(0, 0, 0), `Slot${i}`, 1, true))
+	}
+
 	return presets;
 }
 
@@ -160,4 +165,51 @@ function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
             bgcolor: cr
         }
     };
+}
+
+function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber, SlideNumber, Fullscreen) {
+	return {
+		category: 'Slot Presentations',
+		label: lbl,
+		bank: {
+			style: 'text',
+			text: `${i} $(${instanceLabel}:${txt})`,
+            alignment: 'center:center',
+            size: 'auto',
+            color: 16777215,
+            bgcolor: cr
+		},
+		actions: [
+			{
+				action: 'OpenStart_Presentation_Slot',
+				options: {
+					Key: SlotNumber,
+					SlideNumber: SlideNumber,
+					Fullscreen: Fullscreen
+				}
+			}
+		],
+		feedbacks: [
+			{
+				type: 'slot_exist',
+				options: {
+					Key: SlotNumber
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13421568
+				}
+			},
+			{
+				type: 'slot_displayed',
+				options: {
+					Key: SlotNumber
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13369344
+				}
+			}
+		]
+	}
 }

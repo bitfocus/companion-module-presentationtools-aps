@@ -210,7 +210,7 @@ instance.prototype.variables = function () {
     };
     try {
         for (var i = 20; i > 0; i--) {
-            values[`slot${i}`] = data.filenames[i-1];
+            values[`slot${i}`] = '-';
         }
     } catch (err) {
         console.log(err);
