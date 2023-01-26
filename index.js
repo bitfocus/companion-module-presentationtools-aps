@@ -1,256 +1,232 @@
-var tcp = require('../../tcp');
-var instance_skel = require('../../instance_skel');
+const { InstanceBase, Regex, runEntrypoint, TCPHelper, combineRgb, InstanceStatus  } = require('@companion-module/base')
+
 var choices = require('./choices');
 var actions = require('./actions');
 var feedbacks = require('./feedbacks');
 var states = require('./states');
 var presets = require('./presets');
 
-var debug;
-var log;
 
-function instance(system, id, config) {
-    var self = this;
+class APSInstance extends InstanceBase {
 
-    // super-constructor
-    instance_skel.apply(this, arguments);
+    constructor(internal) {
+		super(internal)
+	}
 
-    self.actions(); // export actions
 
-    return self;
-}
+    updateConfig(config) {
+        this.config = config;
+        var resetConnection = false;
 
-instance.prototype.updateConfig = function (config) {
-    var self = this;
-    var resetConnection = false;
+        if (this.config.host != config.host || this.config.port != config.port) {
+            resetConnection = true;
+        }
 
-    if (self.config.host != config.host || self.config.port != config.port) {
-        resetConnection = true;
+        
+
+        if (resetConnection === true || this.socket === undefined) {
+            this.initTCP();
+        }
     }
 
-    self.config = config;
+    async init(config) {
 
-    if (resetConnection === true || self.socket === undefined) {
-        self.initTCP();
-    }
-}
-
-instance.prototype.init = function () {
-    var self = this;
-
-    debug = self.debug;
-    log = self.log;
-
-    self.captureStates = states.generateCaptureStates();
-    self.displayStates = states.generateDisplayStates();
-    self.slotStates = states.generateSlotStates();
-    self.captureTimeoutObj = null;
-    self.receiver = new MessageBuffer('$');
-    
-    self.initTCP();
-    self.feedbacks();
-    self.variables();
-    self.presets();
-}
-
-instance.prototype.initTCP = function () {
-    var self = this;
-
-    if (self.socket !== undefined) {
-        self.socket.destroy();
-        delete self.socket;
+        this.config = config;
+        this.captureStates = states.generateCaptureStates();
+        this.displayStates = states.generateDisplayStates();
+        this.slotStates = states.generateSlotStates();
+        this.captureTimeoutObj = null;
+        this.receiver = new MessageBuffer('$');
+        
+        this.initTCP();
+        this.actions(); // export actions
+        this.feedbacks();
+        this.variables();
+        this.presets();
     }
 
-    if (self.config.host && self.config.port) {
-        self.socket = new tcp(self.config.host, self.config.port);
+    initTCP() {
+        var self = this;
 
-        self.socket.on('status_change', (status, message) => {
-            self.status(status, message);
-        });
+        if (self.socket !== undefined) {
+            self.socket.destroy();
+            delete self.socket;
+        }
 
-        self.socket.on('error', (err) => {
-            debug('Network error', err);
-            self.status(self.STATE_ERROR, err);
-            log('error', 'Network error: ' + err.message);
-        });
+        if (self.config.host && self.config.port) {
+            self.socket = new TCPHelper(self.config.host, self.config.port);
 
-        self.socket.on('connect', () => {
-            debug('Connected');
-            self.status(self.STATE_OK);
-            log('Connected');
+            self.socket.on('status_change', (status, message) => {
+                self.log('debug', `Status ${status}, message: ${message}`);
+                self.updateStatus(status);
+            });
 
-            setTimeout(() => {
-                self.socket.send('states$');
-            }, 1000);
-        });
+            self.socket.on('error', (err) => {
+                self.updateStatus(InstanceStatus.UnknownError);
+            });
 
-        self.socket.on('data', (data) => {
-            self.receiver.push(data);
-            let message = self.receiver.handleData();
-            if (message == null)
-                return;
-            // data is Buffer object
-            try {
-                // console.log(message);
-                let jsonData = JSON.parse(message);
-                // console.log(jsonData);
-                if (jsonData.action === 'states') {
-                    states.updateStates(self.displayStates, jsonData.data);
-                    self.checkFeedbacks('loaded', 'displayed');
-                } else if (jsonData.action === 'display') {
-                    states.updateDisplayStates(self.displayStates, jsonData.data);
-                    self.checkFeedbacks('displayed');
-                } else if (jsonData.action === 'capture') {
-                    states.uploadLoadStates(self.displayStates, jsonData.index);
-                    states.updateCaptureStates(self.captureStates, jsonData.index);
-                    self.checkFeedbacks('captured');
-                    if (self.captureTimeoutObj !== null) {
-                        clearTimeout(self.captureTimeoutObj);
+            self.socket.on('connect', () => {
+                self.updateStatus(InstanceStatus.Ok);
+                setTimeout(() => {
+                    self.socket.send('states$');
+                }, 1000);
+            });
+
+            self.socket.on('data', (data) => {
+                self.receiver.push(data);
+                let message = self.receiver.handleData();
+                if (message == null)
+                    return;
+                // data is Buffer object
+                try {
+                    let jsonData = JSON.parse(message);
+                    if (jsonData.action === 'states') {
+                        states.updateStates(self.displayStates, jsonData.data);
+                        self.checkFeedbacks('loaded', 'displayed');
+                    } else if (jsonData.action === 'display') {
+                        states.updateDisplayStates(self.displayStates, jsonData.data);
+                        self.checkFeedbacks('displayed');
+                    } else if (jsonData.action === 'capture') {
+                        states.uploadLoadStates(self.displayStates, jsonData.index);
+                        states.updateCaptureStates(self.captureStates, jsonData.index);
+                        self.checkFeedbacks('captured');
+                        if (self.captureTimeoutObj !== null) {
+                            clearTimeout(self.captureTimeoutObj);
+                        }
+                        self.captureTimeoutObj = setTimeout(() => {
+                            states.updateCaptureStates(self.captureStates, 999);
+                            self.checkFeedbacks('captured', 'loaded');
+                            self.captureTimeoutObj = null;
+                        }, 1500);
+                    } else if (jsonData.action === 'delete') {
+                        states.updateUnloadStates(self.displayStates, jsonData.index);
+                        self.checkFeedbacks('loaded');
+                    } else if (jsonData.action === 'files') {
+                        self.setVariableValues(
+                            {
+                                prev: jsonData.data.prev,
+                                curr: jsonData.data.curr,
+                                next: jsonData.data.next
+                            }
+                        
+                        );
+                    } else if (jsonData.action === 'slots') {
+                        self.setSlotVariables(jsonData.data);
+                        states.updateSlotStates(self.slotStates, jsonData.data);
+                        self.checkFeedbacks('slot_exist', 'slot_displayed');
                     }
-                    self.captureTimeoutObj = setTimeout(() => {
-                        states.updateCaptureStates(self.captureStates, 999);
-                        self.checkFeedbacks('captured', 'loaded');
-                        self.captureTimeoutObj = null;
-                    }, 1500);
-                } else if (jsonData.action === 'delete') {
-                    states.updateUnloadStates(self.displayStates, jsonData.index);
-                    self.checkFeedbacks('loaded');
-                } else if (jsonData.action === 'files') {
-                    self.setVariable('prev', jsonData.data.prev);
-                    self.setVariable('curr', jsonData.data.curr);
-                    self.setVariable('next', jsonData.data.next);
-                } else if (jsonData.action === 'slots') {
-                    self.setSlotVariables(jsonData.data);
-                    states.updateSlotStates(self.slotStates, jsonData.data);
-                    self.checkFeedbacks('slot_exist', 'slot_displayed');
+                } catch (e) {
+                    console.error(e);
                 }
-            } catch (e) {
-                console.error(e);
+            });
+        }
+    }
+
+    getConfigFields() {
+
+        return [
+            {
+                type: 'static-text',
+                id: 'info',
+                width: 12,
+                label: 'Information',
+                value: 'This will establish a TCP connection to interact with the APS app'
+            },
+            {
+                type: 'textinput',
+                id: 'host',
+                label: 'Target IP (For local: 127.0.0.1)',
+                default: '127.0.0.1',
+                width: 6,
+                regex: Regex.IP
+            },
+            {
+                type: 'textinput',
+                id: 'port',
+                label: 'Target port (Default: 4777)',
+                default: '4777',
+                width: 6,
+                regex: Regex.PORT
             }
-        });
+        ]
     }
-}
 
-instance.prototype.config_fields = function () {
-    var self = this;
-    return [
-        {
-            type: 'text',
-            id: 'info',
-            width: 12,
-            label: 'Information',
-            value: 'This will establish a TCP connection to interact with the APS app'
-        },
-        {
-            type: 'textinput',
-            id: 'host',
-            label: 'Target IP (For local: 127.0.0.1)',
-            default: '127.0.0.1',
-            width: 6,
-            regex: self.REGEX_IP
-        },
-        {
-            type: 'textinput',
-            id: 'port',
-            label: 'Target port (Default: 4777)',
-            default: '4777',
-            width: 6,
-            regex: self.REGEX_PORT
+    actions() {
+        let ats = actions.getActions(this);
+        this.setActionDefinitions(ats);
+    }
+
+
+    feedbacks() {
+        var self = this;
+        var fdbs = feedbacks.getFeedbacks(self);
+        self.setFeedbackDefinitions(fdbs);
+    }
+
+    variables() {
+        var self = this;
+        var variables = [
+            { name: 'Previous', variableId: 'prev' },
+            { name: 'Current', variableId: 'curr' },
+            { name: 'Next', variableId: 'next' }
+        ];
+        for (var i = 1; i <= 20; i++) {
+            variables.push({
+                name: `Slot ${i}`, variableId: `slot${i}`
+            });
         }
-    ]
-}
 
-instance.prototype.actions = function () {
-    var self = this;
-    ats = actions.getActions(self);
-    self.setActions(ats);
-}
+        self.setVariableDefinitions(variables);
 
-instance.prototype.action = function (action) {
-    // console.log(action);
+        const values = {
+            prev: '',
+            curr: '',
+            next: '',
+        };
+        try {
+            for (var i = 20; i > 0; i--) {
+                values[`slot${i}`] = '-';
+            }
+        } catch (err) {
+            self.log('debug', err);
+        }
 
-    var self = this;
-    var cmd = '';
-    var terminationChar = '$';
-    cmd = actions.getCommand(action);
-    cmd += terminationChar;
-    if (cmd !== undefined && cmd !== terminationChar) {
-        if (self.socket !== undefined && self.socket.connected) {
-            // console.log(cmd);
-            self.socket.send(cmd);
+        self.setVariableValues(values);
+    }
+
+    setSlotVariables(data) {
+        var self = this;
+        const values = {}
+
+        try {
+            for (var i = 20; i > 0; i--) {
+                values[`slot${i}`] = data.filenames[i-1];
+            }
+        } catch (err) {
+            self.log('debug', err);
+        }
+
+        self.setVariableValues(values);
+    }
+
+    presets() {
+        var self = this;
+        try {
+            self.setPresetDefinitions(presets.getPresets(self));
+        } catch (err) {
+            self.log('debug', err);
         }
     }
-}
 
-instance.prototype.feedbacks = function () {
-    var self = this;
-    var fdbs = feedbacks.getFeedbacks(self);
-    self.setFeedbackDefinitions(fdbs);
-}
+    async destroy() {
+        var self = this;
 
-instance.prototype.variables = function () {
-    var self = this;
-    var variables = [
-        { label: 'Previous', name: 'prev' },
-        { label: 'Current', name: 'curr' },
-        { label: 'Next', name: 'next' }
-    ];
-    for (var i = 1; i <= 20; i++) {
-        variables.push({
-            label: `Slot ${i}`, name: `slot${i}`
-        });
-    }
-
-    self.setVariableDefinitions(variables);
-
-    const values = {
-        prev: '',
-        curr: '',
-        next: '',
-    };
-    try {
-        for (var i = 20; i > 0; i--) {
-            values[`slot${i}`] = '-';
+        if (self.socket !== undefined) {
+            self.socket.destroy();
         }
-    } catch (err) {
-        console.log(err);
+
+        self.log('debug', `destroy ${self.id}`);
     }
-
-    self.setVariables(values);
-}
-
-instance.prototype.setSlotVariables = function (data) {
-    var self = this;
-    const values = {}
-
-    try {
-        for (var i = 20; i > 0; i--) {
-            values[`slot${i}`] = data.filenames[i-1];
-        }
-    } catch (err) {
-        console.log(err);
-    }
-
-    self.setVariables(values);
-}
-
-instance.prototype.presets = function () {
-    var self = this;
-    try {
-        self.setPresetDefinitions(presets.getPresets(self));
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-instance.prototype.destroy = function () {
-    var self = this;
-
-    if (self.socket !== undefined) {
-        self.socket.destroy();
-    }
-
-    self.debug('destroy', self.id);
 }
 
 class MessageBuffer {
@@ -286,5 +262,4 @@ class MessageBuffer {
     }
 }
 
-instance_skel.extendedBy(instance);
-exports = module.exports = instance;
+runEntrypoint(APSInstance, [])

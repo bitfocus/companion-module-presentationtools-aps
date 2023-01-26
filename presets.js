@@ -1,40 +1,40 @@
+const { combineRgb  } = require('@companion-module/base')
 exports.getPresets = function (instance) {
 	var self = instance;
-	var presets = [];
+	var presets = {};
 
 	//Presentation Control
-	presets.push(getPresetForPresentationControl('Previous in full screen', 'Prev', 'Navigation_PrevFS', {'SlideNumber': 1, 'Fullscreen': true}));
-	presets.push(getPresetForPresentationControl('Next in full screen', 'Next', 'Navigation_NextFS', {'SlideNumber': 1, 'Fullscreen': true}));
-	presets.push(getPresetForPresentationControl('Next without putting to fullscreen', 'next no fs', 'Navigation_NextNoFS'));
-	presets.push(getPresetForPresentationControl('Put current in fullscreen', 'currnt', 'Navigation_CurrentFS'));
-	presets.push(getPresetForPresentationControl('Close all except current', 'close others', 'Navigation_CloseOthers'));
-	presets.push(getPresetForPresentationControl('Simulate left arrow keystroke', '<', 'Keystroke', {'Key': 'Key_Left'}));
-	presets.push(getPresetForPresentationControl('Simulate right arrow keystroke', '>', 'Keystroke', {'Key': 'Key_Right'}));
-	presets.push(getPresetForPresentationControl('Simulate Esc keystroke', 'Esc', 'Keystroke', {'Key': 'Key_Esc'}));
-	presets.push(getPresetForPresentationControl('Simulate B keystroke', 'B', 'Keystroke', {'Key': 'Key_B'}));
+	presets['Navigation_PrevFS'] = getPresetForPresentationControl('Previous in full screen', 'Prev', 'Navigation_PrevFS', {'SlideNumber': 1, 'Fullscreen': true});
+	presets['Navigation_NextFS'] = getPresetForPresentationControl('Next in full screen', 'Next', 'Navigation_NextFS', {'SlideNumber': 1, 'Fullscreen': true});
+	presets['Navigation_NextNoFS'] = getPresetForPresentationControl('Next without putting to fullscreen', 'next no fs', 'Navigation_NextNoFS');
+	presets['Navigation_CurrentFS'] = getPresetForPresentationControl('Put current in fullscreen', 'currnt', 'Navigation_CurrentFS');
+	presets['Navigation_CloseOthers'] = getPresetForPresentationControl('Close all except current', 'close others', 'Navigation_CloseOthers');
+	presets['Key_Left'] = getPresetForPresentationControl('Simulate left arrow keystroke', '<', 'Keystroke', {'Key': 'Key_Left'});
+	presets['Key_Right'] = getPresetForPresentationControl('Simulate right arrow keystroke', '>', 'Keystroke', {'Key': 'Key_Right'});
+	presets['Key_Esc'] = getPresetForPresentationControl('Simulate Esc keystroke', 'Esc', 'Keystroke', {'Key': 'Key_Esc'});
+	presets['Key_B'] = getPresetForPresentationControl('Simulate B keystroke', 'B', 'Keystroke', {'Key': 'Key_B'});
 
 	// Still Images - Capture
 	for (var i = 1; i <= 10; i++) {
-		presets.push(getPresetForStillImageCapture(`Capture Image ${i}`, `Captr ${i}`, `Capture${i}`, self.rgb(200, 180, 0)));
+		presets[`Capture${i}`] = getPresetForStillImageCapture(`Capture Image ${i}`, `Captr ${i}`, `Capture${i}`, combineRgb(200, 180, 0));
 	}
 
 	// Still Images - Display
 	for (var i = 1; i <= 10; i++) {
-		presets.push(getPresetForStillImageDisplay(`Display Image ${i}`, `Disply ${i}`, `Display${i}`, self.rgb(0, 90, 0), self.rgb(255, 0, 0)));
+		presets[`Display${i}`] = getPresetForStillImageDisplay(`Display Image ${i}`, `Disply ${i}`, `Display${i}`, combineRgb(0, 90, 0), combineRgb(255, 0, 0));
 	}
-	presets.push(getPresetForStillImageDisplay('Display Test Image', 'Test image', 'DisplayTest', self.rgb(153, 0, 153), self.rgb(255, 0, 0), '18'));
-	presets.push(getPresetForStillImageDisplay('Display Blackout', 'Blackout', 'Blackout', self.rgb(0, 0, 0), self.rgb(255, 0, 0), '14'));
-	presets.push(getPresetForStillImageDisplay('Freeze', 'Freeze', 'Freeze', self.rgb(0, 51, 153), self.rgb(255, 0, 0), '18'));
-	presets.push(getPresetForStillImageExit());
-
+	presets['DisplayTest'] = getPresetForStillImageDisplay('Display Test Image', 'Test image', 'DisplayTest', combineRgb(153, 0, 153), combineRgb(255, 0, 0), '18');
+	presets['Blackout'] = getPresetForStillImageDisplay('Display Blackout', 'Blackout', 'Blackout', combineRgb(0, 0, 0), combineRgb(255, 0, 0), '14');
+	presets['Freeze'] = getPresetForStillImageDisplay('Freeze', 'Freeze', 'Freeze', combineRgb(0, 51, 153), combineRgb(255, 0, 0), '18');
+	presets['ExitImages'] = getPresetForStillImageExit();
     // Presentation Files
-    presets.push(getPresetForPresentationFiles(self.label, 'Previous', 'prev', self.rgb(0, 0, 0)));
-    presets.push(getPresetForPresentationFiles(self.label, 'Current', 'curr', self.rgb(255, 0, 0)));
-    presets.push(getPresetForPresentationFiles(self.label, 'Next', 'next', self.rgb(0, 153, 0)));
+    presets['PresentationFilesPrev'] = getPresetForPresentationFiles(self.label, 'Previous', 'prev', combineRgb(0, 0, 0));
+    presets['PresentationFilesCurr'] = getPresetForPresentationFiles(self.label, 'Current', 'curr', combineRgb(255, 0, 0));
+    presets['PresentationFilesNext'] = getPresetForPresentationFiles(self.label, 'Next', 'next', combineRgb(0, 153, 0));
 
 	//Slot Presentations
 	for (let i = 1; i <= 20; i++) {
-		presets.push(getPresetforSlotPresentation(self.label, `Slot ${i}`, `slot${i}`, i, self.rgb(0, 0, 0), `Slot${i}`, 1, true))
+		presets[`Slot${i}`] = getPresetforSlotPresentation(self.label, `Slot ${i}`, `slot${i}`, i, combineRgb(0, 0, 0), `Slot${i}`, 1, true)
 	}
 
 	return presets;
@@ -42,46 +42,61 @@ exports.getPresets = function (instance) {
 
 function getPresetForPresentationControl(lbl, txt, act, opt = null) {
 	return {
+        type: 'button',
         category: 'Presentation Control',
-        label: lbl,
-        bank: {
+        name: lbl,
+        style: {
             bgcolor: 0,
-            style: 'text',
             text: txt,
             alignment: 'center:center',
             size: 'auto',
             color: 16777215
 
         },
-        actions: [{
-            action: act,
-            options: opt
-        }]
+        steps: [
+            {
+                down: [
+                    {
+                        actionId: act,
+                        options: opt
+                    }
+                ],
+                up: []
+            }
+        ],
+        feedbacks: []
     };
 }
 
 function getPresetForStillImageCapture(lbl, txt, key, clr) {
 	return {
+        type: 'button',
         category: 'Still Images',
-        label: lbl,
-        bank: {
+        name: lbl,
+        style: {
             bgcolor: 0,
-            style: 'text',
             text: txt,
             alignment: 'center:center',
             size: 'auto',
             color: 16777215
 
         },
-        actions: [{
-            action: 'Capture_Image',
-            delay: 0,
-            options: {
-            	'Key': key
+        steps: [
+            {
+                down: [
+                    {
+                        actionId: 'Capture_Image',
+                        delay: 0,
+                        options: {
+                            'Key': key
+                        }
+                    }
+                ],
+                up: []
             }
-        }],
+        ],
         feedbacks: [{
-            type: 'captured',
+            feedbackId: 'captured',
             options: {
             	'Key': key
             },
@@ -95,26 +110,33 @@ function getPresetForStillImageCapture(lbl, txt, key, clr) {
 
 function getPresetForStillImageDisplay(lbl, txt, key, clr1, crl2, siz = 'auto') {
 	return {
+        type: 'button',
         category: 'Still Images',
-        label: lbl,
-        bank: {
+        name: lbl,
+        style: {
             bgcolor: 0,
-            style: 'text',
             text: txt,
             alignment: 'center:center',
             size: siz,
             color: 16777215
 
         },
-        actions: [{
-            action: 'Display_Image',
-            delay: 0,
-            options: {
-            	'Key': key
+        steps: [
+            {
+                down: [
+                    {
+                        actionId: 'Display_Image',
+                        delay: 0,
+                        options: {
+                            'Key': key
+                        }
+                    }
+                ],
+                up: []
             }
-        }],
+        ],
         feedbacks: [{
-            type: 'loaded',
+            feedbackId: 'loaded',
             options: {
             	'Key': key
             },
@@ -123,7 +145,7 @@ function getPresetForStillImageDisplay(lbl, txt, key, clr1, crl2, siz = 'auto') 
                 bgcolor: clr1
             }
         },{
-            type: 'displayed',
+            feedbackId: 'displayed',
             options: {
             	'Key': key
             },
@@ -137,27 +159,33 @@ function getPresetForStillImageDisplay(lbl, txt, key, clr1, crl2, siz = 'auto') 
 
 function getPresetForStillImageExit() {
 	return {
+        type: 'button',
         category: 'Still Images',
-        label: 'Exit Images',
-        bank: {
+        name: 'Exit Images',
+        style: {
             bgcolor: 0,
-            style: 'text',
             text: 'Exit images',
             alignment: 'center:center',
             size: 'auto',
             color: 16777215
 
         },
-        actions: [{ action: 'ExitImages' }]
+        steps: [
+            {
+            down: [{ actionId: 'ExitImages' }],
+            up: []
+            }
+        ],
+        feedbacks: []
     };
 }
 
 function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
     return {
+        type: 'button',
         category: 'Presentation Files',
-        label: lbl,
-        bank: {
-            style: 'text',
+        name: lbl,
+        style: {
             text: `$(${instanceLabel}:${txt})`,
             alignment: 'center:center',
             size: 'auto',
@@ -168,30 +196,36 @@ function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
 }
 
 function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber, SlideNumber, Fullscreen) {
+    console.log(instanceLabel)
 	return {
+        type: 'button',
 		category: 'Slot Presentations',
-		label: lbl,
-		bank: {
-			style: 'text',
+		name: lbl,
+		style: {
 			text: `${i} $(${instanceLabel}:${txt})`,
             alignment: 'center:center',
             size: 'auto',
             color: 16777215,
             bgcolor: cr
 		},
-		actions: [
-			{
-				action: 'OpenStart_Presentation_Slot',
-				options: {
-					Key: SlotNumber,
-					SlideNumber: SlideNumber,
-					Fullscreen: Fullscreen
-				}
-			}
+		steps: [
+            {
+                down: [
+                    {
+                        actionId: 'OpenStart_Presentation_Slot',
+                        options: {
+                            Key: SlotNumber,
+                            SlideNumber: SlideNumber,
+                            Fullscreen: Fullscreen
+                        }
+                    }
+                ],
+                up: []
+            }
 		],
 		feedbacks: [
 			{
-				type: 'slot_exist',
+				feedbackId: 'slot_exist',
 				options: {
 					Key: SlotNumber
 				},
@@ -201,7 +235,7 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 				}
 			},
 			{
-				type: 'slot_displayed',
+				feedbackId: 'slot_displayed',
 				options: {
 					Key: SlotNumber
 				},

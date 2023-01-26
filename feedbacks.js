@@ -1,10 +1,11 @@
+const { combineRgb  } = require('@companion-module/base')
 var choices = require('./choices');
 exports.getFeedbacks = function (instance) {
 	var self = instance;
 	return {
 		loaded: {
             type: 'boolean',
-            label: 'Change button loaded',
+            name: 'Change button loaded',
             description: 'Foreground and background colors when image is loaded',
             options: [
                 {
@@ -15,9 +16,9 @@ exports.getFeedbacks = function (instance) {
                     choices: choices.getChoicesForDisplay()
                 }
             ],
-            style: {
-                color: self.rgb(255, 255, 255),
-                bgcolor: self.rgb(0, 255, 0)
+            defaultStyle: {
+                color: combineRgb(255, 255, 255),
+                bgcolor: combineRgb(0, 255, 0)
             },
             callback: function (feedback) {
                 return self.displayStates[feedback.options.Key].loaded;
@@ -25,7 +26,7 @@ exports.getFeedbacks = function (instance) {
 		},
         displayed: {
             type: 'boolean',
-            label: 'Change button displayed',
+            name: 'Change button displayed',
             description: 'Foreground and background colors when image is displayed',
             options: [
                 {
@@ -36,9 +37,9 @@ exports.getFeedbacks = function (instance) {
                     choices: choices.getChoicesForDisplay()
                 }
             ],
-            style: {
-                color: self.rgb(255, 255, 255),
-                bgcolor: self.rgb(255, 0, 0)
+            defaultStyle: {
+                color: combineRgb(255, 255, 255),
+                bgcolor: combineRgb(255, 0, 0)
             },
             callback: function (feedback) {
                 return self.displayStates[feedback.options.Key].displayed;
@@ -46,7 +47,7 @@ exports.getFeedbacks = function (instance) {
         },
         captured: {
             type: 'boolean',
-            label: 'Change button captured',
+            name: 'Change button captured',
             description: 'Foreground and background colors when image is being captured',
             options: [
                 {
@@ -57,9 +58,9 @@ exports.getFeedbacks = function (instance) {
                     choices: choices.getChoicesForCapture()
                 }
             ],
-            style: {
-                color: self.rgb(255, 255, 255),
-                bgcolor: self.rgb(255, 255, 0)
+            defaultStyle: {
+                color: combineRgb(255, 255, 255),
+                bgcolor: combineRgb(255, 255, 0)
             },
             callback: function (feedback) {
                 return self.captureStates[feedback.options.Key];
@@ -67,7 +68,7 @@ exports.getFeedbacks = function (instance) {
         },
         slot_displayed: {
             type: 'boolean',
-            label: 'Presentation displayed',
+            name: 'Presentation displayed',
             description: 'Foreground and background colors when presentation is displayed',
             options: [
                 {
@@ -78,9 +79,9 @@ exports.getFeedbacks = function (instance) {
                     choices: choices.getChoicesForSlot()
                 }
             ],
-            style: {
-                color: self.rgb(255, 255, 255),
-                bgcolor: self.rgb(255, 0, 0)
+            defaultStyle: {
+                color: combineRgb(255, 255, 255),
+                bgcolor: combineRgb(255, 0, 0)
             },
             callback: function (feedback) {
                 return self.slotStates[feedback.options.Key].opened;
@@ -88,7 +89,7 @@ exports.getFeedbacks = function (instance) {
         },
         slot_exist: {
             type: 'boolean',
-            label: 'Presentation if exists',
+            name: 'Presentation if exists',
             description: 'Foreground and background colors when presentation exists',
             options: [
                 {
@@ -99,9 +100,9 @@ exports.getFeedbacks = function (instance) {
                     choices: choices.getChoicesForSlot()
                 }
             ],
-            style: {
-                color: self.rgb(255, 255, 255),
-                bgcolor: self.rgb(204, 204, 0)
+            defaultStyle: {
+                color: combineRgb(255, 255, 255),
+                bgcolor: combineRgb(204, 204, 0)
             },
             callback: function (feedback) {
                 return self.slotStates[feedback.options.Key].exists;
