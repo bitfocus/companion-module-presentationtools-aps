@@ -191,7 +191,14 @@ function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
             size: 'auto',
             color: 16777215,
             bgcolor: cr
-        }
+        },
+        steps: [
+            {
+            down: [],
+            up: []
+            }
+        ],
+        feedbacks: []
     };
 }
 
