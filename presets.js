@@ -203,7 +203,6 @@ function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
 }
 
 function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber, SlideNumber, Fullscreen) {
-    console.log(instanceLabel)
 	return {
         type: 'button',
 		category: 'Slot Presentations',
