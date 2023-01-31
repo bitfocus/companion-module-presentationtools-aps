@@ -109,9 +109,9 @@ exports.getActions = function (instance) {
             callback: action_callback
         },
 
-        'ExitImages': { name: 'Exit Images', options: [] },
+        'ExitImages': { name: 'Exit Images', options: [], callback: action_callback },
 
-        'states': { name: 'Refresh', options: [] },
+        'states': { name: 'Refresh', options: [], callback: action_callback },
 
         'OpenStart_Presentation': {
             name: 'Open/Start Presentation',
