@@ -10,7 +10,7 @@ class APSInstance extends InstanceBase {
 		super(internal)
 	}
 
-	async updateConfig(config) {
+	async configUpdated(config) {
 		this.config = config
 		var resetConnection = false
 
