@@ -12,19 +12,7 @@ class APSInstance extends InstanceBase {
 
 	async configUpdated(config) {
 		this.config = config
-		var resetConnection = false
 
-		if (this.config.host != config.host || this.config.port != config.port) {
-			resetConnection = true
-		}
-
-		if (resetConnection === true || this.socket === undefined) {
-			this.initTCP()
-		}
-	}
-
-	async init(config) {
-		this.config = config
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
@@ -37,6 +25,10 @@ class APSInstance extends InstanceBase {
 		this.feedbacks()
 		this.variables()
 		this.presets()
+	}
+
+	async init(config) {
+		this.configUpdated(config);
 	}
 
 	initTCP() {
