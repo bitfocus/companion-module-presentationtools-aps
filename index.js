@@ -134,11 +134,18 @@ class APSInstance extends InstanceBase {
 			{
 				type: 'textinput',
 				id: 'port',
-				label: 'Target port (Default: 4777)',
-				default: '4777',
+				label: 'Target Port (Default: 31600)',
+				default: '31600',
 				width: 6,
 				regex: Regex.PORT,
 			},
+			,
+			{
+				type: 'static-text',
+				id: 'info-defaultport',
+				width: 12,
+				label: 'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
+			}
 		]
 	}
 
