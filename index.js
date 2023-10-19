@@ -139,7 +139,6 @@ class APSInstance extends InstanceBase {
 				width: 6,
 				regex: Regex.PORT,
 			},
-			,
 			{
 				type: 'static-text',
 				id: 'info-defaultport',
