@@ -1,4 +1,5 @@
 const { combineRgb } = require('@companion-module/base')
+const { numberOfPresentationSlots } = require('./constants');
 exports.getPresets = function (instance) {
 	var self = instance
 	var presets = {}
@@ -89,7 +90,7 @@ exports.getPresets = function (instance) {
 	presets['PresentationFilesNext'] = getPresetForPresentationFiles(self.label, 'Next', 'next', combineRgb(0, 153, 0))
 
 	//Slot Presentations
-	for (let i = 1; i <= 20; i++) {
+	for (let i = 1; i <= numberOfPresentationSlots; i++) {
 		presets[`Slot${i}`] = getPresetforSlotPresentation(
 			self.label,
 			`Slot ${i}`,

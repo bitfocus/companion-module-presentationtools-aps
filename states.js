@@ -1,3 +1,4 @@
+const { numberOfPresentationSlots } = require('./constants');
 var choices = require('./choices')
 exports.generateCaptureStates = function () {
 	var cchoices = choices.getChoicesForCapture()
@@ -22,7 +23,7 @@ exports.generateDisplayStates = function () {
 exports.generateSlotStates = function () {
 	var schoices = choices.getChoicesForSlot()
 	var states = new Object()
-	for (var i = 20 - 1; i >= 0; i--) {
+	for (var i = numberOfPresentationSlots - 1; i >= 0; i--) {
 		const si = schoices[i].id
 		states[si] = new Object()
 		states[si].exists = false
@@ -87,7 +88,7 @@ exports.updateUnloadStates = function (states, index) {
 	}
 }
 exports.updateSlotStates = function (states, data) {
-	for (var i = 20; i > 0; i--) {
+	for (var i = numberOfPresentationSlots; i > 0; i--) {
 		const si = 'Slot' + i
 		states[si].exists = data.exists[i - 1]
 		states[si].opened = data.opened[i - 1]

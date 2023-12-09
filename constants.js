@@ -1,0 +1,1 @@
+exports.numberOfPresentationSlots = 40

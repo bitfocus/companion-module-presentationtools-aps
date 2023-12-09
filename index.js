@@ -1,4 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
+const { numberOfPresentationSlots } = require('./constants');
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -166,7 +167,7 @@ class APSInstance extends InstanceBase {
 			{ name: 'Current', variableId: 'curr' },
 			{ name: 'Next', variableId: 'next' },
 		]
-		for (let i = 1; i <= 20; i++) {
+		for (let i = 1; i <= numberOfPresentationSlots; i++) {
 			variables.push({
 				name: `Slot ${i}`,
 				variableId: `slot${i}`,
@@ -181,7 +182,7 @@ class APSInstance extends InstanceBase {
 			next: '',
 		}
 		try {
-			for (let i = 20; i > 0; i--) {
+			for (let i = numberOfPresentationSlots; i > 0; i--) {
 				values[`slot${i}`] = '-'
 			}
 		} catch (err) {
@@ -196,7 +197,7 @@ class APSInstance extends InstanceBase {
 		const values = {}
 
 		try {
-			for (let i = 20; i > 0; i--) {
+			for (let i = numberOfPresentationSlots; i > 0; i--) {
 				values[`slot${i}`] = data.filenames[i - 1]
 			}
 		} catch (err) {
