@@ -88,6 +88,9 @@ exports.getPresets = function (instance) {
 	presets['PresentationFilesPrev'] = getPresetForPresentationFiles(self.label, 'Previous', 'prev', combineRgb(0, 0, 0))
 	presets['PresentationFilesCurr'] = getPresetForPresentationFiles(self.label, 'Current', 'curr', combineRgb(255, 0, 0))
 	presets['PresentationFilesNext'] = getPresetForPresentationFiles(self.label, 'Next', 'next', combineRgb(0, 153, 0))
+	presets['SlideNumber'] = getPresetForPresentationFiles(self.label, 'Slide Number', 'slide_number', combineRgb(0, 0, 0))
+	presets['SlidesCount'] = getPresetForPresentationFiles(self.label, 'Slides Count', 'slides_count', combineRgb(0, 0, 0))
+	presets['BuildsCount'] = getPresetForPresentationFiles(self.label, 'Builds Count', 'builds_count', combineRgb(0, 0, 0))
 
 	//Slot Presentations
 	for (let i = 1; i <= numberOfPresentationSlots; i++) {

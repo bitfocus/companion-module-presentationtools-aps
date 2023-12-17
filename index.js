@@ -98,11 +98,18 @@ class APSInstance extends InstanceBase {
 						states.updateUnloadStates(self.displayStates, jsonData.index)
 						self.checkFeedbacks('loaded')
 					} else if (jsonData.action === 'files') {
-						self.setVariableValues({
+						let update_obj = {
 							prev: jsonData.data.prev,
 							curr: jsonData.data.curr,
 							next: jsonData.data.next,
-						})
+						}
+						// For not raising exception while using old verions of APS
+						if(jsonData.data.slide_number){
+							update_obj["slide_number"] = jsonData.data.slide_number
+							update_obj["slides_count"] = jsonData.data.slides_count
+							update_obj["builds_count"] = jsonData.data.builds_count
+						}
+						self.setVariableValues(update_obj)
 					} else if (jsonData.action === 'slots') {
 						self.setSlotVariables(jsonData.data)
 						states.updateSlotStates(self.slotStates, jsonData.data)
@@ -166,6 +173,9 @@ class APSInstance extends InstanceBase {
 			{ name: 'Previous', variableId: 'prev' },
 			{ name: 'Current', variableId: 'curr' },
 			{ name: 'Next', variableId: 'next' },
+			{ name: 'Slide Number', variableId: 'slide_number' },
+			{ name: 'Slides Count', variableId: 'slides_count' },
+			{ name: 'Builds Count', variableId: 'builds_count' },
 		]
 		for (let i = 1; i <= numberOfPresentationSlots; i++) {
 			variables.push({
@@ -180,6 +190,9 @@ class APSInstance extends InstanceBase {
 			prev: '',
 			curr: '',
 			next: '',
+			slide_number: '',
+			slides_count: '',
+			builds_count: '',
 		}
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
