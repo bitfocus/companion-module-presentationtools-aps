@@ -1,3 +1,4 @@
+const { numberOfPresentationSlots } = require('./constants');
 exports.getChoicesForCapture = function () {
 	return [
 		{ id: 'Capture1', label: 'Image 1' },
@@ -33,26 +34,9 @@ exports.getChoicesForDisplay = function () {
 }
 
 exports.getChoicesForSlot = function () {
-	return [
-		{ id: 'Slot1', label: '1' },
-		{ id: 'Slot2', label: '2' },
-		{ id: 'Slot3', label: '3' },
-		{ id: 'Slot4', label: '4' },
-		{ id: 'Slot5', label: '5' },
-		{ id: 'Slot6', label: '6' },
-		{ id: 'Slot7', label: '7' },
-		{ id: 'Slot8', label: '8' },
-		{ id: 'Slot9', label: '9' },
-		{ id: 'Slot10', label: '10' },
-		{ id: 'Slot11', label: '11' },
-		{ id: 'Slot12', label: '12' },
-		{ id: 'Slot13', label: '13' },
-		{ id: 'Slot14', label: '14' },
-		{ id: 'Slot15', label: '15' },
-		{ id: 'Slot16', label: '16' },
-		{ id: 'Slot17', label: '17' },
-		{ id: 'Slot18', label: '18' },
-		{ id: 'Slot19', label: '19' },
-		{ id: 'Slot20', label: '20' },
-	]
+	choicesList = []
+	for(let i = 1; i <= numberOfPresentationSlots; i++){
+		choicesList.push({ id: `Slot${i}`, label: i })
+	}
+	return choicesList
 }
