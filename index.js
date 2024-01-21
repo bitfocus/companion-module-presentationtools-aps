@@ -71,52 +71,54 @@ class APSInstance extends InstanceBase {
 
 			self.socket.on('data', (data) => {
 				self.receiver.push(data)
-				let message = self.receiver.handleData()
-				if (message == null) return
-				// data is Buffer object
-				try {
-					let jsonData = JSON.parse(message)
-					if (jsonData.action === 'states') {
-						states.updateStates(self.displayStates, jsonData.data)
-						self.checkFeedbacks('loaded', 'displayed')
-					} else if (jsonData.action === 'display') {
-						states.updateDisplayStates(self.displayStates, jsonData.data)
-						self.checkFeedbacks('displayed')
-					} else if (jsonData.action === 'capture') {
-						states.uploadLoadStates(self.displayStates, jsonData.index)
-						states.updateCaptureStates(self.captureStates, jsonData.index)
-						self.checkFeedbacks('captured')
-						if (self.captureTimeoutObj !== null) {
-							clearTimeout(self.captureTimeoutObj)
+				let messages = self.receiver.getMessages()
+				if (messages == null) return
+				for (let i = 0; i < messages.length; i++){
+					let message = messages[i]
+					try {
+						let jsonData = JSON.parse(message)
+						if (jsonData.action === 'states') {
+							states.updateStates(self.displayStates, jsonData.data)
+							self.checkFeedbacks('loaded', 'displayed')
+						} else if (jsonData.action === 'display') {
+							states.updateDisplayStates(self.displayStates, jsonData.data)
+							self.checkFeedbacks('displayed')
+						} else if (jsonData.action === 'capture') {
+							states.uploadLoadStates(self.displayStates, jsonData.index)
+							states.updateCaptureStates(self.captureStates, jsonData.index)
+							self.checkFeedbacks('captured')
+							if (self.captureTimeoutObj !== null) {
+								clearTimeout(self.captureTimeoutObj)
+							}
+							self.captureTimeoutObj = setTimeout(() => {
+								states.updateCaptureStates(self.captureStates, 999)
+								self.checkFeedbacks('captured', 'loaded')
+								self.captureTimeoutObj = null
+							}, 1500)
+						} else if (jsonData.action === 'delete') {
+							states.updateUnloadStates(self.displayStates, jsonData.index)
+							self.checkFeedbacks('loaded')
+						} else if (jsonData.action === 'files') {
+							let update_obj = {
+								prev: jsonData.data.prev,
+								curr: jsonData.data.curr,
+								next: jsonData.data.next,
+							}
+							// For not raising exception while using old verions of APS
+							if(jsonData.data.slide_number){
+								update_obj["slide_number"] = jsonData.data.slide_number
+								update_obj["slides_count"] = jsonData.data.slides_count
+								update_obj["builds_count"] = jsonData.data.builds_count
+							}
+							self.setVariableValues(update_obj)
+						} else if (jsonData.action === 'slots') {
+							self.setSlotVariables(jsonData.data)
+							states.updateSlotStates(self.slotStates, jsonData.data)
+							self.checkFeedbacks('slot_exist', 'slot_displayed')
 						}
-						self.captureTimeoutObj = setTimeout(() => {
-							states.updateCaptureStates(self.captureStates, 999)
-							self.checkFeedbacks('captured', 'loaded')
-							self.captureTimeoutObj = null
-						}, 1500)
-					} else if (jsonData.action === 'delete') {
-						states.updateUnloadStates(self.displayStates, jsonData.index)
-						self.checkFeedbacks('loaded')
-					} else if (jsonData.action === 'files') {
-						let update_obj = {
-							prev: jsonData.data.prev,
-							curr: jsonData.data.curr,
-							next: jsonData.data.next,
-						}
-						// For not raising exception while using old verions of APS
-						if(jsonData.data.slide_number){
-							update_obj["slide_number"] = jsonData.data.slide_number
-							update_obj["slides_count"] = jsonData.data.slides_count
-							update_obj["builds_count"] = jsonData.data.builds_count
-						}
-						self.setVariableValues(update_obj)
-					} else if (jsonData.action === 'slots') {
-						self.setSlotVariables(jsonData.data)
-						states.updateSlotStates(self.slotStates, jsonData.data)
-						self.checkFeedbacks('slot_exist', 'slot_displayed')
+					} catch (e) {
+						console.error(e)
 					}
-				} catch (e) {
-					console.error(e)
 				}
 			})
 		}
@@ -247,29 +249,25 @@ class MessageBuffer {
 	}
 
 	isFinished() {
-		if (this.buffer.length === 0 || this.buffer.indexOf(this.delimiter) === -1) {
-			return true
-		}
-		return false
+		return this.buffer.length === 0 || this.buffer.indexOf(this.delimiter) === -1
 	}
 
 	push(data) {
 		this.buffer += data
 	}
 
-	getMessage() {
-		const delimiterIndex = this.buffer.indexOf(this.delimiter)
-		if (delimiterIndex !== -1) {
-			const message = this.buffer.slice(0, delimiterIndex)
-			this.buffer = this.buffer.replace(message + this.delimiter, '')
-			return message
+	getMessages() {
+		const messages = []
+	  
+		while (!this.isFinished()) {
+			const delimiterIndex = this.buffer.indexOf(this.delimiter)
+			if (delimiterIndex !== -1) {
+				const message = this.buffer.slice(0, delimiterIndex)
+				this.buffer = this.buffer.replace(message + this.delimiter, '')
+				messages.push(message)
+			}
 		}
-		return null
-	}
-
-	handleData() {
-		const message = this.getMessage()
-		return message
+		return messages.length > 0 ? messages : null;
 	}
 }
 
