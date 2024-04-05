@@ -24,10 +24,6 @@ Controls APS by [PresentationTools](https://presentationtools.com/).
 - Put current presentation in fullscreen
 - Close all except current.
 
-#### Keystroke:
-
-- Send frequently used presentation keys (Right, Left, ESC and B)
-
 #### Capture Image:
 
 - Take screenshot of the main presenter-screen and store this in the image-banks.

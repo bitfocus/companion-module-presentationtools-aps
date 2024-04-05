@@ -172,12 +172,12 @@ class APSInstance extends InstanceBase {
 	variables() {
 		var self = this
 		var variables = [
-			{ name: 'Previous', variableId: 'prev' },
-			{ name: 'Current', variableId: 'curr' },
-			{ name: 'Next', variableId: 'next' },
-			{ name: 'Slide Number', variableId: 'slide_number' },
-			{ name: 'Slides Count', variableId: 'slides_count' },
-			{ name: 'Builds Count', variableId: 'builds_count' },
+			{ name: 'Presentation: Previous in folder', variableId: 'prev' },
+			{ name: 'Presentation: Current', variableId: 'curr' },
+			{ name: 'Presentation: Next in folder', variableId: 'next' },
+			{ name: 'Slide: Current', variableId: 'slide_number' },
+			{ name: 'Slide: Total number', variableId: 'slides_count' },
+			{ name: 'Slide: Builds count', variableId: 'builds_count' },
 		]
 		for (let i = 1; i <= numberOfPresentationSlots; i++) {
 			variables.push({

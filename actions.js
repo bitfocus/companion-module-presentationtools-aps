@@ -28,7 +28,7 @@ exports.getActions = function (instance) {
 
 	return {
 		Navigation_NextFS: {
-			name: 'Next presentation',
+			name: 'Presentation: Open next in folder',
 			options: [
 				getSlideNumber('Go to slide'),
 				{
@@ -41,7 +41,7 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 		Navigation_PrevFS: {
-			name: 'Prev presentation',
+			name: 'Presentation: Open previous in folder',
 			options: [
 				getSlideNumber('Go to slide'),
 				{
@@ -55,37 +55,57 @@ exports.getActions = function (instance) {
 		},
 		// 'Navigation_NextNoFS': { label: 'Next without putting to fullscreen' },
 		Navigation_CurrentFS: {
-			name: 'Put current in fullscreen',
+			name: 'Presentation: Put current in fullscreen',
 			options: [],
 			callback: action_callback,
 		},
 		Navigation_CloseOthers: {
-			name: 'Close all except current',
+			name: 'Presentation: Close all except current',
 			options: [],
 			callback: action_callback,
 		},
 
-		Keystroke: {
-			name: 'Simulate keystroke',
+		PresentationExit: {
+			name: 'Presentation: Exit',
 			options: [
 				{
-					type: 'dropdown',
-					label: 'Key',
 					id: 'Key',
+					type: 'textinput',
+					default: 'Key_Esc',
+					isVisible: ((_o, _d) => false)
+				}
+			],
+			callback: action_callback,
+		},
+
+		SlideNext: {
+			name: 'Slide: Next',
+			options: [
+				{
+					id: 'Key',
+					type: 'textinput',
 					default: 'Key_Right',
-					choices: [
-						{ id: 'Key_Right', label: 'Right Arrow' },
-						{ id: 'Key_Left', label: 'Left Arrow' },
-						{ id: 'Key_Esc', label: 'Escape' },
-						{ id: 'Key_B', label: 'B' },
-					],
-				},
+					isVisible: ((_o, _d) => false)
+				}
+			],
+			callback: action_callback,
+		},
+
+		SlidePrevious: {
+			name: 'Slide: Previous',
+			options: [
+				{
+					id: 'Key',
+					type: 'textinput',
+					default: 'Key_Left',
+					isVisible: ((_o, _d) => false)
+				}
 			],
 			callback: action_callback,
 		},
 
 		Capture_Image: {
-			name: 'Capture Image',
+			name: 'Still Image: Capture',
 			options: [
 				{
 					type: 'dropdown',
@@ -99,7 +119,7 @@ exports.getActions = function (instance) {
 		},
 
 		Display_Image: {
-			name: 'Display Image',
+			name: 'Still Image: Display',
 			options: [
 				{
 					type: 'dropdown',
@@ -112,12 +132,11 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
-		ExitImages: { name: 'Exit Images', options: [], callback: action_callback },
+		ExitImages: { name: 'Still Image: Exit', options: [], callback: action_callback },
 
-		states: { name: 'Refresh', options: [], callback: action_callback },
 
 		OpenStart_Presentation: {
-			name: 'Open/Start Presentation',
+			name: 'Presentation: Open from file path',
 			options: [
 				{
 					type: 'textinput',
@@ -138,7 +157,7 @@ exports.getActions = function (instance) {
 		},
 
 		Generic: {
-			name: 'Generic - Go to slide',
+			name: 'Slide: Go to slide',
 			options: [getSlideNumber('Slide Nr.')],
 			callback: action_callback,
 		},
@@ -192,7 +211,7 @@ exports.getActions = function (instance) {
 		},
 
 		OpenStart_Presentation_Slot: {
-			name: 'Open/Start Presentation from slot',
+			name: 'Presentation: Open from slot',
 			options: [
 				{
 					type: 'dropdown',
@@ -245,7 +264,9 @@ function getCommand(action) {
 		case 'Navigation_CloseOthers':
 			cmd = action.actionId
 			break
-		case 'Keystroke':
+		case 'PresentationExit':
+		case 'SlideNext':
+		case 'SlidePrevious':
 			cmd = action.options.Key
 			break
 		case 'Capture_Image':
