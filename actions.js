@@ -230,12 +230,114 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+
+		Play_MediaPlayer: {
+			name: 'Media Player: Play',
+			options: [],
+			callback: action_callback,
+		},
+
+		Pause_MediaPlayer: {
+			name: 'Media Player: Pause',
+			options: [],
+			callback: action_callback,
+		},
+
+		Restart_MediaPlayer: {
+			name: 'Media Player: Restart',
+			options: [],
+			callback: action_callback,
+		},
+
+		Stop_MediaPlayer: {
+			name: 'Media Player: Stop',
+			options: [],
+			callback: action_callback,
+		},
+
+		Loop_MediaPlayer: {
+			name: 'Media Player: Loop mode',
+			options: [],
+			callback: action_callback,
+		},
+
+		Fade_MediaPlayer: {
+			name: 'Media Player: Fade mode',
+			options: [],
+			callback: action_callback,
+		},
+
+		Load_MediaPlayer: {
+			name: 'Media Player: Load',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'Key',
+					default: 'Load_MediaPlayer#1',
+					choices: choices.getChoicesForMediaPlayer(),
+				},
+			],
+			callback: action_callback,
+		},
+
+		MediaPlayer_Position: {
+			name: 'Media Player: Go to position',
+			options: [
+				{
+					type: 'number',
+					label: 'Go to position (seconds)',
+					id: 'Seconds',
+					default: 0,
+					min: 0,
+					step: 1,
+					required: true,
+					range: false,
+				},
+			],
+			callback: action_callback,
+		},
+
+		MediaPlayer_Forward: {
+			name: 'Media Player: Move forward',
+			options: [
+				{
+					type: 'number',
+					label: 'Move forward (seconds)',
+					id: 'Seconds',
+					default: 10,
+					min: 1,
+					step: 1,
+					required: true,
+					range: false,
+				},
+			],
+			callback: action_callback,
+		},
+
+		MediaPlayer_Rewind: {
+			name: 'Media Player: Move back',
+			options: [
+				{
+					type: 'number',
+					label: 'Move back (seconds)',
+					id: 'Seconds',
+					default: 10,
+					min: 1,
+					step: 1,
+					required: true,
+					range: false,
+				},
+			],
+			callback: action_callback,
+		},
 	}
 }
 
 function getCommand(action) {
 	var cmd = ''
 	var separatorChar = '^'
+	var mediaPlayerSeparatorChar = '#'
 	switch (action.actionId) {
 		case 'Navigation_NextFS':
 			// case 'Navigation_NextNoFS':
@@ -260,22 +362,13 @@ function getCommand(action) {
 				cmd += action.options.Fullscreen ? 1 : 0
 			}
 			break
-		case 'Navigation_CurrentFS':
-		case 'Navigation_CloseOthers':
-			cmd = action.actionId
-			break
 		case 'PresentationExit':
 		case 'SlideNext':
 		case 'SlidePrevious':
-			cmd = action.options.Key
-			break
 		case 'Capture_Image':
 		case 'Display_Image':
+		case 'Load_MediaPlayer':
 			cmd = action.options.Key
-			break
-		case 'ExitImages':
-		case 'states':
-			cmd = action.actionId
 			break
 		case 'OpenStart_Presentation':
 			cmd = 'OpenStart_Presentation' + separatorChar
@@ -293,19 +386,20 @@ function getCommand(action) {
 			cmd = action.actionId + separatorChar
 			cmd += action.options.SlideNumber
 			break
-		case 'Powerpoint_Previous':
-		case 'Powerpoint_Next':
-		case 'Acrobat_Previous':
-		case 'Acrobat_Next':
-		case 'Keynote_Previous':
-		case 'Keynote_Next':
-			cmd = action.actionId
-			break
 		case 'OpenStart_Presentation_Slot':
 			cmd = 'OpenStart_Presentation_Slot' + separatorChar
 			cmd += action.options.SlideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 			cmd += action.options.Key.substring(4)
+			break
+		case 'MediaPlayer_Position':
+		case 'MediaPlayer_Forward':
+		case 'MediaPlayer_Rewind':
+			cmd = action.actionId + mediaPlayerSeparatorChar
+			cmd += action.options.Seconds
+			break
+		default:
+			cmd = action.actionId
 			break
 	}
 	return cmd
