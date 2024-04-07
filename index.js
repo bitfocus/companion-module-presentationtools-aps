@@ -17,6 +17,13 @@ class APSInstance extends InstanceBase {
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
+		this.mediaPlayerState = {
+			slots: states.generateMediaSlotStates(),
+			playing: false,
+			paused: false,
+			loop_on: false,
+			fade_on: false,
+		}
 		this.captureTimeoutObj = null
 		this.statesTimeoutObj = null
 		this.receiver = new MessageBuffer('$')
@@ -115,6 +122,17 @@ class APSInstance extends InstanceBase {
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
+						}else if (jsonData.action === 'MediaPlayer') {
+							//self.setSlotVariables(jsonData.data)
+							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
+							self.checkFeedbacks(
+								'Media_playing', 
+								'Media_loaded', 
+								'Media_playback_state_playing', 
+								'Media_playback_state_paused', 
+								'Media_player_loop_on', 
+								'Media_player_fade_on',
+							)
 						}
 					} catch (e) {
 						console.error(e)

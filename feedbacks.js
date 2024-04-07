@@ -108,5 +108,106 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[feedback.options.Key].exists
 			},
 		},
+
+		Media_playing: {
+			type: 'boolean',
+			name: 'Media Player slot is playing',
+			description: 'If the media from the slot is playing, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Media Slot',
+					id: 'Key',
+					default: 'Load_MediaPlayer#1',
+					choices: choices.getChoicesForMediaPlayer(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.mediaPlayerState.slots[feedback.options.Key].playing
+			},
+		},
+
+		Media_loaded: {
+			type: 'boolean',
+			name: 'Media Player slot is loaded',
+			description: 'If the media from the slot is loaded, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Media Slot',
+					id: 'Key',
+					default: 'Load_MediaPlayer#1',
+					choices: choices.getChoicesForMediaPlayer(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.mediaPlayerState.slots[feedback.options.Key].loaded
+			},
+		},
+
+
+		Media_playback_state_playing: {
+			type: 'boolean',
+			name: 'Media Player is playing',
+			description: 'If the media in playing-state, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.playing
+			},
+		},
+		
+		Media_playback_state_paused: {
+			type: 'boolean',
+			name: 'Media Player is paused',
+			description: 'If the media-in pause-state, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.paused
+			},
+		},
+		
+		Media_player_loop_on: {
+			type: 'boolean',
+			name: 'Media Player loop-mode',
+			description: 'If the media-player is in loop-mode, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.loop_on
+			},
+		},
+		
+		Media_player_fade_on: {
+			type: 'boolean',
+			name: 'Media Player fade-mode',
+			description: 'If the media-player is in fade-mode, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.fade_on
+			},
+		},
 	}
 }
