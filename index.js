@@ -1,5 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { numberOfPresentationSlots } = require('./constants');
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants');
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -123,7 +123,7 @@ class APSInstance extends InstanceBase {
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
 						}else if (jsonData.action === 'MediaPlayer') {
-							//self.setSlotVariables(jsonData.data)
+							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
 							self.checkFeedbacks(
 								'Media_playing', 
@@ -196,11 +196,26 @@ class APSInstance extends InstanceBase {
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
 			{ name: 'Slide: Builds count', variableId: 'builds_count' },
+			{ name: 'Media player: Playing media', variableId: 'Media_playing' },
+			{ name: 'Media player: Loaded media', variableId: 'Media_loaded' },
+			{ name: 'Media player: Playing media filename', variableId: 'Media_playing_filename' },
+			{ name: 'Media player: Loaded media filename', variableId: 'Media_loaded_filename' },
+			{ name: 'Media player: Playback state', variableId: 'Media_playback_state' },
+			{ name: 'Media player: Time left', variableId: 'Media_time_left' },
+			{ name: 'Media player: Time elapsed', variableId: 'Media_time_elapsed' },
+			{ name: 'Media player: Time duration', variableId: 'Media_duration' },
 		]
 		for (let i = 1; i <= numberOfPresentationSlots; i++) {
 			variables.push({
-				name: `Slot ${i}`,
-				variableId: `slot${i}`,
+				name: `Presentation Slot ${i}`,
+				variableId: `presentation_slot${i}`,
+			})
+		}
+
+		for (let i = 1; i <= numberOfPresentationSlots; i++) {
+			variables.push({
+				name: `Media ${i}`,
+				variableId: `media_slot${i}`,
 			})
 		}
 
@@ -213,10 +228,26 @@ class APSInstance extends InstanceBase {
 			slide_number: '',
 			slides_count: '',
 			builds_count: '',
+			Media_playing: '',
+			Media_loaded: '',
+			Media_playing_filename: '',
+			Media_loaded_filename: '',
+			Media_playback_state: '',
+			Media_time_left: '',
+			Media_time_elapsed: '',
+			Media_duration: '',
 		}
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
-				values[`slot${i}`] = '-'
+				values[`presentation_slot${i}`] = '-'
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		try {
+			for (let i = numberOfMediaPlayerSlots; i > 0; i--) {
+				values[`media_slot${i}`] = '-'
 			}
 		} catch (err) {
 			self.log('debug', err)
@@ -231,7 +262,32 @@ class APSInstance extends InstanceBase {
 
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
-				values[`slot${i}`] = data.filenames[i - 1]
+				values[`presentation_slot${i}`] = data.filenames[i - 1]
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		self.setVariableValues(values)
+	}
+
+
+	setMediaPlayerVariables(data) {
+		var self = this
+		const values = {
+			'Media_playing': data.Media_playing,
+			'Media_loaded': data.Media_loaded,
+			'Media_playing_filename': data.Media_playing_filename,
+			'Media_loaded_filename': data.Media_loaded_filename,
+			'Media_playback_state': data.Media_playback_state,
+			'Media_time_left': data.Media_time_left,
+			'Media_time_elapsed': data.Media_time_elapsed,
+			'Media_duration': data.Media_duration,
+		}
+
+		try {
+			for (let i = numberOfPresentationSlots; i > 0; i--) {
+				values[`media_slot${i}`] = data.filenames[i - 1]
 			}
 		} catch (err) {
 			self.log('debug', err)
