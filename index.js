@@ -107,15 +107,15 @@ class APSInstance extends InstanceBase {
 							self.checkFeedbacks('loaded')
 						} else if (jsonData.action === 'files') {
 							let update_obj = {
-								prev: jsonData.data.prev,
-								curr: jsonData.data.curr,
-								next: jsonData.data.next,
+								Presentation_previous: jsonData.data.prev,
+								Presentation_current: jsonData.data.curr,
+								Presentation_next: jsonData.data.next,
 							}
 							// For not raising exception while using old verions of APS
 							if(jsonData.data.slide_number){
 								update_obj["slide_number"] = jsonData.data.slide_number
 								update_obj["slides_count"] = jsonData.data.slides_count
-								update_obj["builds_count"] = jsonData.data.builds_count
+								update_obj["Slides_builds_count"] = jsonData.data.builds_count
 							}
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
@@ -190,12 +190,12 @@ class APSInstance extends InstanceBase {
 	variables() {
 		var self = this
 		var variables = [
-			{ name: 'Presentation: Previous in folder', variableId: 'prev' },
-			{ name: 'Presentation: Current', variableId: 'curr' },
-			{ name: 'Presentation: Next in folder', variableId: 'next' },
+			{ name: 'Presentation: Previous in folder', variableId: 'Presentation_previous' },
+			{ name: 'Presentation: Current', variableId: 'Presentation_current' },
+			{ name: 'Presentation: Next in folder', variableId: 'Presentation_next' },
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
-			{ name: 'Slide: Builds count', variableId: 'builds_count' },
+			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
 			{ name: 'Media player: Playing media', variableId: 'Media_playing' },
 			{ name: 'Media player: Loaded media', variableId: 'Media_loaded' },
 			{ name: 'Media player: Playing media filename', variableId: 'Media_playing_filename' },
@@ -203,7 +203,7 @@ class APSInstance extends InstanceBase {
 			{ name: 'Media player: Playback state', variableId: 'Media_playback_state' },
 			{ name: 'Media player: Time left', variableId: 'Media_time_left' },
 			{ name: 'Media player: Time elapsed', variableId: 'Media_time_elapsed' },
-			{ name: 'Media player: Time duration', variableId: 'Media_duration' },
+			{ name: 'Media player: Time duration', variableId: 'Media_time_duration' },
 		]
 		for (let i = 1; i <= numberOfPresentationSlots; i++) {
 			variables.push({
@@ -222,12 +222,12 @@ class APSInstance extends InstanceBase {
 		self.setVariableDefinitions(variables)
 
 		const values = {
-			prev: '',
-			curr: '',
-			next: '',
+			Presentation_previous: '',
+			Presentation_current: '',
+			Presentation_next: '',
 			slide_number: '',
 			slides_count: '',
-			builds_count: '',
+			Slides_builds_count: '',
 			Media_playing: '',
 			Media_loaded: '',
 			Media_playing_filename: '',
@@ -235,7 +235,7 @@ class APSInstance extends InstanceBase {
 			Media_playback_state: '',
 			Media_time_left: '',
 			Media_time_elapsed: '',
-			Media_duration: '',
+			Media_time_duration: '',
 		}
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
@@ -282,7 +282,7 @@ class APSInstance extends InstanceBase {
 			'Media_playback_state': data.Media_playback_state,
 			'Media_time_left': data.Media_time_left,
 			'Media_time_elapsed': data.Media_time_elapsed,
-			'Media_duration': data.Media_duration,
+			'Media_time_duration': data.Media_duration,
 		}
 
 		try {

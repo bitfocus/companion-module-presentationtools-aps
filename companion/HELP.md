@@ -71,12 +71,12 @@ Mac only:
 
 #### Variables
 
-- curr: Currently opened presentation
-- prev: Prevously opened presentation
-- next: Next presentation to be opened
+- Presentation_current: Currently opened presentation
+- Presentation_previous: Prevously opened presentation
+- Presentation_next: Next presentation to be opened
 - slide_number: Slide Number
 - slides_count: Slides Count
-- builds_count: Builds Count
+- Slides_builds_count: Builds Count
 
 #### Feedbacks
 

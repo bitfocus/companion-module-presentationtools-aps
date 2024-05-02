@@ -85,12 +85,12 @@ exports.getPresets = function (instance) {
 	)
 	presets['ExitImages'] = getPresetForStillImageExit()
 	// Presentation Files
-	presets['PresentationFilesPrev'] = getPresetForPresentationFiles(self.label, 'Previous', 'prev', combineRgb(0, 0, 0))
-	presets['PresentationFilesCurr'] = getPresetForPresentationFiles(self.label, 'Current', 'curr', combineRgb(255, 0, 0))
-	presets['PresentationFilesNext'] = getPresetForPresentationFiles(self.label, 'Next', 'next', combineRgb(0, 153, 0))
+	presets['PresentationFilesPrev'] = getPresetForPresentationFiles(self.label, 'Previous', 'Presentation_previous', combineRgb(0, 0, 0))
+	presets['PresentationFilesCurr'] = getPresetForPresentationFiles(self.label, 'Current', 'Presentation_current', combineRgb(255, 0, 0))
+	presets['PresentationFilesNext'] = getPresetForPresentationFiles(self.label, 'Next', 'Presentation_next', combineRgb(0, 153, 0))
 	presets['SlideNumber'] = getPresetForPresentationFiles(self.label, 'Slide Number', 'slide_number', combineRgb(0, 0, 0))
 	presets['SlidesCount'] = getPresetForPresentationFiles(self.label, 'Slides Count', 'slides_count', combineRgb(0, 0, 0))
-	presets['BuildsCount'] = getPresetForPresentationFiles(self.label, 'Builds Count', 'builds_count', combineRgb(0, 0, 0))
+	presets['BuildsCount'] = getPresetForPresentationFiles(self.label, 'Builds Count', 'Slides_builds_count', combineRgb(0, 0, 0))
 
 	//Slot Presentations
 	for (let i = 1; i <= numberOfPresentationSlots; i++) {
