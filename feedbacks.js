@@ -141,7 +141,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Media Slot',
 					id: 'Key',
 					default: 'Load_MediaPlayer#1',
-					choices: choices.getChoicesForMediaPlayer(),
+					choices: [{ id: `any_media_loaded`, label: `Any media loaded` }].concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			defaultStyle: {

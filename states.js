@@ -98,6 +98,8 @@ exports.updateSlotStates = function (states, data) {
 exports.generateMediaSlotStates = function () {
 	var schoices = choices.getChoicesForMediaPlayer()
 	var states = new Object()
+	states['any_media_loaded'] = new Object()
+	states['any_media_loaded'].loaded = false
 	for (var i = numberOfMediaPlayerSlots - 1; i >= 0; i--) {
 		const si = schoices[i].id
 		states[si] = new Object()
@@ -112,6 +114,7 @@ exports.updateMediaPlayerState = function (mediaPlayerState, data) {
 	mediaPlayerState.paused = data.Media_playback_state == 'paused'
 	mediaPlayerState.loop_on = data.Media_player_loop_status == 'on'
 	mediaPlayerState.fade_on = data.Media_player_fade_status == 'on'
+	mediaPlayerState.slots['any_media_loaded'].loaded = false
 	
 	// Slots
 	for (var i = numberOfMediaPlayerSlots; i > 0; i--) {
@@ -125,6 +128,7 @@ exports.updateMediaPlayerState = function (mediaPlayerState, data) {
 
 		if(data.Media_loaded == i){
 			mediaPlayerState.slots[si].loaded = true
+			mediaPlayerState.slots['any_media_loaded'].loaded = true
 		}
 		else{
 			mediaPlayerState.slots[si].loaded = false
