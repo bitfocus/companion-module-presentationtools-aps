@@ -275,7 +275,10 @@ exports.getActions = function (instance) {
 					label: 'Source',
 					id: 'Key',
 					default: 'Load_MediaPlayer#1',
-					choices: choices.getChoicesForMediaPlayer(),
+					choices: [
+						{ id: `Load_MediaPlayer#Previous`, label: `Previous` },
+						{ id: `Load_MediaPlayer#Next`, label: `Next` },
+					].concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			callback: action_callback,
