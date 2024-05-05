@@ -442,7 +442,7 @@ exports.getPresets = function (instance) {
 		"category": 'Media Player',
 		"name": 'Media time duration',
 		"style": {
-			"text": "$(APS:Media_time_duration)",
+			"text": `$(${self.label}:Media_time_duration)`,
 			"size": "auto",
 			"alignment": "center:center",
 			"color": 16777215,
@@ -462,7 +462,7 @@ exports.getPresets = function (instance) {
 		"category": 'Media Player',
 		"name": 'Media time elapsed',
 		"style": {
-			"text": "$(APS:Media_time_elapsed)",
+			"text": `$(${self.label}:Media_time_elapsed)`,
 			"size": "auto",
 			"alignment": "center:center",
 			"color": 16777215,
@@ -482,7 +482,7 @@ exports.getPresets = function (instance) {
 		"category": 'Media Player',
 		"name": 'Media time left',
 		"style": {
-			"text": "$(APS:Media_time_left)",
+			"text": `$(${self.label}:Media_time_left)`,
 			"size": "auto",
 			"alignment": "center:center",
 			"color": 16777215,
@@ -500,19 +500,19 @@ exports.getPresets = function (instance) {
 
 	//Media player slots
 	for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
-		presets[`Media${i}`] = getPresetforMediaPlayerSlots(i)
+		presets[`Media${i}`] = getPresetforMediaPlayerSlots(self.label, i)
 	}
 
 	return presets
 }
 
-function getPresetforMediaPlayerSlots(slot_num) {
+function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
 	return {
 		"type": "button",
 		"category": 'Media Player',
 		"name": `Media ${slot_num}`,
 		"style": {
-			"text": `${slot_num} - $(APS:media_slot${slot_num})`,
+			"text": `${slot_num} - $(${instanceLabel}:media_slot${slot_num})`,
 			"size": "auto",
 			"alignment": "center:center",
 			"color": 16777215,
