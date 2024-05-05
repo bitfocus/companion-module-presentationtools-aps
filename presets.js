@@ -15,11 +15,6 @@ exports.getPresets = function (instance) {
 		SlideNumber: 1,
 		Fullscreen: true,
 	})
-	presets['Navigation_NextNoFS'] = getPresetForPresentationControl(
-		'Next without putting to fullscreen',
-		'next no fs',
-		'Navigation_NextNoFS'
-	)
 	presets['Navigation_CurrentFS'] = getPresetForPresentationControl(
 		'Put current in fullscreen',
 		'currnt',
@@ -30,14 +25,7 @@ exports.getPresets = function (instance) {
 		'close others',
 		'Navigation_CloseOthers'
 	)
-	presets['Key_Left'] = getPresetForPresentationControl('Simulate left arrow keystroke', '<', 'Keystroke', {
-		Key: 'Key_Left',
-	})
-	presets['Key_Right'] = getPresetForPresentationControl('Simulate right arrow keystroke', '>', 'Keystroke', {
-		Key: 'Key_Right',
-	})
-	presets['Key_Esc'] = getPresetForPresentationControl('Simulate Esc keystroke', 'Esc', 'Keystroke', { Key: 'Key_Esc' })
-	presets['Key_B'] = getPresetForPresentationControl('Simulate B keystroke', 'B', 'Keystroke', { Key: 'Key_B' })
+	presets['Exit'] = getPresetForPresentationControl('Presentation Exit', 'Esc', 'PresentationExit', { Key: 'Key_Esc' })
 
 	// Still Images - Capture
 	for (let i = 1; i <= 10; i++) {
@@ -88,16 +76,13 @@ exports.getPresets = function (instance) {
 	presets['PresentationFilesPrev'] = getPresetForPresentationFiles(self.label, 'Previous', 'Presentation_previous', combineRgb(0, 0, 0))
 	presets['PresentationFilesCurr'] = getPresetForPresentationFiles(self.label, 'Current', 'Presentation_current', combineRgb(255, 0, 0))
 	presets['PresentationFilesNext'] = getPresetForPresentationFiles(self.label, 'Next', 'Presentation_next', combineRgb(0, 153, 0))
-	presets['SlideNumber'] = getPresetForPresentationFiles(self.label, 'Slide Number', 'slide_number', combineRgb(0, 0, 0))
-	presets['SlidesCount'] = getPresetForPresentationFiles(self.label, 'Slides Count', 'slides_count', combineRgb(0, 0, 0))
-	presets['BuildsCount'] = getPresetForPresentationFiles(self.label, 'Builds Count', 'Slides_builds_count', combineRgb(0, 0, 0))
 
 	//Slot Presentations
 	for (let i = 1; i <= numberOfPresentationSlots; i++) {
 		presets[`Slot${i}`] = getPresetforSlotPresentation(
 			self.label,
 			`Slot ${i}`,
-			`slot${i}`,
+			`presentation_slot${i}`,
 			i,
 			combineRgb(0, 0, 0),
 			`Slot${i}`,
@@ -106,6 +91,341 @@ exports.getPresets = function (instance) {
 		)
 	}
 
+
+	// Slides
+	presets['SlidePrevious'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Slide Previous',
+		"style": {
+			"text": "Slide",
+			"size": "auto",
+			"png64": "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",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "SlidePrevious",
+						"options": {
+							"Key": "Key_Left"
+						},
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['SlideNext'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Slide Next',
+		"style": {
+			"text": "Slide ",
+			"size": "24",
+			"png64": "iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAYAAABV7bNHAAAEDmlDQ1BrQ0dDb2xvclNwYWNlR2VuZXJpY1JHQgAAOI2NVV1oHFUUPpu5syskzoPUpqaSDv41lLRsUtGE2uj+ZbNt3CyTbLRBkMns3Z1pJjPj/KRpKT4UQRDBqOCT4P9bwSchaqvtiy2itFCiBIMo+ND6R6HSFwnruTOzu5O4a73L3PnmnO9+595z7t4LkLgsW5beJQIsGq4t5dPis8fmxMQ6dMF90A190C0rjpUqlSYBG+PCv9rt7yDG3tf2t/f/Z+uuUEcBiN2F2Kw4yiLiZQD+FcWyXYAEQfvICddi+AnEO2ycIOISw7UAVxieD/Cyz5mRMohfRSwoqoz+xNuIB+cj9loEB3Pw2448NaitKSLLRck2q5pOI9O9g/t/tkXda8Tbg0+PszB9FN8DuPaXKnKW4YcQn1Xk3HSIry5ps8UQ/2W5aQnxIwBdu7yFcgrxPsRjVXu8HOh0qao30cArp9SZZxDfg3h1wTzKxu5E/LUxX5wKdX5SnAzmDx4A4OIqLbB69yMesE1pKojLjVdoNsfyiPi45hZmAn3uLWdpOtfQOaVmikEs7ovj8hFWpz7EV6mel0L9Xy23FMYlPYZenAx0yDB1/PX6dledmQjikjkXCxqMJS9WtfFCyH9XtSekEF+2dH+P4tzITduTygGfv58a5VCTH5PtXD7EFZiNyUDBhHnsFTBgE0SQIA9pfFtgo6cKGuhooeilaKH41eDs38Ip+f4At1Rq/sjr6NEwQqb/I/DQqsLvaFUjvAx+eWirddAJZnAj1DFJL0mSg/gcIpPkMBkhoyCSJ8lTZIxk0TpKDjXHliJzZPO50dR5ASNSnzeLvIvod0HG/mdkmOC0z8VKnzcQ2M/Yz2vKldduXjp9bleLu0ZWn7vWc+l0JGcaai10yNrUnXLP/8Jf59ewX+c3Wgz+B34Df+vbVrc16zTMVgp9um9bxEfzPU5kPqUtVWxhs6OiWTVW+gIfywB9uXi7CGcGW/zk98k/kmvJ95IfJn/j3uQ+4c5zn3Kfcd+AyF3gLnJfcl9xH3OfR2rUee80a+6vo7EK5mmXUdyfQlrYLTwoZIU9wsPCZEtP6BWGhAlhL3p2N6sTjRdduwbHsG9kq32sgBepc+xurLPW4T9URpYGJ3ym4+8zA05u44QjST8ZIoVtu3qE7fWmdn5LPdqvgcZz8Ww8BWJ8X3w0PhQ/wnCDGd+LvlHs8dRy6bLLDuKMaZ20tZrqisPJ5ONiCq8yKhYM5cCgKOu66Lsc0aYOtZdo5QCwezI4wm9J/v0X23mlZXOfBjj8Jzv3WrY5D+CsA9D7aMs2gGfjve8ArD6mePZSeCfEYt8CONWDw8FXTxrPqx/r9Vt4biXeANh8vV7/+/16ffMD1N8AuKD/A/8leAvFY9bLAAAAbGVYSWZNTQAqAAAACAAEARoABQAAAAEAAAA+ARsABQAAAAEAAABGASgAAwAAAAEAAgAAh2kABAAAAAEAAABOAAAAAAAAAJAAAAABAAAAkAAAAAEAAqACAAQAAAABAAAASKADAAQAAAABAAAASAAAAAD6G6/pAAAACXBIWXMAABYlAAAWJQFJUiTwAAACq0lEQVR4Ae2Yv2sUQQBGs4lRYyCIMQgSgiIoimIhEbuAaKOBlDZJI9haKKjY2CUBbbUwpQYs/AH+AWphF7CUoKAWkkY0kqhJNLq+z9sJy2X3DnIId7vfB4/Z2dtZbt7Nze5MW5tjAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzZgAzawAQPRBto0bZM4jjv4cvvhLLyDp1EUrVI6yIlgDzyDr/AeLtpMYgAZnXAalkH5Ax9g1JIwgIgOOAafIOQ3B7NwxpIqknqQcR1WIGSVg1dwwpIqknqRMRnsJKUkzcBhS6pI2oWMu4mcUGhUaQIfKL0kJOiJNgBPIJ0fVB5BryXFcTsiDsALSGeByhRss6TKk+0IMjT/pDNPZRw21ZNU9wJuso+b9EFc72ZN+rnerh+A3rB7ku+4nfICfIFbybnMouZSAzljtBoH3bCVox+3G9qrOjFH/QrLkemq82vVXEHI2cpVM1DkR6PWaS9hGEnfKdel2mj1BUWfyDRAuiB3oOQKwugyDe+AyiIkaw5dpGP36eu3vA7mmlMD/mabKQZhp6rQilEfD8E1CJO0+iEpt+EGglZ0Iis1BakBkjTKckda1k2b6Jz61w9TcBJCf5c41sR8GTkLlOUMP+5ueAi/IETbIY9Bry7lDQJ2gNZjPyFEx89hb3nN0HMEaNtjArK2PY5yPvzVyueJznfDJViCEG2cvYEhaNX5tPEfk853wRhoTzpEW68fYQS07Chn6LxW7wfhLaTzmcp56CynmaTXEgCnIP3E0ki6CnqfK3eQoE0y7f+8BmURbsKWRswUajZHhkbKcTgHs3Cv0RfBQglCiB7xmoj/7XPVWkLoWscGbMAGbMAGbMAGbMAGbOB/GfgLbqswpSVx4roAAAAASUVORK5CYII=",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "SlideNext",
+						"options": {
+							"Key": "Key_Right"
+						},
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['SlideGoTo'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Slide Go To',
+		"style": {
+			"text": "Slide go to",
+			"size": "auto",
+			"alignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Generic",
+						"options": {
+							"SlideNumber": 1
+						},
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	
+	presets['PowerpointPrevious'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Powerpoint Previous',
+		"style": {
+			"text": "PPT ",
+			"size": "24",
+			"png64": "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",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Powerpoint_Previous",
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['PowerpointNext'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Powerpoint Next',
+		"style": {
+			"text": "PPT",
+			"size": "24",
+			"png64": "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",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Powerpoint_Next",
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['PowerpointGoTo'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Powerpoint Go To',
+		"style": {
+			"text": "PPT go to",
+			"size": "24",
+			"alignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Powerpoint_Go",
+						"options": {
+							"SlideNumber": 1
+						},
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	
+	presets['KeynotePrevious'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Keynote Previous',
+		"style": {
+			"text": "Key",
+			"size": "24",
+			"png64": "iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAYAAABV7bNHAAAEDmlDQ1BrQ0dDb2xvclNwYWNlR2VuZXJpY1JHQgAAOI2NVV1oHFUUPpu5syskzoPUpqaSDv41lLRsUtGE2uj+ZbNt3CyTbLRBkMns3Z1pJjPj/KRpKT4UQRDBqOCT4P9bwSchaqvtiy2itFCiBIMo+ND6R6HSFwnruTOzu5O4a73L3PnmnO9+595z7t4LkLgsW5beJQIsGq4t5dPis8fmxMQ6dMF90A190C0rjpUqlSYBG+PCv9rt7yDG3tf2t/f/Z+uuUEcBiN2F2Kw4yiLiZQD+FcWyXYAEQfvICddi+AnEO2ycIOISw7UAVxieD/Cyz5mRMohfRSwoqoz+xNuIB+cj9loEB3Pw2448NaitKSLLRck2q5pOI9O9g/t/tkXda8Tbg0+PszB9FN8DuPaXKnKW4YcQn1Xk3HSIry5ps8UQ/2W5aQnxIwBdu7yFcgrxPsRjVXu8HOh0qao30cArp9SZZxDfg3h1wTzKxu5E/LUxX5wKdX5SnAzmDx4A4OIqLbB69yMesE1pKojLjVdoNsfyiPi45hZmAn3uLWdpOtfQOaVmikEs7ovj8hFWpz7EV6mel0L9Xy23FMYlPYZenAx0yDB1/PX6dledmQjikjkXCxqMJS9WtfFCyH9XtSekEF+2dH+P4tzITduTygGfv58a5VCTH5PtXD7EFZiNyUDBhHnsFTBgE0SQIA9pfFtgo6cKGuhooeilaKH41eDs38Ip+f4At1Rq/sjr6NEwQqb/I/DQqsLvaFUjvAx+eWirddAJZnAj1DFJL0mSg/gcIpPkMBkhoyCSJ8lTZIxk0TpKDjXHliJzZPO50dR5ASNSnzeLvIvod0HG/mdkmOC0z8VKnzcQ2M/Yz2vKldduXjp9bleLu0ZWn7vWc+l0JGcaai10yNrUnXLP/8Jf59ewX+c3Wgz+B34Df+vbVrc16zTMVgp9um9bxEfzPU5kPqUtVWxhs6OiWTVW+gIfywB9uXi7CGcGW/zk98k/kmvJ95IfJn/j3uQ+4c5zn3Kfcd+AyF3gLnJfcl9xH3OfR2rUee80a+6vo7EK5mmXUdyfQlrYLTwoZIU9wsPCZEtP6BWGhAlhL3p2N6sTjRdduwbHsG9kq32sgBepc+xurLPW4T9URpYGJ3ym4+8zA05u44QjST8ZIoVtu3qE7fWmdn5LPdqvgcZz8Ww8BWJ8X3w0PhQ/wnCDGd+LvlHs8dRy6bLLDuKMaZ20tZrqisPJ5ONiCq8yKhYM5cCgKOu66Lsc0aYOtZdo5QCwezI4wm9J/v0X23mlZXOfBjj8Jzv3WrY5D+CsA9D7aMs2gGfjve8ArD6mePZSeCfEYt8CONWDw8FXTxrPqx/r9Vt4biXeANh8vV7/+/16ffMD1N8AuKD/A/8leAvFY9bLAAAAbGVYSWZNTQAqAAAACAAEARoABQAAAAEAAAA+ARsABQAAAAEAAABGASgAAwAAAAEAAgAAh2kABAAAAAEAAABOAAAAAAAAAJAAAAABAAAAkAAAAAEAAqACAAQAAAABAAAASKADAAQAAAABAAAASAAAAAD6G6/pAAAACXBIWXMAABYlAAAWJQFJUiTwAAACq0lEQVR4Ae2YPWgUQRiGc0nU2GgX0OoKY6VgJ6YRa0UEQYVgoYWFjW1AUASxEERQbATbVNbapRLtlIA/zRGEEILYqIghl5/1eZE9hmV3w2Vdbif3fvBwO8POz/dkbjJzIyMOG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG7ABG8gz0Mqr7LcuSZI9tBmHbqvV2uy3fZPfH606OeTspY8r8AjOUK7cZ9U5Naa9Vg7cgi1QLMHxxkxwkBNBxDhchTVI4w8P1wY5r0aMjYQxOAs/IYzvFE41YpKDmgQCRmEaViAMraRZ+C8b/6DyqzSukodj0IEw1ik8hbFKA8TeGAFteA9hbFCYg/2x51dp/giYhHkIY5PCazhYqfPYG0sAvIQwJOcdHI49v7L56/RbGgiY4IWHcDHz4mfKM/CNd2LeexJO/1uZ3HrFUkEkrlPyXbjRa/HvocvHHLThCMQaErNMnh0krfedBA1vQnpK5rEXquv2SvE+aJtYhEtFcgrPLDTSV2sBjhY13iX1WjnzcI5VtJHNqexiKXn9L7vsCM0vJ0xRv0DkLpbCPQibq6yixzR8BvsgDHW6BjKe23H4coOflccSvCjag7ZNDkl36OA2aMNOQ3LuwRsoW4Xp+038VO5aOSvI6ex4ggjS3esJZDflj9RNwbaSdzx4LA2RMAG6TuhaEcYHCu1Y8qh1nojQafoV6F9jGLp+TNY6eCydI+IQvIXs2UjXkAOx5FHrPBGhfedTjqTn1Ons5EDECfiSI+kBddkjwXAKQ8Rp+Aph/KAwPZxGcrJGxgXQbT6N3zxcznl1eKsQch30Y/0vWICYb/f1/CGRch7uw8l6RnCvNmADNmADNmADNmADNmADNrCrDPwFdF0Se2ZFbxMAAAAASUVORK5CYII=",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Keynote_Previous",
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['KeynoteNext'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Keynote Next',
+		"style": {
+			"text": "Key ",
+			"size": "24",
+			"png64": "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",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Keynote_Next",
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['KeynoteGoTo'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Keynote Go To',
+		"style": {
+			"text": "Key go to ",
+			"size": "24",
+			"alignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Keynote_Go",
+						"options": {
+							"SlideNumber": 1
+						},
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	
+	presets['AdobeAcrobatPrevious'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Adobe Acrobat Previous',
+		"style": {
+			"text": "PDF  ",
+			"size": "24",
+			"png64": "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",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Acrobat_Previous",
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['AdobeAcrobatNext'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Adobe Acrobat Next',
+		"style": {
+			"text": "PDF ",
+			"size": "24",
+			"png64": "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",
+			"alignment": "center:top",
+			"pngalignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [
+					{
+						"actionId": "Acrobat_Next",
+					}
+				],
+				"up": []
+			}
+		]
+	}
+	presets['AdobeAcrobatGoTo'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'Adobe Acrobat Go To',
+		"style": {
+			"text": "PDF go to",
+			"size": "24",
+			"alignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+					"down": [
+						{
+							"actionId": "Acrobat_Go",
+							"options": {
+								"SlideNumber": 1
+							},
+						}
+					],
+					"up": []
+			}
+		]
+	}
+	
+	presets['SlideNumber'] = {
+		"type": "button",
+		"category": 'Slide control',
+		"name": 'slide number/slides count',
+		"style": {
+			"text": `$(${self.label}:slide_number)/$(${self.label}:slides_count)`,
+			"size": "auto",
+			"alignment": "center:center",
+			"color": 16777215,
+			"bgcolor": 0,
+		},
+		"feedbacks": [],
+		"steps": [
+			{
+				"down": [],
+				"up": []
+			}
+		]
+	}
 
 	// Media Player
 
@@ -559,7 +879,7 @@ function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
 function getPresetForPresentationControl(lbl, txt, act, opt = null) {
 	return {
 		type: 'button',
-		category: 'Presentation Control',
+		category: 'Presentation File control',
 		name: lbl,
 		style: {
 			bgcolor: 0,
@@ -700,7 +1020,7 @@ function getPresetForStillImageExit() {
 function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
 	return {
 		type: 'button',
-		category: 'Presentation Files',
+		category: 'Presentation File control',
 		name: lbl,
 		style: {
 			text: `$(${instanceLabel}:${txt})`,
@@ -722,7 +1042,7 @@ function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
 function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber, SlideNumber, Fullscreen) {
 	return {
 		type: 'button',
-		category: 'Slot Presentations',
+		category: 'Presentation File control',
 		name: lbl,
 		style: {
 			text: `${i} $(${instanceLabel}:${txt})`,
