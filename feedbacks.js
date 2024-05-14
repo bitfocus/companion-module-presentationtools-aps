@@ -5,8 +5,8 @@ exports.getFeedbacks = function (instance) {
 	return {
 		loaded: {
 			type: 'boolean',
-			name: 'Change button loaded',
-			description: 'If image is loaded, change the style',
+			name: 'Still Image exists',
+			description: 'If there is a still image available, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -26,8 +26,8 @@ exports.getFeedbacks = function (instance) {
 		},
 		displayed: {
 			type: 'boolean',
-			name: 'Change button displayed',
-			description: 'If image is displayed, change the style',
+			name: 'Still image display',
+			description: 'When the still image is displayed, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -47,8 +47,8 @@ exports.getFeedbacks = function (instance) {
 		},
 		captured: {
 			type: 'boolean',
-			name: 'Change button captured',
-			description: 'If image is being captured, change the style',
+			name: 'Still image capture',
+			description: 'When taking a screenshot and storing an image, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -68,8 +68,8 @@ exports.getFeedbacks = function (instance) {
 		},
 		slot_displayed: {
 			type: 'boolean',
-			name: 'Presentation displayed',
-			description: 'If presentation is displayed, change the style',
+			name: 'Slot presentation is displayed',
+			description: 'If the presentation from the slot is displayed, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -89,8 +89,8 @@ exports.getFeedbacks = function (instance) {
 		},
 		slot_exist: {
 			type: 'boolean',
-			name: 'Presentation if exists',
-			description: 'If presentation exists, change the style',
+			name: 'Slot presentation exists',
+			description: 'If there is a presentation on the slot, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -106,6 +106,107 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				return self.slotStates[feedback.options.Key].exists
+			},
+		},
+
+		Media_playing: {
+			type: 'boolean',
+			name: 'Media Player slot is playing',
+			description: 'If the media from the slot is playing, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Media Slot',
+					id: 'Key',
+					default: 'Load_MediaPlayer#1',
+					choices: choices.getChoicesForMediaPlayer(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.mediaPlayerState.slots[feedback.options.Key].playing
+			},
+		},
+
+		Media_loaded: {
+			type: 'boolean',
+			name: 'Media Player slot is loaded',
+			description: 'If the media from the slot is loaded, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Media Slot',
+					id: 'Key',
+					default: 'Load_MediaPlayer#1',
+					choices: [{ id: `any_media_loaded`, label: `Any media loaded` }].concat(choices.getChoicesForMediaPlayer()),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.mediaPlayerState.slots[feedback.options.Key].loaded
+			},
+		},
+
+
+		Media_playback_state_playing: {
+			type: 'boolean',
+			name: 'Media Player is playing',
+			description: 'If the media in playing-state, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.playing
+			},
+		},
+		
+		Media_playback_state_paused: {
+			type: 'boolean',
+			name: 'Media Player is paused',
+			description: 'If the media-in pause-state, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.paused
+			},
+		},
+		
+		Media_player_loop_on: {
+			type: 'boolean',
+			name: 'Media Player loop-mode',
+			description: 'If the media-player is in loop-mode, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.loop_on
+			},
+		},
+		
+		Media_player_fade_on: {
+			type: 'boolean',
+			name: 'Media Player fade-mode',
+			description: 'If the media-player is in fade-mode, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.fade_on
 			},
 		},
 	}
