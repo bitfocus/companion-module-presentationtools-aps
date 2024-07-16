@@ -51,8 +51,8 @@ class APSInstance extends InstanceBase {
 			self.socket = new TCPHelper(self.config.host, self.config.port)
 
 			self.socket.on('status_change', (status, message) => {
-				self.log('debug', `Status ${status}, message: ${message}`)
-				self.updateStatus(status)
+				//self.log('debug', `Status ${status}, message: ${message}`)
+				//self.updateStatus(status)
 			})
 
 			self.socket.on('error', (_err) => {

@@ -14,14 +14,18 @@ function getSlideNumber(txtLabel) {
 }
 
 exports.getActions = function (instance) {
-	function action_callback(action) {
+	async function action_callback(action) {
 		var cmd = ''
 		var terminationChar = '$'
-		cmd = getCommand(action)
+		cmd = await getCommand(action, instance)
 		cmd += terminationChar
 		if (cmd !== undefined && cmd !== terminationChar) {
+			instance.log('debug', `sending ${cmd}`)
 			if (instance.socket !== undefined && instance.socket.isConnected) {
 				instance.socket.send(cmd)
+			}
+			else {
+				instance.log('warn', 'Cannot send command. Socket not connected.')
 			}
 		}
 	}
@@ -72,7 +76,8 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					type: 'textinput',
 					default: 'Key_Esc',
-					isVisible: ((_o, _d) => false)
+					isVisible: ((_o, _d) => false),
+					useVariables: true,
 				}
 			],
 			callback: action_callback,
@@ -85,7 +90,8 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					type: 'textinput',
 					default: 'Key_Right',
-					isVisible: ((_o, _d) => false)
+					isVisible: ((_o, _d) => false),
+					useVariables: true,
 				}
 			],
 			callback: action_callback,
@@ -98,7 +104,8 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					type: 'textinput',
 					default: 'Key_Left',
-					isVisible: ((_o, _d) => false)
+					isVisible: ((_o, _d) => false),
+					useVariables: true,
 				}
 			],
 			callback: action_callback,
@@ -144,6 +151,7 @@ exports.getActions = function (instance) {
 					id: 'Filename',
 					default: '',
 					tooltip: 'Open the file with the filename (absolute file path)',
+					useVariables: true,
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -337,7 +345,7 @@ exports.getActions = function (instance) {
 	}
 }
 
-function getCommand(action) {
+async function getCommand(action, instance) {
 	var cmd = ''
 	var separatorChar = '^'
 	var mediaPlayerSeparatorChar = '#'
@@ -368,6 +376,7 @@ function getCommand(action) {
 		case 'PresentationExit':
 		case 'SlideNext':
 		case 'SlidePrevious':
+			cmd = await instance.parseVariablesInString(action.options.Key)
 		case 'Capture_Image':
 		case 'Display_Image':
 		case 'Load_MediaPlayer':
@@ -377,7 +386,7 @@ function getCommand(action) {
 			cmd = 'OpenStart_Presentation' + separatorChar
 			cmd += action.options.SlideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-			cmd += action.options.Filename
+			cmd += await instance.parseVariablesInString(action.options.Filename)
 			break
 		case 'Generic':
 			cmd = 'Generic' + separatorChar
