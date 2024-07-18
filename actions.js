@@ -23,8 +23,7 @@ exports.getActions = function (instance) {
 			instance.log('debug', `sending ${cmd}`)
 			if (instance.socket !== undefined && instance.socket.isConnected) {
 				instance.socket.send(cmd)
-			}
-			else {
+			} else {
 				instance.log('warn', 'Cannot send command. Socket not connected.')
 			}
 		}
@@ -76,9 +75,9 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					type: 'textinput',
 					default: 'Key_Esc',
-					isVisible: ((_o, _d) => false),
+					isVisible: (_o, _d) => false,
 					useVariables: true,
-				}
+				},
 			],
 			callback: action_callback,
 		},
@@ -90,9 +89,9 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					type: 'textinput',
 					default: 'Key_Right',
-					isVisible: ((_o, _d) => false),
+					isVisible: (_o, _d) => false,
 					useVariables: true,
-				}
+				},
 			],
 			callback: action_callback,
 		},
@@ -104,9 +103,9 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					type: 'textinput',
 					default: 'Key_Left',
-					isVisible: ((_o, _d) => false),
+					isVisible: (_o, _d) => false,
 					useVariables: true,
-				}
+				},
 			],
 			callback: action_callback,
 		},
@@ -140,7 +139,6 @@ exports.getActions = function (instance) {
 		},
 
 		ExitImages: { name: 'Still Image: Exit', options: [], callback: action_callback },
-
 
 		OpenStart_Presentation: {
 			name: 'Presentation: Open from file path',

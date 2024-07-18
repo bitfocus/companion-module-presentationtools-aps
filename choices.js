@@ -1,4 +1,4 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants');
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
 exports.getChoicesForCapture = function () {
 	return [
 		{ id: 'Capture1', label: 'Image 1' },
@@ -35,7 +35,7 @@ exports.getChoicesForDisplay = function () {
 
 exports.getChoicesForSlot = function () {
 	choicesList = []
-	for(let i = 1; i <= numberOfPresentationSlots; i++){
+	for (let i = 1; i <= numberOfPresentationSlots; i++) {
 		choicesList.push({ id: `Slot${i}`, label: i })
 	}
 	return choicesList
@@ -43,7 +43,7 @@ exports.getChoicesForSlot = function () {
 
 exports.getChoicesForMediaPlayer = function () {
 	choicesList = []
-	for(let i = 1; i <= numberOfMediaPlayerSlots; i++){
+	for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
 		choicesList.push({ id: `Load_MediaPlayer#${i}`, label: `Media ${i}` })
 	}
 	return choicesList

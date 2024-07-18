@@ -1,4 +1,4 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants');
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
 var choices = require('./choices')
 exports.generateCaptureStates = function () {
 	var cchoices = choices.getChoicesForCapture()
@@ -109,28 +109,25 @@ exports.generateMediaSlotStates = function () {
 	return states
 }
 exports.updateMediaPlayerState = function (mediaPlayerState, data) {
-
 	mediaPlayerState.playing = data.Media_playback_state == 'playing'
 	mediaPlayerState.paused = data.Media_playback_state == 'paused'
 	mediaPlayerState.loop_on = data.Media_player_loop_status == 'on'
 	mediaPlayerState.fade_on = data.Media_player_fade_status == 'on'
 	mediaPlayerState.slots['any_media_loaded'].loaded = false
-	
+
 	// Slots
 	for (var i = numberOfMediaPlayerSlots; i > 0; i--) {
 		const si = 'Load_MediaPlayer#' + i
-		if(data.Media_playing == i){
+		if (data.Media_playing == i) {
 			mediaPlayerState.slots[si].playing = true
-		}
-		else{
+		} else {
 			mediaPlayerState.slots[si].playing = false
 		}
 
-		if(data.Media_loaded == i){
+		if (data.Media_loaded == i) {
 			mediaPlayerState.slots[si].loaded = true
 			mediaPlayerState.slots['any_media_loaded'].loaded = true
-		}
-		else{
+		} else {
 			mediaPlayerState.slots[si].loaded = false
 		}
 	}

@@ -1,5 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants');
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -36,7 +36,7 @@ class APSInstance extends InstanceBase {
 	}
 
 	async init(config) {
-		this.configUpdated(config);
+		this.configUpdated(config)
 	}
 
 	initTCP() {
@@ -80,7 +80,7 @@ class APSInstance extends InstanceBase {
 				self.receiver.push(data)
 				let messages = self.receiver.getMessages()
 				if (messages == null) return
-				for (let i = 0; i < messages.length; i++){
+				for (let i = 0; i < messages.length; i++) {
 					let message = messages[i]
 					try {
 						let jsonData = JSON.parse(message)
@@ -112,25 +112,25 @@ class APSInstance extends InstanceBase {
 								Presentation_next: jsonData.data.next,
 							}
 							// For not raising exception while using old verions of APS
-							if(jsonData.data.slide_number){
-								update_obj["slide_number"] = jsonData.data.slide_number
-								update_obj["slides_count"] = jsonData.data.slides_count
-								update_obj["Slides_builds_count"] = jsonData.data.builds_count
+							if (jsonData.data.slide_number) {
+								update_obj['slide_number'] = jsonData.data.slide_number
+								update_obj['slides_count'] = jsonData.data.slides_count
+								update_obj['Slides_builds_count'] = jsonData.data.builds_count
 							}
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
-						}else if (jsonData.action === 'MediaPlayer') {
+						} else if (jsonData.action === 'MediaPlayer') {
 							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
 							self.checkFeedbacks(
-								'Media_playing', 
-								'Media_loaded', 
-								'Media_playback_state_playing', 
-								'Media_playback_state_paused', 
-								'Media_player_loop_on', 
+								'Media_playing',
+								'Media_loaded',
+								'Media_playback_state_playing',
+								'Media_playback_state_paused',
+								'Media_player_loop_on',
 								'Media_player_fade_on',
 							)
 						}
@@ -171,8 +171,9 @@ class APSInstance extends InstanceBase {
 				type: 'static-text',
 				id: 'info-defaultport',
 				width: 12,
-				label: 'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
-			}
+				label:
+					'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
+			},
 		]
 	}
 
@@ -271,18 +272,17 @@ class APSInstance extends InstanceBase {
 		self.setVariableValues(values)
 	}
 
-
 	setMediaPlayerVariables(data) {
 		var self = this
 		const values = {
-			'Media_playing': data.Media_playing,
-			'Media_loaded': data.Media_loaded,
-			'Media_playing_filename': data.Media_playing_filename,
-			'Media_loaded_filename': data.Media_loaded_filename,
-			'Media_playback_state': data.Media_playback_state,
-			'Media_time_left': data.Media_time_left,
-			'Media_time_elapsed': data.Media_time_elapsed,
-			'Media_time_duration': data.Media_duration,
+			Media_playing: data.Media_playing,
+			Media_loaded: data.Media_loaded,
+			Media_playing_filename: data.Media_playing_filename,
+			Media_loaded_filename: data.Media_loaded_filename,
+			Media_playback_state: data.Media_playback_state,
+			Media_time_left: data.Media_time_left,
+			Media_time_elapsed: data.Media_time_elapsed,
+			Media_time_duration: data.Media_duration,
 		}
 
 		try {
@@ -332,7 +332,7 @@ class MessageBuffer {
 
 	getMessages() {
 		const messages = []
-	  
+
 		while (!this.isFinished()) {
 			const delimiterIndex = this.buffer.indexOf(this.delimiter)
 			if (delimiterIndex !== -1) {
@@ -341,7 +341,7 @@ class MessageBuffer {
 				messages.push(message)
 			}
 		}
-		return messages.length > 0 ? messages : null;
+		return messages.length > 0 ? messages : null
 	}
 }
 

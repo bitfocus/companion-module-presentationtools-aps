@@ -153,7 +153,6 @@ exports.getFeedbacks = function (instance) {
 			},
 		},
 
-
 		Media_playback_state_playing: {
 			type: 'boolean',
 			name: 'Media Player is playing',
@@ -167,7 +166,7 @@ exports.getFeedbacks = function (instance) {
 				return self.mediaPlayerState.playing
 			},
 		},
-		
+
 		Media_playback_state_paused: {
 			type: 'boolean',
 			name: 'Media Player is paused',
@@ -181,7 +180,7 @@ exports.getFeedbacks = function (instance) {
 				return self.mediaPlayerState.paused
 			},
 		},
-		
+
 		Media_player_loop_on: {
 			type: 'boolean',
 			name: 'Media Player loop-mode',
@@ -195,7 +194,7 @@ exports.getFeedbacks = function (instance) {
 				return self.mediaPlayerState.loop_on
 			},
 		},
-		
+
 		Media_player_fade_on: {
 			type: 'boolean',
 			name: 'Media Player fade-mode',
