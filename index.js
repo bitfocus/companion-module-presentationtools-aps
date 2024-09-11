@@ -17,6 +17,9 @@ class APSInstance extends InstanceBase {
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
+		this.presentationFolderState = {
+			filesList: []
+		}
 		this.mediaPlayerState = {
 			slots: states.generateMediaSlotStates(),
 			playing: false,
@@ -122,6 +125,9 @@ class APSInstance extends InstanceBase {
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
+						} else if (jsonData.action === 'presentations_folder') {
+							states.updatePresentationsFolderStates(self.presentationFolderState, jsonData.data)
+							self.actions()
 						} else if (jsonData.action === 'MediaPlayer') {
 							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)

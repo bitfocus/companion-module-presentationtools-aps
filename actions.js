@@ -140,16 +140,30 @@ exports.getActions = function (instance) {
 
 		ExitImages: { name: 'Still Image: Exit', options: [], callback: action_callback },
 
+		SetSelected_PresentationFolder: {
+			name: 'Set presentation folder X',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForPresentationFolder(),
+				},
+			],
+			callback: action_callback,
+		},
+
 		OpenStart_Presentation: {
 			name: 'Presentation: Open from file path',
 			options: [
 				{
-					type: 'textinput',
+					type: 'dropdown',
 					label: 'Filename',
 					id: 'Filename',
 					default: '',
-					tooltip: 'Open the file with the filename (absolute file path)',
-					useVariables: true,
+					tooltip: 'Open the file with the filename (From the selected folder)',
+					choices: choices.getChoicesForFolderFiles(instance.presentationFolderState.filesList),
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -380,6 +394,13 @@ async function getCommand(action, instance) {
 		case 'Load_MediaPlayer':
 			cmd = action.options.Key
 			break
+		case 'SetSelected_PresentationFolder':
+			let folderNumMatches = action.options.Key.match(/\d+$/);
+			if (folderNumMatches) {
+				number = folderNumMatches[0];
+				cmd = action.actionId + separatorChar + number
+			}
+			break;
 		case 'OpenStart_Presentation':
 			cmd = 'OpenStart_Presentation' + separatorChar
 			cmd += action.options.SlideNumber + separatorChar
