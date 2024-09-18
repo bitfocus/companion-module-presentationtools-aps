@@ -94,6 +94,9 @@ exports.updateSlotStates = function (states, data) {
 		states[si].opened = data.opened[i - 1]
 	}
 }
+exports.updatePresentationsFolderStates = function (states, data) {
+		states.filesList = data.files_list
+}
 
 exports.generateMediaSlotStates = function () {
 	var schoices = choices.getChoicesForMediaPlayer()
