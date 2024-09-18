@@ -17,6 +17,8 @@ class APSInstance extends InstanceBase {
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
+		this.slotCaptureStates = states.generateSlotCaptureStates()
+		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.presentationFolderState = {
 			filesList: []
 		}
@@ -28,6 +30,8 @@ class APSInstance extends InstanceBase {
 			fade_on: false,
 		}
 		this.captureTimeoutObj = null
+		this.slotCaptureTimeoutObj = null
+		this.folderCaptureTimeoutObj = null
 		this.statesTimeoutObj = null
 		this.receiver = new MessageBuffer('$')
 
@@ -105,6 +109,28 @@ class APSInstance extends InstanceBase {
 								self.checkFeedbacks('captured', 'loaded')
 								self.captureTimeoutObj = null
 							}, 1500)
+						} else if (jsonData.action === 'slot_capture') {
+							states.updateSlotCaptureStates(self.slotCaptureStates, jsonData.index)
+							self.checkFeedbacks('slot_captured')
+							if (self.slotCaptureTimeoutObj !== null) {
+								clearTimeout(self.slotCaptureTimeoutObj)
+							}
+							self.slotCaptureTimeoutObj = setTimeout(() => {
+								states.updateSlotCaptureStates(self.slotCaptureStates, -1)
+								self.checkFeedbacks('slot_captured')
+								self.slotCaptureTimeoutObj = null
+							}, 1000)
+						} else if (jsonData.action === 'folder_capture') {
+							states.updateFolderCaptureStates(self.folderCaptureStates, jsonData.index)
+							self.checkFeedbacks('folder_captured')
+							if (self.folderCaptureTimeoutObj !== null) {
+								clearTimeout(self.folderCaptureTimeoutObj)
+							}
+							self.folderCaptureTimeoutObj = setTimeout(() => {
+								states.updateFolderCaptureStates(self.folderCaptureStates, -1)
+								self.checkFeedbacks('folder_captured')
+								self.folderCaptureTimeoutObj = null
+							}, 1000)
 						} else if (jsonData.action === 'delete') {
 							states.updateUnloadStates(self.displayStates, jsonData.index)
 							self.checkFeedbacks('loaded')

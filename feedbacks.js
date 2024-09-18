@@ -66,6 +66,48 @@ exports.getFeedbacks = function (instance) {
 				return self.captureStates[feedback.options.Key]
 			},
 		},
+		slot_captured: {
+			type: 'boolean',
+			name: 'Presentation capture',
+			description: 'When capturing current presentation to a slot, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'Key',
+					default: 'Slot1',
+					choices: choices.getChoicesForSlot(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 255, 0),
+			},
+			callback: function (feedback) {
+				return self.slotCaptureStates[feedback.options.Key]
+			},
+		},
+		folder_captured: {
+			type: 'boolean',
+			name: 'Folder capture',
+			description: "When capturing current presentation's folder, change the style",
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForPresentationFolder(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 255, 0),
+			},
+			callback: function (feedback) {
+				return self.folderCaptureStates[feedback.options.Key]
+			},
+		},
 		slot_displayed: {
 			type: 'boolean',
 			name: 'Slot presentation is displayed',
