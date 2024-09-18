@@ -31,6 +31,24 @@ exports.generateSlotStates = function () {
 	}
 	return states
 }
+exports.generateSlotCaptureStates = function () {
+	var cchoices = choices.getChoicesForSlot()
+	var states = new Object()
+	for (var i = cchoices.length - 1; i >= 0; i--) {
+		var ci = cchoices[i].id
+		states[ci] = false
+	}
+	return states
+}
+exports.generateFolderCaptureStates = function () {
+	var cchoices = choices.getChoicesForPresentationFolder()
+	var states = new Object()
+	for (var i = cchoices.length - 1; i >= 0; i--) {
+		var ci = cchoices[i].id
+		states[ci] = false
+	}
+	return states
+}
 function doUpdateDisplayStates(states, data) {
 	const key = 'Display' + (data.displayIndex + 1)
 	for (const k in states) {
@@ -92,6 +110,26 @@ exports.updateSlotStates = function (states, data) {
 		const si = 'Slot' + i
 		states[si].exists = data.exists[i - 1]
 		states[si].opened = data.opened[i - 1]
+	}
+}
+exports.updateSlotCaptureStates = function (states, index) {
+	const key = 'Slot' + (index + 1)
+	for (const k in states) {
+		if (key === k) {
+			states[k] = true
+		} else {
+			states[k] = false
+		}
+	}
+}
+exports.updateFolderCaptureStates = function (states, index) {
+	const key = 'Folder' + (index + 1)
+	for (const k in states) {
+		if (key === k) {
+			states[k] = true
+		} else {
+			states[k] = false
+		}
 	}
 }
 exports.updatePresentationsFolderStates = function (states, data) {

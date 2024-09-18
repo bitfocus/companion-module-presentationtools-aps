@@ -251,6 +251,34 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		CapturePresentationSlot: {
+			name: 'Presentation: Capture current presentation',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Key',
+					default: 'Slot1',
+					choices: choices.getChoicesForSlot(),
+				},
+			],
+			callback: action_callback,
+		},
+
+		CaptureFolder: {
+			name: "Presentation: Capture current presentation's folder",
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForPresentationFolder(),
+				},
+			],
+			callback: action_callback,
+		},
+
 		Play_MediaPlayer: {
 			name: 'Media Player: Play',
 			options: [],
@@ -422,6 +450,12 @@ async function getCommand(action, instance) {
 			cmd += action.options.SlideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 			cmd += action.options.Key.substring(4)
+			break
+		case 'CapturePresentationSlot':
+			cmd = action.actionId + separatorChar + action.options.Key.substring(4)
+			break
+		case 'CaptureFolder':
+			cmd = action.actionId + separatorChar + action.options.Key.substring(6)
 			break
 		case 'MediaPlayer_Position':
 		case 'MediaPlayer_Forward':
