@@ -1,5 +1,5 @@
 const { combineRgb } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles } = require('./constants')
 exports.getPresets = function (instance) {
 	var self = instance
 	var presets = {}
@@ -104,6 +104,23 @@ exports.getPresets = function (instance) {
 			1,
 			true,
 		)
+	}
+
+	//Folder Presentations
+	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.presentationFolderState.filesList.length); i++) {
+		try{
+		presets[`File${i}`] = getPresetforPresentationFolder(
+			`File ${i}`,
+			`${i} - $(${self.label}:presentation_folder_file${i})`,
+			i,
+			combineRgb(0, 0, 0),
+			`File${i}`,
+			1,
+			true,
+		)
+		}catch(err){
+			self.log('debug', err.message)
+		}
 	}
 
 	// Slides
@@ -1073,7 +1090,7 @@ function getPresetForPresentationFiles(instanceLabel, lbl, txt, cr) {
 function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber, SlideNumber, Fullscreen) {
 	return {
 		type: 'button',
-		category: 'Presentation File control',
+		category: 'Presentation Slots',
 		name: lbl,
 		style: {
 			text: `${i} $(${instanceLabel}:${txt})`,
@@ -1112,6 +1129,58 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 				feedbackId: 'slot_displayed',
 				options: {
 					Key: SlotNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13369344,
+				},
+			},
+		],
+	}
+}
+
+function getPresetforPresentationFolder(lbl, txt, i, cr, FileNumber, SlideNumber, Fullscreen) {
+	return {
+		type: 'button',
+		category: 'Presentation Folder',
+		name: lbl,
+		style: {
+			text: txt,
+			alignment: 'center:center',
+			size: 'auto',
+			color: 16777215,
+			bgcolor: cr,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'OpenStart_Presentation',
+						options: {
+							FileNumber: FileNumber,
+							SlideNumber: SlideNumber,
+							Fullscreen: Fullscreen,
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'file_exist',
+				options: {
+					Key: FileNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13421568,
+				},
+			},
+			{
+				feedbackId: 'file_displayed',
+				options: {
+					Key: FileNumber,
 				},
 				style: {
 					color: 16777215,

@@ -1,4 +1,4 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles } = require('./constants')
 var choices = require('./choices')
 exports.generateCaptureStates = function () {
 	var cchoices = choices.getChoicesForCapture()
@@ -110,6 +110,20 @@ exports.updateSlotStates = function (states, data) {
 		const si = 'Slot' + i
 		states[si].exists = data.exists[i - 1]
 		states[si].opened = data.opened[i - 1]
+	}
+}
+exports.updateFileStates = function (states, openedFileIndex) {
+	let filesState = states.filesState
+	let numberOfFiles = states.filesList.length
+	for (var i = Math.max(minNumberOfFolderFiles, numberOfFiles); i > 0; i--) {
+		const si = 'File' + i
+		filesState[si] = new Object()
+		filesState[si].opened = false
+		filesState[si].exists = false
+		if(i == openedFileIndex + 1)
+			filesState[si].opened = true
+		if(i <= numberOfFiles)
+			filesState[si].exists = true
 	}
 }
 exports.updateSlotCaptureStates = function (states, index) {

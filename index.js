@@ -1,5 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles } = require('./constants')
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -20,7 +20,8 @@ class APSInstance extends InstanceBase {
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.presentationFolderState = {
-			filesList: []
+			filesList: [],
+			filesState: {}
 		}
 		this.mediaPlayerState = {
 			slots: states.generateMediaSlotStates(),
@@ -153,7 +154,14 @@ class APSInstance extends InstanceBase {
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
 						} else if (jsonData.action === 'presentations_folder') {
 							states.updatePresentationsFolderStates(self.presentationFolderState, jsonData.data)
+							self.variables()
 							self.actions()
+							self.feedbacks()
+							self.presets()
+							self.setFolderFilesVariables()
+						} else if (jsonData.action === 'opened_folder_presentation') {
+							states.updateFileStates(self.presentationFolderState, jsonData.data.current_opened_file_index)
+							self.checkFeedbacks('file_exist', 'file_displayed')
 						} else if (jsonData.action === 'MediaPlayer') {
 							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
@@ -245,6 +253,13 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
+		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.presentationFolderState.filesList.length); i++) {
+			variables.push({
+				name: `Presentation Folder File ${i}`,
+				variableId: `presentation_folder_file${i}`,
+			})
+		}
+
 		for (let i = 1; i <= numberOfPresentationSlots; i++) {
 			variables.push({
 				name: `Media ${i}`,
@@ -296,6 +311,24 @@ class APSInstance extends InstanceBase {
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
 				values[`presentation_slot${i}`] = data.filenames[i - 1]
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		self.setVariableValues(values)
+	}
+
+	setFolderFilesVariables() {
+		var self = this
+		const values = {}
+		let filesList = self.presentationFolderState.filesList
+		try {
+			for (let i = Math.max(minNumberOfFolderFiles, filesList.length); i > 0; i--) {
+				let text = ''
+				if(i <= filesList.length)
+					text = filesList[i - 1].split('\\').pop()
+				values[`presentation_folder_file${i}`] = text
 			}
 		} catch (err) {
 			self.log('debug', err)

@@ -129,6 +129,27 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[feedback.options.Key].opened
 			},
 		},
+		file_displayed: {
+			type: 'boolean',
+			name: 'Folder file presentation is displayed',
+			description: 'If the presentation from the folder file is displayed, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices.getChoicesForFolderFiles(self.presentationFolderState.filesList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return self.presentationFolderState.filesState[feedback.options.Key]?.opened
+			},
+		},
 		slot_exist: {
 			type: 'boolean',
 			name: 'Slot presentation exists',
@@ -148,6 +169,27 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				return self.slotStates[feedback.options.Key].exists
+			},
+		},
+		file_exist: {
+			type: 'boolean',
+			name: 'Folder file presentation exists',
+			description: 'If there is a presentation on the folder file, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices.getChoicesForFolderFiles(self.presentationFolderState.filesList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.presentationFolderState.filesState[feedback.options.Key]?.exists
 			},
 		},
 

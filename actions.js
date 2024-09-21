@@ -160,7 +160,7 @@ exports.getActions = function (instance) {
 				{
 					type: 'dropdown',
 					label: 'Filename',
-					id: 'Filename',
+					id: 'FileNumber',
 					default: '',
 					tooltip: 'Open the file with the filename (From the selected folder)',
 					choices: choices.getChoicesForFolderFiles(instance.presentationFolderState.filesList),
@@ -430,10 +430,15 @@ async function getCommand(action, instance) {
 			}
 			break;
 		case 'OpenStart_Presentation':
-			cmd = 'OpenStart_Presentation' + separatorChar
-			cmd += action.options.SlideNumber + separatorChar
-			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-			cmd += await instance.parseVariablesInString(action.options.Filename)
+			let fileNumberMatches = action.options.FileNumber.match(/\d+$/);
+			if (fileNumberMatches) {
+				cmd = action.actionId + separatorChar
+				cmd += action.options.SlideNumber + separatorChar
+				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
+				let fileNumber = fileNumberMatches[0]
+				let filePath = instance.presentationFolderState.filesList[fileNumber - 1]
+				cmd += filePath
+			}
 			break
 		case 'Generic':
 			cmd = 'Generic' + separatorChar
