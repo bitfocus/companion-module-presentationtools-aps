@@ -17,6 +17,7 @@ class APSInstance extends InstanceBase {
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
+		this.lastCachedSlotVariablesData = {}
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.presentationFolderState = {
@@ -30,6 +31,7 @@ class APSInstance extends InstanceBase {
 			loop_on: false,
 			fade_on: false,
 		}
+		this.lastCachedMediaPlayerVariablesData = {}
 		this.captureTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
 		this.folderCaptureTimeoutObj = null
@@ -149,6 +151,7 @@ class APSInstance extends InstanceBase {
 							}
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
+							self.lastCachedSlotVariablesData = jsonData.data
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
@@ -159,10 +162,13 @@ class APSInstance extends InstanceBase {
 							self.feedbacks()
 							self.presets()
 							self.setFolderFilesVariables()
+							self.setSlotVariables()
+							self.setMediaPlayerVariables()
 						} else if (jsonData.action === 'opened_folder_presentation') {
 							states.updateFileStates(self.presentationFolderState, jsonData.data.current_opened_file_index)
 							self.checkFeedbacks('file_exist', 'file_displayed')
 						} else if (jsonData.action === 'MediaPlayer') {
+							self.lastCachedMediaPlayerVariablesData = jsonData.data
 							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
 							self.checkFeedbacks(
@@ -306,6 +312,9 @@ class APSInstance extends InstanceBase {
 
 	setSlotVariables(data) {
 		var self = this
+		if (!data){
+			data = self.lastCachedSlotVariablesData
+		}
 		const values = {}
 
 		try {
@@ -339,6 +348,9 @@ class APSInstance extends InstanceBase {
 
 	setMediaPlayerVariables(data) {
 		var self = this
+		if (!data){
+			data = self.lastCachedMediaPlayerVariablesData
+		}
 		const values = {
 			Media_playing: data.Media_playing,
 			Media_loaded: data.Media_loaded,
