@@ -266,7 +266,7 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
-		for (let i = 1; i <= numberOfPresentationSlots; i++) {
+		for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
 			variables.push({
 				name: `Media ${i}`,
 				variableId: `media_slot${i}`,
@@ -363,7 +363,7 @@ class APSInstance extends InstanceBase {
 		}
 
 		try {
-			for (let i = numberOfPresentationSlots; i > 0; i--) {
+			for (let i = numberOfMediaPlayerSlots; i > 0; i--) {
 				values[`media_slot${i}`] = data.filenames[i - 1]
 			}
 		} catch (err) {
