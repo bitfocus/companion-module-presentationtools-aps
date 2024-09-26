@@ -1,5 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders } = require('./constants')
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -17,7 +17,9 @@ class APSInstance extends InstanceBase {
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
+		this.folderStates = states.generateFolderStates()
 		this.lastCachedSlotVariablesData = {}
+		this.lastCachedFolderVariablesData = {}
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.presentationFolderState = {
@@ -155,7 +157,13 @@ class APSInstance extends InstanceBase {
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
-						} else if (jsonData.action === 'presentations_folder') {
+						} else if (jsonData.action === 'folders') {
+							self.lastCachedFolderVariablesData = jsonData.data
+							self.setFolderVariables(jsonData.data)
+							states.updateFolderStates(self.folderStates, jsonData.data)
+							self.checkFeedbacks('folder_exist', 'folder_active')
+							self.log('debug', JSON.stringify(jsonData))
+						} else if (jsonData.action === 'active_folder_presentations') {
 							states.updatePresentationsFolderStates(self.presentationFolderState, jsonData.data)
 							self.variables()
 							self.actions()
@@ -163,6 +171,7 @@ class APSInstance extends InstanceBase {
 							self.presets()
 							self.setFolderFilesVariables()
 							self.setSlotVariables()
+							self.setFolderVariables()
 							self.setMediaPlayerVariables()
 						} else if (jsonData.action === 'opened_folder_presentation') {
 							states.updateFileStates(self.presentationFolderState, jsonData.data.current_opened_file_index)
@@ -258,6 +267,12 @@ class APSInstance extends InstanceBase {
 				variableId: `presentation_slot${i}`,
 			})
 		}
+		for (let i = 1; i <= numberOfPresentationFolders; i++) {
+			variables.push({
+				name: `Presentation Folder ${i}`,
+				variableId: `presentation_folder${i}`,
+			})
+		}
 
 		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.presentationFolderState.filesList.length); i++) {
 			variables.push({
@@ -300,6 +315,14 @@ class APSInstance extends InstanceBase {
 		}
 
 		try {
+			for (let i = numberOfPresentationFolders; i > 0; i--) {
+				values[`presentation_folder${i}`] = '-'
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		try {
 			for (let i = numberOfMediaPlayerSlots; i > 0; i--) {
 				values[`media_slot${i}`] = '-'
 			}
@@ -320,6 +343,24 @@ class APSInstance extends InstanceBase {
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
 				values[`presentation_slot${i}`] = data.filenames[i - 1]
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		self.setVariableValues(values)
+	}
+
+	setFolderVariables(data) {
+		var self = this
+		if (!data){
+			data = self.lastCachedFolderVariablesData
+		}
+		const values = {}
+
+		try {
+			for (let i = numberOfPresentationFolders; i > 0; i--) {
+				values[`presentation_folder${i}`] = data.names[i - 1]
 			}
 		} catch (err) {
 			self.log('debug', err)

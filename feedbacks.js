@@ -171,6 +171,48 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[feedback.options.Key].exists
 			},
 		},
+		folder_exist: {
+			type: 'boolean',
+			name: 'Folder exists',
+			description: 'If there is a folder on the slot, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForPresentationFolder(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.folderStates[feedback.options.Key].exists
+			},
+		},
+		folder_active: {
+			type: 'boolean',
+			name: 'Folder is active',
+			description: 'If folder file is active, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForPresentationFolder(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return self.folderStates.active_folder_number == parseInt(feedback.options.Key.substr(6))
+			},
+		},
 		file_exist: {
 			type: 'boolean',
 			name: 'Folder file presentation exists',

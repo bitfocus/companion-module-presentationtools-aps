@@ -1,4 +1,4 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders } = require('./constants')
 var choices = require('./choices')
 exports.generateCaptureStates = function () {
 	var cchoices = choices.getChoicesForCapture()
@@ -28,6 +28,17 @@ exports.generateSlotStates = function () {
 		states[si] = new Object()
 		states[si].exists = false
 		states[si].opened = false
+	}
+	return states
+}
+exports.generateFolderStates = function () {
+	var schoices = choices.getChoicesForPresentationFolder()
+	var states = new Object()
+	states['active_folder_number'] = -1
+	for (var i = numberOfPresentationFolders - 1; i >= 0; i--) {
+		const si = schoices[i].id
+		states[si] = new Object()
+		states[si].exists = false
 	}
 	return states
 }
@@ -110,6 +121,13 @@ exports.updateSlotStates = function (states, data) {
 		const si = 'Slot' + i
 		states[si].exists = data.exists[i - 1]
 		states[si].opened = data.opened[i - 1]
+	}
+}
+exports.updateFolderStates = function (states, data) {
+	states.active_folder_number = data.active_folder_number
+	for (var i = numberOfPresentationFolders; i > 0; i--) {
+		const si = 'Folder' + i
+		states[si].exists = data.exists[i - 1]
 	}
 }
 exports.updateFileStates = function (states, openedFileIndex) {

@@ -1,5 +1,5 @@
 const { combineRgb } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders } = require('./constants')
 exports.getPresets = function (instance) {
 	var self = instance
 	var presets = {}
@@ -103,6 +103,18 @@ exports.getPresets = function (instance) {
 			`Slot${i}`,
 			1,
 			true,
+		)
+	}
+
+	//Folders
+	for (let i = 1; i <= numberOfPresentationFolders; i++) {
+		presets[`Folder${i}`] = getPresetforFolder(
+			self.label,
+			`Folder ${i}`,
+			`presentation_folder${i}`,
+			i,
+			combineRgb(0, 0, 0),
+			`Folder${i}`,
 		)
 	}
 
@@ -1139,10 +1151,53 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 	}
 }
 
+function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
+	return {
+		type: 'button',
+		category: 'Folders',
+		name: lbl,
+		style: {
+			text: `${i} $(${instanceLabel}:${txt})`,
+			alignment: 'center:center',
+			size: 'auto',
+			color: 16777215,
+			bgcolor: cr,
+		},
+		steps: [
+			{
+				down: [],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'folder_exist',
+				options: {
+					Key: FolderNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13421568,
+				},
+			},
+			{
+				feedbackId: 'folder_active',
+				options: {
+					Key: FolderNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13369344,
+				},
+			},
+		],
+	}
+}
+
 function getPresetforPresentationFolder(lbl, txt, i, cr, FileNumber, SlideNumber, Fullscreen) {
 	return {
 		type: 'button',
-		category: 'Presentation Folder',
+		category: 'Presentation Folder Files',
 		name: lbl,
 		style: {
 			text: txt,
