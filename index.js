@@ -18,8 +18,6 @@ class APSInstance extends InstanceBase {
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
 		this.folderStates = states.generateFolderStates()
-		this.lastCachedSlotVariablesData = {}
-		this.lastCachedFolderVariablesData = {}
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.presentationFolderState = {
@@ -33,7 +31,6 @@ class APSInstance extends InstanceBase {
 			loop_on: false,
 			fade_on: false,
 		}
-		this.lastCachedMediaPlayerVariablesData = {}
 		this.captureTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
 		this.folderCaptureTimeoutObj = null
@@ -165,14 +162,11 @@ class APSInstance extends InstanceBase {
 							self.log('debug', JSON.stringify(jsonData))
 						} else if (jsonData.action === 'active_folder_presentations') {
 							states.updatePresentationsFolderStates(self.presentationFolderState, jsonData.data)
-							self.variables()
+							self.variables(true)
 							self.actions()
 							self.feedbacks()
 							self.presets()
 							self.setFolderFilesVariables()
-							self.setSlotVariables()
-							self.setFolderVariables()
-							self.setMediaPlayerVariables()
 						} else if (jsonData.action === 'opened_folder_presentation') {
 							states.updateFileStates(self.presentationFolderState, jsonData.data.current_opened_file_index)
 							self.checkFeedbacks('file_exist', 'file_displayed')
@@ -243,7 +237,7 @@ class APSInstance extends InstanceBase {
 		self.setFeedbackDefinitions(fdbs)
 	}
 
-	variables() {
+	variables(initOnly = false) {
 		var self = this
 		var variables = [
 			{ name: 'Presentation: Previous in folder', variableId: 'Presentation_previous' },
@@ -290,6 +284,9 @@ class APSInstance extends InstanceBase {
 
 		self.setVariableDefinitions(variables)
 
+		if(initOnly)
+			return
+
 		const values = {
 			Presentation_previous: '',
 			Presentation_current: '',
@@ -335,9 +332,6 @@ class APSInstance extends InstanceBase {
 
 	setSlotVariables(data) {
 		var self = this
-		if (!data){
-			data = self.lastCachedSlotVariablesData
-		}
 		const values = {}
 
 		try {
@@ -353,9 +347,6 @@ class APSInstance extends InstanceBase {
 
 	setFolderVariables(data) {
 		var self = this
-		if (!data){
-			data = self.lastCachedFolderVariablesData
-		}
 		const values = {}
 
 		try {
@@ -389,9 +380,6 @@ class APSInstance extends InstanceBase {
 
 	setMediaPlayerVariables(data) {
 		var self = this
-		if (!data){
-			data = self.lastCachedMediaPlayerVariablesData
-		}
 		const values = {
 			Media_playing: data.Media_playing,
 			Media_loaded: data.Media_loaded,
