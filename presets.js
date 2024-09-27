@@ -119,7 +119,7 @@ exports.getPresets = function (instance) {
 	}
 
 	//Folder Presentations
-	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.presentationFolderState.filesList.length); i++) {
+	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.activeFolderState.filesList.length); i++) {
 		try{
 		presets[`File${i}`] = getPresetforPresentationFolder(
 			`File ${i}`,

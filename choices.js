@@ -41,7 +41,7 @@ exports.getChoicesForSlot = function () {
 	return choicesList
 }
 
-exports.getChoicesForPresentationFolder = function () {
+exports.getChoicesForFolder = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfPresentationFolders; i++) {
 		choicesList.push({ id: `Folder${i}`, label: i })

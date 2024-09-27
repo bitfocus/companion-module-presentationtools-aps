@@ -148,7 +148,7 @@ exports.getActions = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: choices.getChoicesForFolder(),
 				},
 			],
 			callback: action_callback,
@@ -163,7 +163,7 @@ exports.getActions = function (instance) {
 					id: 'FileNumber',
 					default: '',
 					tooltip: 'Open the file with the filename (From the selected folder)',
-					choices: choices.getChoicesForFolderFiles(instance.presentationFolderState.filesList),
+					choices: choices.getChoicesForFolderFiles(instance.activeFolderState.filesList),
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -273,7 +273,7 @@ exports.getActions = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: choices.getChoicesForFolder(),
 				},
 			],
 			callback: action_callback,
@@ -436,7 +436,7 @@ async function getCommand(action, instance) {
 				cmd += action.options.SlideNumber + separatorChar
 				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 				let fileNumber = fileNumberMatches[0]
-				let filePath = instance.presentationFolderState.filesList[fileNumber - 1]
+				let filePath = instance.activeFolderState.filesList[fileNumber - 1]
 				cmd += filePath
 			}
 			break

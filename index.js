@@ -20,7 +20,7 @@ class APSInstance extends InstanceBase {
 		this.folderStates = states.generateFolderStates()
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
-		this.presentationFolderState = {
+		this.activeFolderState = {
 			filesList: [],
 			filesState: {}
 		}
@@ -159,16 +159,15 @@ class APSInstance extends InstanceBase {
 							self.setFolderVariables(jsonData.data)
 							states.updateFolderStates(self.folderStates, jsonData.data)
 							self.checkFeedbacks('folder_exist', 'folder_active')
-							self.log('debug', JSON.stringify(jsonData))
 						} else if (jsonData.action === 'active_folder_presentations') {
-							states.updatePresentationsFolderStates(self.presentationFolderState, jsonData.data)
+							states.updatePresentationsFolderStates(self.activeFolderState, jsonData.data)
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
 							self.presets()
 							self.setFolderFilesVariables()
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							states.updateFileStates(self.presentationFolderState, jsonData.data.current_opened_file_index)
+							states.updateFileStates(self.activeFolderState, jsonData.data.current_opened_file_index)
 							self.checkFeedbacks('file_exist', 'file_displayed')
 						} else if (jsonData.action === 'MediaPlayer') {
 							self.lastCachedMediaPlayerVariablesData = jsonData.data
@@ -268,7 +267,7 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
-		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.presentationFolderState.filesList.length); i++) {
+		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.activeFolderState.filesList.length); i++) {
 			variables.push({
 				name: `Presentation Folder File ${i}`,
 				variableId: `presentation_folder_file${i}`,
@@ -363,7 +362,7 @@ class APSInstance extends InstanceBase {
 	setFolderFilesVariables() {
 		var self = this
 		const values = {}
-		let filesList = self.presentationFolderState.filesList
+		let filesList = self.activeFolderState.filesList
 		try {
 			for (let i = Math.max(minNumberOfFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''

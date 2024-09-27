@@ -97,7 +97,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Source',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: choices.getChoicesForFolder(),
 				},
 			],
 			defaultStyle: {
@@ -139,7 +139,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.presentationFolderState.filesList),
+					choices: choices.getChoicesForFolderFiles(self.activeFolderState.filesList),
 				},
 			],
 			defaultStyle: {
@@ -147,7 +147,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.presentationFolderState.filesState[feedback.options.Key]?.opened
+				return self.activeFolderState.filesState[feedback.options.Key]?.opened
 			},
 		},
 		slot_exist: {
@@ -181,7 +181,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: choices.getChoicesForFolder(),
 				},
 			],
 			defaultStyle: {
@@ -202,7 +202,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: choices.getChoicesForFolder(),
 				},
 			],
 			defaultStyle: {
@@ -223,7 +223,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.presentationFolderState.filesList),
+					choices: choices.getChoicesForFolderFiles(self.activeFolderState.filesList),
 				},
 			],
 			defaultStyle: {
@@ -231,7 +231,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.presentationFolderState.filesState[feedback.options.Key]?.exists
+				return self.activeFolderState.filesState[feedback.options.Key]?.exists
 			},
 		},
 
