@@ -21,6 +21,7 @@ class APSInstance extends InstanceBase {
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.activeFolderState = {
+			name: null,
 			filesList: [],
 			filesState: {}
 		}
@@ -267,6 +268,19 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
+		variables.push({
+			name: `Active Folder Name`,
+			variableId: `active_folder_name`,
+		})
+		variables.push({
+			name: `Active Folder number`,
+			variableId: `active_folder_number`,
+		})
+		variables.push({
+			name: `Active Folder Files Count`,
+			variableId: `active_folder_files_count`,
+		})
+
 		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.activeFolderState.filesList.length); i++) {
 			variables.push({
 				name: `Presentation Folder File ${i}`,
@@ -362,6 +376,9 @@ class APSInstance extends InstanceBase {
 	setFolderFilesVariables() {
 		var self = this
 		const values = {}
+		values[`active_folder_name`] = self.activeFolderState.name
+		values[`active_folder_number`] = self.activeFolderState.number
+		values[`active_folder_files_count`] = self.activeFolderState.filesList.length
 		let filesList = self.activeFolderState.filesList
 		try {
 			for (let i = Math.max(minNumberOfFolderFiles, filesList.length); i > 0; i--) {

@@ -165,6 +165,8 @@ exports.updateFolderCaptureStates = function (states, index) {
 	}
 }
 exports.updateActiveFolderState = function (states, data) {
+		states.name = data.name
+		states.number = data.number
 		states.filesList = data.files_list
 }
 
