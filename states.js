@@ -164,7 +164,7 @@ exports.updateFolderCaptureStates = function (states, index) {
 		}
 	}
 }
-exports.updatePresentationsFolderStates = function (states, data) {
+exports.updateActiveFolderState = function (states, data) {
 		states.filesList = data.files_list
 }
 

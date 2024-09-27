@@ -160,7 +160,7 @@ class APSInstance extends InstanceBase {
 							states.updateFolderStates(self.folderStates, jsonData.data)
 							self.checkFeedbacks('folder_exist', 'folder_active')
 						} else if (jsonData.action === 'active_folder_presentations') {
-							states.updatePresentationsFolderStates(self.activeFolderState, jsonData.data)
+							states.updateActiveFolderState(self.activeFolderState, jsonData.data)
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
