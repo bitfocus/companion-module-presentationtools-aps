@@ -1197,7 +1197,7 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 function getPresetforPresentationFolder(lbl, txt, i, cr, FileNumber, SlideNumber, Fullscreen) {
 	return {
 		type: 'button',
-		category: 'Presentation Folder Files',
+		category: 'Watched Folder',
 		name: lbl,
 		style: {
 			text: txt,
