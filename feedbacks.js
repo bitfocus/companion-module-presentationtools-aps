@@ -139,7 +139,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.activeFolderState.filesList),
+					choices: choices.getChoicesForFolderFiles(self.watchedFolderState.filesList),
 				},
 			],
 			defaultStyle: {
@@ -147,7 +147,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.activeFolderState.filesState[feedback.options.Key]?.opened
+				return self.watchedFolderState.filesState[feedback.options.Key]?.opened
 			},
 		},
 		slot_exist: {
@@ -192,10 +192,10 @@ exports.getFeedbacks = function (instance) {
 				return self.folderStates[feedback.options.Key].exists
 			},
 		},
-		folder_active: {
+		folder_watched: {
 			type: 'boolean',
-			name: 'Folder is active',
-			description: 'If folder file is active, change the style',
+			name: 'Folder is watched',
+			description: 'If folder file is watched, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -210,7 +210,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.folderStates.active_folder_number == parseInt(feedback.options.Key.substr(6))
+				return self.watchedFolderState.number == parseInt(feedback.options.Key.substr(6))
 			},
 		},
 		file_exist: {
@@ -223,7 +223,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.activeFolderState.filesList),
+					choices: choices.getChoicesForFolderFiles(self.watchedFolderState.filesList),
 				},
 			],
 			defaultStyle: {
@@ -231,7 +231,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.activeFolderState.filesState[feedback.options.Key]?.exists
+				return self.watchedFolderState.filesState[feedback.options.Key]?.exists
 			},
 		},
 

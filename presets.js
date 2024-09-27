@@ -119,7 +119,7 @@ exports.getPresets = function (instance) {
 	}
 
 	//Folder Presentations
-	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.activeFolderState.filesList.length); i++) {
+	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.watchedFolderState.filesList.length); i++) {
 		try{
 		presets[`File${i}`] = getPresetforPresentationFolder(
 			`File ${i}`,
@@ -1181,7 +1181,7 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 				},
 			},
 			{
-				feedbackId: 'folder_active',
+				feedbackId: 'folder_watched',
 				options: {
 					Key: FolderNumber,
 				},

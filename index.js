@@ -20,7 +20,7 @@ class APSInstance extends InstanceBase {
 		this.folderStates = states.generateFolderStates()
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
-		this.activeFolderState = {
+		this.watchedFolderState = {
 			name: null,
 			filesList: [],
 			filesState: {}
@@ -159,16 +159,16 @@ class APSInstance extends InstanceBase {
 							self.lastCachedFolderVariablesData = jsonData.data
 							self.setFolderVariables(jsonData.data)
 							states.updateFolderStates(self.folderStates, jsonData.data)
-							self.checkFeedbacks('folder_exist', 'folder_active')
-						} else if (jsonData.action === 'active_folder_presentations') {
-							states.updateActiveFolderState(self.activeFolderState, jsonData.data)
+							self.checkFeedbacks('folder_exist', 'folder_watched')
+						} else if (jsonData.action === 'watched_folder_presentations') {
+							states.updateWatchedFolderState(self.watchedFolderState, jsonData.data)
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
 							self.presets()
 							self.setFolderFilesVariables()
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							states.updateFileStates(self.activeFolderState, jsonData.data.current_opened_file_index)
+							states.updateFileStates(self.watchedFolderState, jsonData.data.current_opened_file_index)
 							self.checkFeedbacks('file_exist', 'file_displayed')
 						} else if (jsonData.action === 'MediaPlayer') {
 							self.lastCachedMediaPlayerVariablesData = jsonData.data
@@ -269,19 +269,19 @@ class APSInstance extends InstanceBase {
 		}
 
 		variables.push({
-			name: `Active Folder Name`,
-			variableId: `active_folder_name`,
+			name: `Watched Folder Name`,
+			variableId: `watched_folder_name`,
 		})
 		variables.push({
-			name: `Active Folder number`,
-			variableId: `active_folder_number`,
+			name: `Watched Folder number`,
+			variableId: `watched_folder_number`,
 		})
 		variables.push({
-			name: `Active Folder Files Count`,
-			variableId: `active_folder_files_count`,
+			name: `Watched Folder Files Count`,
+			variableId: `watched_folder_files_count`,
 		})
 
-		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.activeFolderState.filesList.length); i++) {
+		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.watchedFolderState.filesList.length); i++) {
 			variables.push({
 				name: `Presentation Folder File ${i}`,
 				variableId: `presentation_folder_file${i}`,
@@ -376,10 +376,10 @@ class APSInstance extends InstanceBase {
 	setFolderFilesVariables() {
 		var self = this
 		const values = {}
-		values[`active_folder_name`] = self.activeFolderState.name
-		values[`active_folder_number`] = self.activeFolderState.number
-		values[`active_folder_files_count`] = self.activeFolderState.filesList.length
-		let filesList = self.activeFolderState.filesList
+		values[`watched_folder_name`] = self.watchedFolderState.name
+		values[`watched_folder_number`] = self.watchedFolderState.number
+		values[`watched_folder_files_count`] = self.watchedFolderState.filesList.length
+		let filesList = self.watchedFolderState.filesList
 		try {
 			for (let i = Math.max(minNumberOfFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''

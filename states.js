@@ -34,7 +34,6 @@ exports.generateSlotStates = function () {
 exports.generateFolderStates = function () {
 	var schoices = choices.getChoicesForFolder()
 	var states = new Object()
-	states['active_folder_number'] = -1
 	for (var i = numberOfPresentationFolders - 1; i >= 0; i--) {
 		const si = schoices[i].id
 		states[si] = new Object()
@@ -124,7 +123,6 @@ exports.updateSlotStates = function (states, data) {
 	}
 }
 exports.updateFolderStates = function (states, data) {
-	states.active_folder_number = data.active_folder_number
 	for (var i = numberOfPresentationFolders; i > 0; i--) {
 		const si = 'Folder' + i
 		states[si].exists = data.exists[i - 1]
@@ -164,7 +162,7 @@ exports.updateFolderCaptureStates = function (states, index) {
 		}
 	}
 }
-exports.updateActiveFolderState = function (states, data) {
+exports.updateWatchedFolderState = function (states, data) {
 		states.name = data.name
 		states.number = data.number
 		states.filesList = data.files_list
