@@ -159,14 +159,15 @@ class APSInstance extends InstanceBase {
 							self.lastCachedFolderVariablesData = jsonData.data
 							self.setFolderVariables(jsonData.data)
 							states.updateFolderStates(self.folderStates, jsonData.data)
-							self.checkFeedbacks('folder_exist', 'folder_watched')
-						} else if (jsonData.action === 'watched_folder_presentations') {
+							self.checkFeedbacks('folder_exist')
+						} else if (jsonData.action === 'watched_folder') {
 							states.updateWatchedFolderState(self.watchedFolderState, jsonData.data)
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
 							self.presets()
 							self.setFolderFilesVariables()
+							self.checkFeedbacks('folder_watched')
 						} else if (jsonData.action === 'opened_folder_presentation') {
 							states.updateFileStates(self.watchedFolderState, jsonData.data.current_opened_file_index)
 							self.checkFeedbacks('file_exist', 'file_displayed')
