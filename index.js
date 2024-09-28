@@ -14,6 +14,9 @@ class APSInstance extends InstanceBase {
 	async configUpdated(config) {
 		this.config = config
 
+		this.generalState = {
+			isAnyPresentationDisplayed: false
+		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
@@ -137,6 +140,9 @@ class APSInstance extends InstanceBase {
 						} else if (jsonData.action === 'delete') {
 							states.updateUnloadStates(self.displayStates, jsonData.index)
 							self.checkFeedbacks('loaded')
+						} else if (jsonData.action === 'any_presentation_displayed') {
+							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
+							self.checkFeedbacks('presentation_displayed')
 						} else if (jsonData.action === 'files') {
 							let update_obj = {
 								Presentation_previous: jsonData.data.prev,

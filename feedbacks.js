@@ -150,6 +150,19 @@ exports.getFeedbacks = function (instance) {
 				return self.watchedFolderState.filesState[feedback.options.Key]?.opened
 			},
 		},
+		presentation_displayed: {
+			type: 'boolean',
+			name: 'Presentation is displayed',
+			description: 'If any presentation is displayed, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (_feedback) {
+				return self.generalState.isAnyPresentationDisplayed
+			},
+		},
 		slot_exist: {
 			type: 'boolean',
 			name: 'Slot presentation exists',
