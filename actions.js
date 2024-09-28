@@ -154,16 +154,38 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		open_presentation_from_watched_folder: {
+			name: 'Presentation: Open from watched folder',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File name',
+					id: 'FileNumber',
+					default: '',
+					tooltip: 'Open the file with the filename (From the watched folder)',
+					choices: choices.getChoicesForFolderFiles(instance.watchedFolderState.filesList),
+				},
+				getSlideNumber('Go to slide'),
+				{
+					type: 'checkbox',
+					label: 'Run presentation in fullscreen',
+					id: 'Fullscreen',
+					default: true,
+				},
+			],
+			callback: action_callback,
+		},
+
 		OpenStart_Presentation: {
 			name: 'Presentation: Open from file path',
 			options: [
 				{
-					type: 'dropdown',
-					label: 'Filename',
-					id: 'FileNumber',
+					type: 'textinput',
+					label: 'File path',
+					id: 'Filename',
 					default: '',
-					tooltip: 'Open the file with the filename (From the selected folder)',
-					choices: choices.getChoicesForFolderFiles(instance.watchedFolderState.filesList),
+					tooltip: 'Open the file with the filename (absolute file path)',
+					useVariables: true,
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -429,16 +451,22 @@ async function getCommand(action, instance) {
 				cmd = action.actionId + separatorChar + number
 			}
 			break;
-		case 'OpenStart_Presentation':
+		case 'open_presentation_from_watched_folder':
 			let fileNumberMatches = action.options.FileNumber.match(/\d+$/);
 			if (fileNumberMatches) {
-				cmd = action.actionId + separatorChar
+				cmd = 'OpenStart_Presentation' + separatorChar
 				cmd += action.options.SlideNumber + separatorChar
 				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 				let fileNumber = fileNumberMatches[0]
 				let filePath = instance.watchedFolderState.filesList[fileNumber - 1]
 				cmd += filePath
 			}
+			break
+		case 'OpenStart_Presentation':
+			cmd = action.actionId + separatorChar
+			cmd += action.options.SlideNumber + separatorChar
+			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
+			cmd += await instance.parseVariablesInString(action.options.Filename)
 			break
 		case 'Generic':
 			cmd = 'Generic' + separatorChar

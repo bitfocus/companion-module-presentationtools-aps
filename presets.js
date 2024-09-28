@@ -1210,7 +1210,7 @@ function getPresetforPresentationFolder(lbl, txt, i, cr, FileNumber, SlideNumber
 			{
 				down: [
 					{
-						actionId: 'OpenStart_Presentation',
+						actionId: 'open_presentation_from_watched_folder',
 						options: {
 							FileNumber: FileNumber,
 							SlideNumber: SlideNumber,
