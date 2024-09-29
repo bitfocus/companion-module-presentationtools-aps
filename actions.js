@@ -183,7 +183,7 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'File name',
 					id: 'FileNumber',
-					default: '',
+					default: 'File1',
 					tooltip: 'Open the file with the filename (From the watched folder)',
 					choices: choices.getChoicesForFolderFiles(instance.watchedFolderState.filesList),
 				},
