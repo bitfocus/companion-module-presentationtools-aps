@@ -177,7 +177,7 @@ exports.getPresets = function (instance) {
 		category: 'Watched Folder Scroll',
 		name: 'Current selected in watched folder',
 		style: {
-			text: "$(aps:watched_folder_selected_presentation_name)",
+			text: `$(${self.label}:watched_folder_selected_presentation_name)`,
 			size: 'auto',
 			alignment: 'center:center',
 			color: 16777215,
@@ -190,7 +190,7 @@ exports.getPresets = function (instance) {
 					{
 						actionId: 'OpenStart_Presentation',
 						options: {
-							Filename: "$(aps:watched_folder_selected_presentation_path)",
+							Filename: `$(${self.label}:watched_folder_selected_presentation_path)`,
 							SlideNumber: 1,
 							Fullscreen: 1,
 						},
@@ -206,7 +206,7 @@ exports.getPresets = function (instance) {
 		category: 'Watched Folder Scroll',
 		name: 'Current selected in watched folder (Number/Total)',
 		style: {
-			text: "$(aps:watched_folder_selected_presentation_number)/$(aps:watched_folder_total_files_count)",
+			text: `$(${self.label}:watched_folder_selected_presentation_number)/$(${self.label}:watched_folder_total_files_count)`,
 			size: 'auto',
 			alignment: 'center:center',
 			color: 16777215,
