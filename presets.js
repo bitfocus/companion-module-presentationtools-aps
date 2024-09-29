@@ -118,7 +118,110 @@ exports.getPresets = function (instance) {
 		)
 	}
 
-	//Folder Presentations
+	// Watched folder scroll
+	presets['Scroll +1'] = {
+		type: 'button',
+		category: 'Watched Folder Scroll',
+		name: 'Scroll +1',
+		style: {
+			text: '+1',
+			size: 'auto',
+			alignment: 'center:center',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		feedbacks: [],
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'Change_selected_presentation_in_watched_folder',
+						options: {
+							ScrollValue: "1",
+						},
+					},
+				],
+				up: [],
+			},
+		],
+	}
+	presets['Scroll -1'] = {
+		type: 'button',
+		category: 'Watched Folder Scroll',
+		name: 'Scroll -1',
+		style: {
+			text: '-1',
+			size: 'auto',
+			alignment: 'center:center',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		feedbacks: [],
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'Change_selected_presentation_in_watched_folder',
+						options: {
+							ScrollValue: "-1",
+						},
+					},
+				],
+				up: [],
+			},
+		],
+	}
+
+	presets['CurrentSelected'] = {
+		type: 'button',
+		category: 'Watched Folder Scroll',
+		name: 'Current selected in watched folder',
+		style: {
+			text: "$(aps:watched_folder_selected_presentation_name)",
+			size: 'auto',
+			alignment: 'center:center',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		feedbacks: [],
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'OpenStart_Presentation',
+						options: {
+							Filename: "$(aps:watched_folder_selected_presentation_path)",
+							SlideNumber: 1,
+							Fullscreen: 1,
+						},
+					},
+				],
+				up: [],
+			},
+		],
+	}
+
+	presets['CurrentSelectedNumber'] = {
+		type: 'button',
+		category: 'Watched Folder Scroll',
+		name: 'Current selected in watched folder (Number/Total)',
+		style: {
+			text: "$(aps:watched_folder_selected_presentation_number)/$(aps:watched_folder_total_files_count)",
+			size: 'auto',
+			alignment: 'center:center',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		feedbacks: [],
+		steps: [
+			{
+				down: [],
+				up: [],
+			},
+		],
+	}
+
+	//Watched Folder Presentations
 	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.watchedFolderState.filesList.length); i++) {
 		try{
 		presets[`File${i}`] = getPresetforWatchedFolderFiles(

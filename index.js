@@ -250,6 +250,10 @@ class APSInstance extends InstanceBase {
 			{ name: 'Presentation: Previous in folder', variableId: 'Presentation_previous' },
 			{ name: 'Presentation: Current', variableId: 'Presentation_current' },
 			{ name: 'Presentation: Next in folder', variableId: 'Presentation_next' },
+			{ name: 'Presentation: Selected in watched folder (Name)', variableId: 'watched_folder_selected_presentation_name' },
+			{ name: 'Presentation: Selected in watched folder (Path)', variableId: 'watched_folder_selected_presentation_path' },
+			{ name: 'Presentation: Selected in watched folder (Number)', variableId: 'watched_folder_selected_presentation_number' },
+			{ name: 'Presentation: Watched folder total files count', variableId: 'watched_folder_total_files_count' },
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
 			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
@@ -398,6 +402,21 @@ class APSInstance extends InstanceBase {
 			self.log('debug', err)
 		}
 
+		
+		if(filesList.length > 0){
+			if(!filesList.includes(self.getVariableValue('watched_folder_selected_presentation_path'))){
+				values['watched_folder_selected_presentation_number'] = 1
+				values['watched_folder_total_files_count'] = filesList.length
+				values['watched_folder_selected_presentation_path'] = filesList[0]
+				values['watched_folder_selected_presentation_name'] = filesList[0].split('\\').pop()
+			}
+		}
+		else{
+			values['watched_folder_selected_presentation_number'] = null
+			values['watched_folder_total_files_count'] = null
+			values['watched_folder_selected_presentation_path'] = null
+			values['watched_folder_selected_presentation_name'] = null
+		}
 		self.setVariableValues(values)
 	}
 
