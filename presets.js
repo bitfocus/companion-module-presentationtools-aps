@@ -121,7 +121,7 @@ exports.getPresets = function (instance) {
 	//Folder Presentations
 	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.watchedFolderState.filesList.length); i++) {
 		try{
-		presets[`File${i}`] = getPresetforPresentationFolder(
+		presets[`File${i}`] = getPresetforWatchedFolderFiles(
 			`File ${i}`,
 			`${i} - $(${self.label}:presentation_folder_file${i})`,
 			i,
@@ -1194,7 +1194,7 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 	}
 }
 
-function getPresetforPresentationFolder(lbl, txt, i, cr, FileNumber, SlideNumber, Fullscreen) {
+function getPresetforWatchedFolderFiles(lbl, txt, i, cr, FileNumber, SlideNumber, Fullscreen) {
 	return {
 		type: 'button',
 		category: 'Watched Folder',
