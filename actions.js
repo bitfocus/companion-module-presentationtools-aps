@@ -18,6 +18,8 @@ exports.getActions = function (instance) {
 		var cmd = ''
 		var terminationChar = '$'
 		cmd = await getCommand(action, instance)
+		if(!cmd)
+			return
 		cmd += terminationChar
 		if (cmd !== undefined && cmd !== terminationChar) {
 			instance.log('debug', `sending ${cmd}`)
@@ -463,10 +465,15 @@ async function getCommand(action, instance) {
 			}
 			break
 		case 'OpenStart_Presentation':
+			let path = await instance.parseVariablesInString(action.options.Filename)
+			
+			if(!path)
+				return
+
 			cmd = action.actionId + separatorChar
 			cmd += action.options.SlideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-			cmd += await instance.parseVariablesInString(action.options.Filename)
+			cmd += path
 			break
 		case 'Generic':
 			cmd = 'Generic' + separatorChar
