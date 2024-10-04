@@ -18,6 +18,8 @@ exports.getActions = function (instance) {
 		var cmd = ''
 		var terminationChar = '$'
 		cmd = await getCommand(action, instance)
+		if(!cmd)
+			return
 		cmd += terminationChar
 		if (cmd !== undefined && cmd !== terminationChar) {
 			instance.log('debug', `sending ${cmd}`)
@@ -148,7 +150,52 @@ exports.getActions = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: [
+						{ id: `Previous`, label: `Previous` },
+						{ id: `Next`, label: `Next` },
+					].concat(choices.getChoicesForFolder()),
+				},
+			],
+			callback: action_callback,
+		},
+
+		Change_selected_presentation_in_watched_folder: {
+			name: 'Presentation: Scroll selected presentation in watched folder',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Scroll value',
+					id: 'ScrollValue',
+					default: "1",
+					tooltip: 'Scroll value',
+					choices: [
+						{id: "-10", label: "-10"},
+						{id: "-1", label: "-1"},
+						{id: "1", label: "+1"},
+						{id: "10", label: "+10"},
+						
+					],
+				},
+			],
+			callback: action_callback,
+		},
+		open_presentation_from_watched_folder: {
+			name: 'Presentation: Open from watched folder',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File name',
+					id: 'FileNumber',
+					default: 'File1',
+					tooltip: 'Open the file with the filename (From the watched folder)',
+					choices: choices.getChoicesForFolderFiles(instance.watchedFolderState.filesList),
+				},
+				getSlideNumber('Go to slide'),
+				{
+					type: 'checkbox',
+					label: 'Run presentation in fullscreen',
+					id: 'Fullscreen',
+					default: true,
 				},
 			],
 			callback: action_callback,
@@ -158,12 +205,12 @@ exports.getActions = function (instance) {
 			name: 'Presentation: Open from file path',
 			options: [
 				{
-					type: 'dropdown',
-					label: 'Filename',
+					type: 'textinput',
+					label: 'File path',
 					id: 'Filename',
 					default: '',
-					tooltip: 'Open the file with the filename (From the selected folder)',
-					choices: choices.getChoicesForFolderFiles(instance.presentationFolderState.filesList),
+					tooltip: 'Open the file with the filename (absolute file path)',
+					useVariables: true,
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -273,7 +320,7 @@ exports.getActions = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: choices.getChoicesForFolder(),
 				},
 			],
 			callback: action_callback,
@@ -423,17 +470,37 @@ async function getCommand(action, instance) {
 			cmd = action.options.Key
 			break
 		case 'SetSelected_PresentationFolder':
-			let folderNumMatches = action.options.Key.match(/\d+$/);
-			if (folderNumMatches) {
-				number = folderNumMatches[0];
-				cmd = action.actionId + separatorChar + number
+			if(action.options.Key == 'Next' || action.options.Key == 'Previous'){
+				cmd = action.actionId + separatorChar + action.options.Key
+			}else{
+				let folderNumMatches = action.options.Key.match(/\d+$/);
+				if (folderNumMatches) {
+					number = folderNumMatches[0];
+					cmd = action.actionId + separatorChar + number
+				}
 			}
 			break;
+		case 'open_presentation_from_watched_folder':
+			let fileNumberMatches = action.options.FileNumber.match(/\d+$/);
+			if (fileNumberMatches) {
+				cmd = 'OpenStart_Presentation' + separatorChar
+				cmd += action.options.SlideNumber + separatorChar
+				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
+				let fileNumber = fileNumberMatches[0]
+				let filePath = instance.watchedFolderState.filesList[fileNumber - 1]
+				cmd += filePath
+			}
+			break
 		case 'OpenStart_Presentation':
-			cmd = 'OpenStart_Presentation' + separatorChar
+			let path = await instance.parseVariablesInString(action.options.Filename)
+			
+			if(!path)
+				return
+
+			cmd = action.actionId + separatorChar
 			cmd += action.options.SlideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-			cmd += await instance.parseVariablesInString(action.options.Filename)
+			cmd += path
 			break
 		case 'Generic':
 			cmd = 'Generic' + separatorChar
@@ -463,9 +530,33 @@ async function getCommand(action, instance) {
 			cmd = action.actionId + mediaPlayerSeparatorChar
 			cmd += action.options.Seconds
 			break
+		case 'Change_selected_presentation_in_watched_folder':
+			scrollSelectedPresentation(instance, action.options.ScrollValue)
+			break
 		default:
 			cmd = action.actionId
 			break
 	}
 	return cmd
+}
+
+
+function scrollSelectedPresentation(instance, delta) {
+	var self = instance
+	const values = {}
+	let filesList = self.watchedFolderState.filesList
+	
+	if(!filesList || filesList.length == 0)
+		return
+
+	let oldSelectedNumber = self.getVariableValue('watched_folder_selected_presentation_number')
+	if(!oldSelectedNumber)
+		oldSelectedNumber = 1
+	let newSelectedNumber = parseInt(oldSelectedNumber) + parseInt(delta)
+	let sIndex = ((newSelectedNumber - 1) % filesList.length + filesList.length) % filesList.length;
+	values['watched_folder_selected_presentation_number'] = sIndex + 1
+	values['watched_folder_total_files_count'] = filesList.length
+	values['watched_folder_selected_presentation_path'] = filesList[sIndex]
+	values['watched_folder_selected_presentation_name'] = filesList[sIndex].split('\\').pop()
+	self.setVariableValues(values)
 }

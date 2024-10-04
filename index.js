@@ -1,5 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders } = require('./constants')
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -14,13 +14,19 @@ class APSInstance extends InstanceBase {
 	async configUpdated(config) {
 		this.config = config
 
+		this.generalState = {
+			isAnyPresentationDisplayed: false
+		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
+		this.folderStates = states.generateFolderStates()
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
-		this.presentationFolderState = {
-			filesList: []
+		this.watchedFolderState = {
+			name: null,
+			filesList: [],
+			filesState: {}
 		}
 		this.mediaPlayerState = {
 			slots: states.generateMediaSlotStates(),
@@ -134,6 +140,9 @@ class APSInstance extends InstanceBase {
 						} else if (jsonData.action === 'delete') {
 							states.updateUnloadStates(self.displayStates, jsonData.index)
 							self.checkFeedbacks('loaded')
+						} else if (jsonData.action === 'any_presentation_displayed') {
+							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
+							self.checkFeedbacks('presentation_displayed')
 						} else if (jsonData.action === 'files') {
 							let update_obj = {
 								Presentation_previous: jsonData.data.prev,
@@ -148,13 +157,28 @@ class APSInstance extends InstanceBase {
 							}
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
+							self.lastCachedSlotVariablesData = jsonData.data
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
-						} else if (jsonData.action === 'presentations_folder') {
-							states.updatePresentationsFolderStates(self.presentationFolderState, jsonData.data)
+						} else if (jsonData.action === 'folders') {
+							self.lastCachedFolderVariablesData = jsonData.data
+							self.setFolderVariables(jsonData.data)
+							states.updateFolderStates(self.folderStates, jsonData.data)
+							self.checkFeedbacks('folder_exist')
+						} else if (jsonData.action === 'watched_folder') {
+							states.updateWatchedFolderState(self.watchedFolderState, jsonData.data)
+							self.variables(true)
 							self.actions()
+							self.feedbacks()
+							self.presets()
+							self.setFolderFilesVariables()
+							self.checkFeedbacks('folder_watched')
+						} else if (jsonData.action === 'opened_folder_presentation') {
+							states.updateFileStates(self.watchedFolderState, jsonData.data.current_opened_file_index)
+							self.checkFeedbacks('file_exist', 'file_displayed')
 						} else if (jsonData.action === 'MediaPlayer') {
+							self.lastCachedMediaPlayerVariablesData = jsonData.data
 							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
 							self.checkFeedbacks(
@@ -220,12 +244,16 @@ class APSInstance extends InstanceBase {
 		self.setFeedbackDefinitions(fdbs)
 	}
 
-	variables() {
+	variables(initOnly = false) {
 		var self = this
 		var variables = [
 			{ name: 'Presentation: Previous in folder', variableId: 'Presentation_previous' },
 			{ name: 'Presentation: Current', variableId: 'Presentation_current' },
 			{ name: 'Presentation: Next in folder', variableId: 'Presentation_next' },
+			{ name: 'Presentation: Selected in watched folder (Name)', variableId: 'watched_folder_selected_presentation_name' },
+			{ name: 'Presentation: Selected in watched folder (Path)', variableId: 'watched_folder_selected_presentation_path' },
+			{ name: 'Presentation: Selected in watched folder (Number)', variableId: 'watched_folder_selected_presentation_number' },
+			{ name: 'Presentation: Watched folder total files count', variableId: 'watched_folder_total_files_count' },
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
 			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
@@ -244,8 +272,34 @@ class APSInstance extends InstanceBase {
 				variableId: `presentation_slot${i}`,
 			})
 		}
+		for (let i = 1; i <= numberOfPresentationFolders; i++) {
+			variables.push({
+				name: `Presentation Folder ${i}`,
+				variableId: `presentation_folder${i}`,
+			})
+		}
 
-		for (let i = 1; i <= numberOfPresentationSlots; i++) {
+		variables.push({
+			name: `Watched Folder Name`,
+			variableId: `watched_folder_name`,
+		})
+		variables.push({
+			name: `Watched Folder number`,
+			variableId: `watched_folder_number`,
+		})
+		variables.push({
+			name: `Watched Folder Files Count`,
+			variableId: `watched_folder_files_count`,
+		})
+
+		for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.watchedFolderState.filesList.length); i++) {
+			variables.push({
+				name: `Presentation Folder File ${i}`,
+				variableId: `presentation_folder_file${i}`,
+			})
+		}
+
+		for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
 			variables.push({
 				name: `Media ${i}`,
 				variableId: `media_slot${i}`,
@@ -253,6 +307,9 @@ class APSInstance extends InstanceBase {
 		}
 
 		self.setVariableDefinitions(variables)
+
+		if(initOnly)
+			return
 
 		const values = {
 			Presentation_previous: '',
@@ -273,6 +330,14 @@ class APSInstance extends InstanceBase {
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
 				values[`presentation_slot${i}`] = '-'
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		try {
+			for (let i = numberOfPresentationFolders; i > 0; i--) {
+				values[`presentation_folder${i}`] = '-'
 			}
 		} catch (err) {
 			self.log('debug', err)
@@ -304,6 +369,57 @@ class APSInstance extends InstanceBase {
 		self.setVariableValues(values)
 	}
 
+	setFolderVariables(data) {
+		var self = this
+		const values = {}
+
+		try {
+			for (let i = numberOfPresentationFolders; i > 0; i--) {
+				values[`presentation_folder${i}`] = data.names[i - 1]
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		self.setVariableValues(values)
+	}
+
+	setFolderFilesVariables() {
+		var self = this
+		const values = {}
+		values[`watched_folder_name`] = self.watchedFolderState.name
+		values[`watched_folder_number`] = self.watchedFolderState.number
+		values[`watched_folder_files_count`] = self.watchedFolderState.filesList.length
+		let filesList = self.watchedFolderState.filesList
+		try {
+			for (let i = Math.max(minNumberOfFolderFiles, filesList.length); i > 0; i--) {
+				let text = ''
+				if(i <= filesList.length)
+					text = filesList[i - 1].split('\\').pop()
+				values[`presentation_folder_file${i}`] = text
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		
+		if(filesList.length > 0){
+			if(!filesList.includes(self.getVariableValue('watched_folder_selected_presentation_path'))){
+				values['watched_folder_selected_presentation_number'] = 1
+				values['watched_folder_total_files_count'] = filesList.length
+				values['watched_folder_selected_presentation_path'] = filesList[0]
+				values['watched_folder_selected_presentation_name'] = filesList[0].split('\\').pop()
+			}
+		}
+		else{
+			values['watched_folder_selected_presentation_number'] = null
+			values['watched_folder_total_files_count'] = null
+			values['watched_folder_selected_presentation_path'] = null
+			values['watched_folder_selected_presentation_name'] = null
+		}
+		self.setVariableValues(values)
+	}
+
 	setMediaPlayerVariables(data) {
 		var self = this
 		const values = {
@@ -318,7 +434,7 @@ class APSInstance extends InstanceBase {
 		}
 
 		try {
-			for (let i = numberOfPresentationSlots; i > 0; i--) {
+			for (let i = numberOfMediaPlayerSlots; i > 0; i--) {
 				values[`media_slot${i}`] = data.filenames[i - 1]
 			}
 		} catch (err) {

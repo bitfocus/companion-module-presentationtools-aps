@@ -97,7 +97,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Source',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForPresentationFolder(),
+					choices: choices.getChoicesForFolder(),
 				},
 			],
 			defaultStyle: {
@@ -129,6 +129,40 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[feedback.options.Key].opened
 			},
 		},
+		file_displayed: {
+			type: 'boolean',
+			name: 'Folder file presentation is displayed',
+			description: 'If the presentation from the folder file is displayed, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices.getChoicesForFolderFiles(self.watchedFolderState.filesList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return self.watchedFolderState.filesState[feedback.options.Key]?.opened
+			},
+		},
+		presentation_displayed: {
+			type: 'boolean',
+			name: 'Presentation is displayed',
+			description: 'If any presentation is displayed, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (_feedback) {
+				return self.generalState.isAnyPresentationDisplayed
+			},
+		},
 		slot_exist: {
 			type: 'boolean',
 			name: 'Slot presentation exists',
@@ -148,6 +182,69 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				return self.slotStates[feedback.options.Key].exists
+			},
+		},
+		folder_exist: {
+			type: 'boolean',
+			name: 'Folder exists',
+			description: 'If there is a folder on the slot, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForFolder(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.folderStates[feedback.options.Key].exists
+			},
+		},
+		folder_watched: {
+			type: 'boolean',
+			name: 'Folder is watched',
+			description: 'If folder file is watched, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForFolder(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return self.watchedFolderState.number == parseInt(feedback.options.Key.substr(6))
+			},
+		},
+		file_exist: {
+			type: 'boolean',
+			name: 'Folder file presentation exists',
+			description: 'If there is a presentation on the folder file, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices.getChoicesForFolderFiles(self.watchedFolderState.filesList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.watchedFolderState.filesState[feedback.options.Key]?.exists
 			},
 		},
 

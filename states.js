@@ -1,4 +1,4 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders } = require('./constants')
 var choices = require('./choices')
 exports.generateCaptureStates = function () {
 	var cchoices = choices.getChoicesForCapture()
@@ -31,6 +31,16 @@ exports.generateSlotStates = function () {
 	}
 	return states
 }
+exports.generateFolderStates = function () {
+	var schoices = choices.getChoicesForFolder()
+	var states = new Object()
+	for (var i = numberOfPresentationFolders - 1; i >= 0; i--) {
+		const si = schoices[i].id
+		states[si] = new Object()
+		states[si].exists = false
+	}
+	return states
+}
 exports.generateSlotCaptureStates = function () {
 	var cchoices = choices.getChoicesForSlot()
 	var states = new Object()
@@ -41,7 +51,7 @@ exports.generateSlotCaptureStates = function () {
 	return states
 }
 exports.generateFolderCaptureStates = function () {
-	var cchoices = choices.getChoicesForPresentationFolder()
+	var cchoices = choices.getChoicesForFolder()
 	var states = new Object()
 	for (var i = cchoices.length - 1; i >= 0; i--) {
 		var ci = cchoices[i].id
@@ -112,6 +122,26 @@ exports.updateSlotStates = function (states, data) {
 		states[si].opened = data.opened[i - 1]
 	}
 }
+exports.updateFolderStates = function (states, data) {
+	for (var i = numberOfPresentationFolders; i > 0; i--) {
+		const si = 'Folder' + i
+		states[si].exists = data.exists[i - 1]
+	}
+}
+exports.updateFileStates = function (states, openedFileIndex) {
+	let filesState = states.filesState
+	let numberOfFiles = states.filesList.length
+	for (var i = Math.max(minNumberOfFolderFiles, numberOfFiles); i > 0; i--) {
+		const si = 'File' + i
+		filesState[si] = new Object()
+		filesState[si].opened = false
+		filesState[si].exists = false
+		if(i == openedFileIndex + 1)
+			filesState[si].opened = true
+		if(i <= numberOfFiles)
+			filesState[si].exists = true
+	}
+}
 exports.updateSlotCaptureStates = function (states, index) {
 	const key = 'Slot' + (index + 1)
 	for (const k in states) {
@@ -132,7 +162,9 @@ exports.updateFolderCaptureStates = function (states, index) {
 		}
 	}
 }
-exports.updatePresentationsFolderStates = function (states, data) {
+exports.updateWatchedFolderState = function (states, data) {
+		states.name = data.name
+		states.number = data.number
 		states.filesList = data.files_list
 }
 
