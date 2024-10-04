@@ -1,5 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders, numberOfImagesSlots } = require('./constants')
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -38,7 +38,6 @@ class APSInstance extends InstanceBase {
 		this.captureTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
 		this.folderCaptureTimeoutObj = null
-		this.statesTimeoutObj = null
 		this.receiver = new MessageBuffer('$')
 
 		this.initTCP()
@@ -74,19 +73,6 @@ class APSInstance extends InstanceBase {
 
 			self.socket.on('connect', () => {
 				self.updateStatus(InstanceStatus.Ok)
-
-				if (self.statesTimeoutObj !== null) {
-					clearTimeout(self.statesTimeoutObj)
-				}
-
-				self.statesTimeoutObj = setTimeout(() => {
-					try {
-						self.socket.send('states$')
-						self.statesTimeoutObj = null
-					} catch (err) {
-						this.log('debug', err)
-					}
-				}, 1000)
 			})
 
 			self.socket.on('data', (data) => {
@@ -97,8 +83,9 @@ class APSInstance extends InstanceBase {
 					let message = messages[i]
 					try {
 						let jsonData = JSON.parse(message)
-						if (jsonData.action === 'states') {
+						if (jsonData.action === 'imagesstates') {
 							states.updateStates(self.displayStates, jsonData.data)
+							self.setImagesVariables(jsonData.data)
 							self.checkFeedbacks('loaded', 'displayed')
 						} else if (jsonData.action === 'display') {
 							states.updateDisplayStates(self.displayStates, jsonData.data)
@@ -272,6 +259,12 @@ class APSInstance extends InstanceBase {
 				variableId: `presentation_slot${i}`,
 			})
 		}
+		for (let i = 1; i <= numberOfImagesSlots; i++) {
+			variables.push({
+				name: `Image Slot ${i}`,
+				variableId: `image_slot${i}`,
+			})
+		}
 		for (let i = 1; i <= numberOfPresentationFolders; i++) {
 			variables.push({
 				name: `Presentation Folder ${i}`,
@@ -334,6 +327,13 @@ class APSInstance extends InstanceBase {
 		} catch (err) {
 			self.log('debug', err)
 		}
+		try {
+			for (let i = numberOfImagesSlots; i > 0; i--) {
+				values[`image_slot${i}`] = '-'
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
 
 		try {
 			for (let i = numberOfPresentationFolders; i > 0; i--) {
@@ -361,6 +361,21 @@ class APSInstance extends InstanceBase {
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
 				values[`presentation_slot${i}`] = data.filenames[i - 1]
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		self.setVariableValues(values)
+	}
+
+	setImagesVariables(data) {
+		var self = this
+		const values = {}
+
+		try {
+			for (let i = numberOfImagesSlots; i > 0; i--) {
+				values[`image_slot${i}`] = data.filenames[i - 1]
 			}
 		} catch (err) {
 			self.log('debug', err)

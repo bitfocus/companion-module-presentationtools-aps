@@ -41,7 +41,7 @@ exports.getPresets = function (instance) {
 	for (let i = 1; i <= 10; i++) {
 		presets[`Display${i}`] = getPresetForStillImageDisplay(
 			`Display Image ${i}`,
-			`Disply ${i}`,
+			`${i} $(${instance.label}:image_slot${i})`,
 			`Display${i}`,
 			combineRgb(0, 90, 0),
 			combineRgb(255, 0, 0),
