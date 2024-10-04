@@ -150,7 +150,10 @@ exports.getActions = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForFolder(),
+					choices: [
+						{ id: `Previous`, label: `Previous` },
+						{ id: `Next`, label: `Next` },
+					].concat(choices.getChoicesForFolder()),
 				},
 			],
 			callback: action_callback,
@@ -467,10 +470,14 @@ async function getCommand(action, instance) {
 			cmd = action.options.Key
 			break
 		case 'SetSelected_PresentationFolder':
-			let folderNumMatches = action.options.Key.match(/\d+$/);
-			if (folderNumMatches) {
-				number = folderNumMatches[0];
-				cmd = action.actionId + separatorChar + number
+			if(action.options.Key == 'Next' || action.options.Key == 'Previous'){
+				cmd = action.actionId + separatorChar + action.options.Key
+			}else{
+				let folderNumMatches = action.options.Key.match(/\d+$/);
+				if (folderNumMatches) {
+					number = folderNumMatches[0];
+					cmd = action.actionId + separatorChar + number
+				}
 			}
 			break;
 		case 'open_presentation_from_watched_folder':
