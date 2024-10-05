@@ -445,6 +445,26 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+		SetSlotPath: {
+			name: 'Presentation: Set file path for slot',
+			options: [
+				{
+					type: 'textinput',
+					label: 'File Path',
+					id: 'FilePath',
+					useVariables: true,
+				},
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Key',
+					default: 'Slot1',
+					choices: choices.getChoicesForSlot(),
+				},
+				
+			],
+			callback: action_callback,
+		},
 	}
 }
 
@@ -551,6 +571,11 @@ async function getCommand(action, instance) {
 			break
 		case 'ClearAll':
 			cmd = action.actionId + separatorChar + action.options.Key
+			break
+		case 'SetSlotPath':
+			cmd = action.actionId + separatorChar + 
+			action.options.Key.substring(4) + separatorChar + 
+			await instance.parseVariablesInString(action.options.FilePath)
 			break
 		default:
 			cmd = action.actionId
