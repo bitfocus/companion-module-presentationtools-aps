@@ -426,6 +426,25 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+		ClearAll: {
+			name: 'Clear All',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Type',
+					id: 'Key',
+					default: "StillImages",
+					tooltip: 'Type',
+					choices: [
+						{id: "StillImages", label: "Still Images"},
+						{id: "Media", label: "Media"},
+						{id: "SlotPresentations", label: "Slot Presentations"},
+						{id: "PresentationFolders", label: "Presentation Folders"},
+					],
+				},
+			],
+			callback: action_callback,
+		},
 	}
 }
 
@@ -529,6 +548,9 @@ async function getCommand(action, instance) {
 			break
 		case 'Change_selected_presentation_in_watched_folder':
 			scrollSelectedPresentation(instance, action.options.ScrollValue)
+			break
+		case 'ClearAll':
+			cmd = action.actionId + separatorChar + action.options.Key
 			break
 		default:
 			cmd = action.actionId
