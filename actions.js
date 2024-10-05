@@ -1,15 +1,12 @@
 var choices = require('./choices')
 function getSlideNumber(txtLabel) {
 	return {
-		type: 'number',
+		type: 'textinput',
 		label: txtLabel,
 		id: 'SlideNumber',
-		min: 1,
-		max: 100000,
 		default: 1,
-		step: 1,
 		required: true,
-		range: false,
+		useVariables: true,
 	}
 }
 
