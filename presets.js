@@ -1,5 +1,5 @@
 const { combineRgb } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfFolderFiles, numberOfPresentationFolders } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfPresentationFolderFiles, numberOfPresentationFolders } = require('./constants')
 exports.getPresets = function (instance) {
 	var self = instance
 	var presets = {}
@@ -107,9 +107,9 @@ exports.getPresets = function (instance) {
 	}
 
 	//Folders
-	presets['FolderPrev'] = {
+	presets['PresentationFolderPrev'] = {
 		type: 'button',
-		category: 'Folders',
+		category: 'Presentation Folders',
 		name: 'Previous',
 		style: {
 			size: 'auto',
@@ -134,9 +134,9 @@ exports.getPresets = function (instance) {
 			},
 		],
 	}
-	presets['FolderNext'] = {
+	presets['PresentationFolderNext'] = {
 		type: 'button',
-		category: 'Folders',
+		category: 'Presentation Folders',
 		name: 'Next',
 		style: {
 			size: 'auto',
@@ -172,10 +172,10 @@ exports.getPresets = function (instance) {
 		)
 	}
 
-	// Watched folder scroll
-	presets['Scroll +1'] = {
+	// Watched presentation folder scroll
+	presets['PresentationScroll +1'] = {
 		type: 'button',
-		category: 'Watched Folder Scroll',
+		category: 'Watched Presentation Folder Scroll',
 		name: 'Scroll +1',
 		style: {
 			text: '+1',
@@ -189,7 +189,7 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Change_selected_presentation_in_watched_folder',
+						actionId: 'Change_selected_presentation_in_watched_presentation_folder',
 						options: {
 							ScrollValue: "1",
 						},
@@ -199,9 +199,9 @@ exports.getPresets = function (instance) {
 			},
 		],
 	}
-	presets['Scroll -1'] = {
+	presets['PresentationScroll -1'] = {
 		type: 'button',
-		category: 'Watched Folder Scroll',
+		category: 'Watched Presentation Folder Scroll',
 		name: 'Scroll -1',
 		style: {
 			text: '-1',
@@ -215,7 +215,7 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Change_selected_presentation_in_watched_folder',
+						actionId: 'Change_selected_presentation_in_watched_presentation_folder',
 						options: {
 							ScrollValue: "-1",
 						},
@@ -226,12 +226,12 @@ exports.getPresets = function (instance) {
 		],
 	}
 
-	presets['CurrentSelected'] = {
+	presets['CurrentSelectedPresentation'] = {
 		type: 'button',
-		category: 'Watched Folder Scroll',
-		name: 'Current selected in watched folder',
+		category: 'Watched Presentation Folder Scroll',
+		name: 'Current selected in watched presentation folder',
 		style: {
-			text: `$(${self.label}:watched_folder_selected_presentation_name)`,
+			text: `$(${self.label}:watched_presentation_folder_selected_presentation_name)`,
 			size: 'auto',
 			alignment: 'center:center',
 			color: 16777215,
@@ -244,7 +244,7 @@ exports.getPresets = function (instance) {
 					{
 						actionId: 'OpenStart_Presentation',
 						options: {
-							Filename: `$(${self.label}:watched_folder_selected_presentation_path)`,
+							Filename: `$(${self.label}:watched_presentation_folder_selected_presentation_path)`,
 							SlideNumber: 1,
 							Fullscreen: 1,
 						},
@@ -255,12 +255,12 @@ exports.getPresets = function (instance) {
 		],
 	}
 
-	presets['CurrentSelectedNumber'] = {
+	presets['CurrentSelectedPresentationNumber'] = {
 		type: 'button',
-		category: 'Watched Folder Scroll',
-		name: 'Current selected in watched folder (Number/Total)',
+		category: 'Watched Presentation Folder Scroll',
+		name: 'Current selected in watched presentation folder (Number/Total)',
 		style: {
-			text: `$(${self.label}:watched_folder_selected_presentation_number)/$(${self.label}:watched_folder_total_files_count)`,
+			text: `$(${self.label}:watched_presentation_folder_selected_presentation_number)/$(${self.label}:watched_presentation_folder_total_files_count)`,
 			size: 'auto',
 			alignment: 'center:center',
 			color: 16777215,
@@ -275,10 +275,10 @@ exports.getPresets = function (instance) {
 		],
 	}
 
-	//Watched Folder Presentations
-	for (let i = 1; i <= Math.max(minNumberOfFolderFiles, self.watchedFolderState.filesList.length); i++) {
+	//Watched Presentation Folder Presentations
+	for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, self.watchedPresentationFolderState.filesList.length); i++) {
 		try{
-		presets[`File${i}`] = getPresetforWatchedFolderFiles(
+		presets[`File${i}`] = getPresetforWatchedPresentationFolderFiles(
 			`File ${i}`,
 			`${i} - $(${self.label}:presentation_folder_file${i})`,
 			i,
@@ -1311,7 +1311,7 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 	return {
 		type: 'button',
-		category: 'Folders',
+		category: 'Presentation Folders',
 		name: lbl,
 		style: {
 			text: `${i} $(${instanceLabel}:${txt})`,
@@ -1328,7 +1328,7 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 		],
 		feedbacks: [
 			{
-				feedbackId: 'folder_exist',
+				feedbackId: 'presentation_folder_exist',
 				options: {
 					Key: FolderNumber,
 				},
@@ -1338,7 +1338,7 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 				},
 			},
 			{
-				feedbackId: 'folder_watched',
+				feedbackId: 'presentation_folder_watched',
 				options: {
 					Key: FolderNumber,
 				},
@@ -1351,10 +1351,10 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 	}
 }
 
-function getPresetforWatchedFolderFiles(lbl, txt, i, cr, FileNumber, SlideNumber, Fullscreen) {
+function getPresetforWatchedPresentationFolderFiles(lbl, txt, i, cr, FileNumber, SlideNumber, Fullscreen) {
 	return {
 		type: 'button',
-		category: 'Watched Folder',
+		category: 'Watched Presentation Folder',
 		name: lbl,
 		style: {
 			text: txt,
@@ -1367,7 +1367,7 @@ function getPresetforWatchedFolderFiles(lbl, txt, i, cr, FileNumber, SlideNumber
 			{
 				down: [
 					{
-						actionId: 'open_presentation_from_watched_folder',
+						actionId: 'open_presentation_from_watched_presentation_folder',
 						options: {
 							FileNumber: FileNumber,
 							SlideNumber: SlideNumber,

@@ -87,7 +87,7 @@ exports.getFeedbacks = function (instance) {
 				return self.slotCaptureStates[feedback.options.Key]
 			},
 		},
-		folder_captured: {
+		presentation_folder_captured: {
 			type: 'boolean',
 			name: 'Folder capture',
 			description: "When capturing current presentation's folder, change the style",
@@ -129,7 +129,7 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[feedback.options.Key].opened
 			},
 		},
-		file_displayed: {
+		presentation_file_displayed: {
 			type: 'boolean',
 			name: 'Folder file presentation is displayed',
 			description: 'If the presentation from the folder file is displayed, change the style',
@@ -139,7 +139,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.watchedFolderState.filesList),
+					choices: choices.getChoicesForFolderFiles(self.watchedPresentationFolderState.filesList),
 				},
 			],
 			defaultStyle: {
@@ -147,7 +147,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedFolderState.filesState[feedback.options.Key]?.opened
+				return self.watchedPresentationFolderState.filesState[feedback.options.Key]?.opened
 			},
 		},
 		presentation_displayed: {
@@ -184,7 +184,7 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[feedback.options.Key].exists
 			},
 		},
-		folder_exist: {
+		presentation_folder_exist: {
 			type: 'boolean',
 			name: 'Folder exists',
 			description: 'If there is a folder on the slot, change the style',
@@ -205,7 +205,7 @@ exports.getFeedbacks = function (instance) {
 				return self.folderStates[feedback.options.Key].exists
 			},
 		},
-		folder_watched: {
+		presentation_folder_watched: {
 			type: 'boolean',
 			name: 'Folder is watched',
 			description: 'If folder file is watched, change the style',
@@ -223,10 +223,10 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedFolderState.number == parseInt(feedback.options.Key.substr(6))
+				return self.watchedPresentationFolderState.number == parseInt(feedback.options.Key.substr(6))
 			},
 		},
-		file_exist: {
+		presentation_file_exist: {
 			type: 'boolean',
 			name: 'Folder file presentation exists',
 			description: 'If there is a presentation on the folder file, change the style',
@@ -236,7 +236,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.watchedFolderState.filesList),
+					choices: choices.getChoicesForFolderFiles(self.watchedPresentationFolderState.filesList),
 				},
 			],
 			defaultStyle: {
@@ -244,7 +244,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedFolderState.filesState[feedback.options.Key]?.exists
+				return self.watchedPresentationFolderState.filesState[feedback.options.Key]?.exists
 			},
 		},
 

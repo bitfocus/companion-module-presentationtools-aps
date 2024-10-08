@@ -156,8 +156,8 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
-		Change_selected_presentation_in_watched_folder: {
-			name: 'Presentation: Scroll selected presentation in watched folder',
+		Change_selected_presentation_in_watched_presentation_folder: {
+			name: 'Presentation: Scroll selected presentation in watched presentation folder',
 			options: [
 				{
 					type: 'dropdown',
@@ -176,16 +176,16 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
-		open_presentation_from_watched_folder: {
-			name: 'Presentation: Open from watched folder',
+		open_presentation_from_watched_presentation_folder: {
+			name: 'Presentation: Open from watched presentation folder',
 			options: [
 				{
 					type: 'dropdown',
 					label: 'File name',
 					id: 'FileNumber',
 					default: 'File1',
-					tooltip: 'Open the file with the filename (From the watched folder)',
-					choices: choices.getChoicesForFolderFiles(instance.watchedFolderState.filesList),
+					tooltip: 'Open the file with the filename (From the watched presentation folder)',
+					choices: choices.getChoicesForFolderFiles(instance.watchedPresentationFolderState.filesList),
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -516,14 +516,14 @@ async function getCommand(action, instance) {
 				}
 			}
 			break;
-		case 'open_presentation_from_watched_folder':
+		case 'open_presentation_from_watched_presentation_folder':
 			let fileNumberMatches = action.options.FileNumber.match(/\d+$/);
 			if (fileNumberMatches) {
 				cmd = 'OpenStart_Presentation' + separatorChar
 				cmd += action.options.SlideNumber + separatorChar
 				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 				let fileNumber = fileNumberMatches[0]
-				let filePath = instance.watchedFolderState.filesList[fileNumber - 1]
+				let filePath = instance.watchedPresentationFolderState.filesList[fileNumber - 1]
 				cmd += filePath
 			}
 			break
@@ -566,7 +566,7 @@ async function getCommand(action, instance) {
 			cmd = action.actionId + mediaPlayerSeparatorChar
 			cmd += action.options.Seconds
 			break
-		case 'Change_selected_presentation_in_watched_folder':
+		case 'Change_selected_presentation_in_watched_presentation_folder':
 			scrollSelectedPresentation(instance, action.options.ScrollValue)
 			break
 		case 'ClearAll':
@@ -588,19 +588,19 @@ async function getCommand(action, instance) {
 function scrollSelectedPresentation(instance, delta) {
 	var self = instance
 	const values = {}
-	let filesList = self.watchedFolderState.filesList
+	let filesList = self.watchedPresentationFolderState.filesList
 	
 	if(!filesList || filesList.length == 0)
 		return
 
-	let oldSelectedNumber = self.getVariableValue('watched_folder_selected_presentation_number')
+	let oldSelectedNumber = self.getVariableValue('watched_presentation_folder_selected_presentation_number')
 	if(!oldSelectedNumber)
 		oldSelectedNumber = 1
 	let newSelectedNumber = parseInt(oldSelectedNumber) + parseInt(delta)
 	let sIndex = ((newSelectedNumber - 1) % filesList.length + filesList.length) % filesList.length;
-	values['watched_folder_selected_presentation_number'] = sIndex + 1
-	values['watched_folder_total_files_count'] = filesList.length
-	values['watched_folder_selected_presentation_path'] = filesList[sIndex]
-	values['watched_folder_selected_presentation_name'] = filesList[sIndex].split('\\').pop()
+	values['watched_presentation_folder_selected_presentation_number'] = sIndex + 1
+	values['watched_presentation_folder_total_files_count'] = filesList.length
+	values['watched_presentation_folder_selected_presentation_path'] = filesList[sIndex]
+	values['watched_presentation_folder_selected_presentation_name'] = filesList[sIndex].split('\\').pop()
 	self.setVariableValues(values)
 }
