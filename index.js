@@ -20,7 +20,7 @@ class APSInstance extends InstanceBase {
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
-		this.folderStates = states.generateFolderStates()
+		this.presentationFolderStates = states.generatePresentationFolderStates()
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.watchedPresentationFolderState = {
@@ -149,7 +149,7 @@ class APSInstance extends InstanceBase {
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
 						} else if (jsonData.action === 'presentation_folders') {
 							self.setPresentationFolderVariables(jsonData.data)
-							states.updatePresentationFolderStates(self.folderStates, jsonData.data)
+							states.updatePresentationFolderStates(self.presentationFolderStates, jsonData.data)
 							self.checkFeedbacks('presentation_folder_exist')
 						} else if (jsonData.action === 'watched_presentation_folder') {
 							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data)

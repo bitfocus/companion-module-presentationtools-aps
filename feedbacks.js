@@ -202,7 +202,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.folderStates[feedback.options.Key].exists
+				return self.presentationFolderStates[feedback.options.Key].exists
 			},
 		},
 		presentation_folder_watched: {

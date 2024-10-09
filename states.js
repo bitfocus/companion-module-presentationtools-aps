@@ -31,7 +31,7 @@ exports.generateSlotStates = function () {
 	}
 	return states
 }
-exports.generateFolderStates = function () {
+exports.generatePresentationFolderStates = function () {
 	var schoices = choices.getChoicesForFolder()
 	var states = new Object()
 	for (var i = numberOfPresentationFolders - 1; i >= 0; i--) {
