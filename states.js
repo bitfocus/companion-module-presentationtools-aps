@@ -32,7 +32,7 @@ exports.generateSlotStates = function () {
 	return states
 }
 exports.generatePresentationFolderStates = function () {
-	var schoices = choices.getChoicesForFolder()
+	var schoices = choices.getChoicesForPresentationFolder()
 	var states = new Object()
 	for (var i = numberOfPresentationFolders - 1; i >= 0; i--) {
 		const si = schoices[i].id
@@ -51,7 +51,7 @@ exports.generateSlotCaptureStates = function () {
 	return states
 }
 exports.generateFolderCaptureStates = function () {
-	var cchoices = choices.getChoicesForFolder()
+	var cchoices = choices.getChoicesForPresentationFolder()
 	var states = new Object()
 	for (var i = cchoices.length - 1; i >= 0; i--) {
 		var ci = cchoices[i].id

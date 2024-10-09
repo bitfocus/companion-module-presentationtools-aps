@@ -97,7 +97,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Source',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForFolder(),
+					choices: choices.getChoicesForPresentationFolder(),
 				},
 			],
 			defaultStyle: {
@@ -139,7 +139,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.watchedPresentationFolderState.filesList),
+					choices: choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList),
 				},
 			],
 			defaultStyle: {
@@ -194,7 +194,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForFolder(),
+					choices: choices.getChoicesForPresentationFolder(),
 				},
 			],
 			defaultStyle: {
@@ -215,7 +215,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForFolder(),
+					choices: choices.getChoicesForPresentationFolder(),
 				},
 			],
 			defaultStyle: {
@@ -236,7 +236,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForFolderFiles(self.watchedPresentationFolderState.filesList),
+					choices: choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList),
 				},
 			],
 			defaultStyle: {

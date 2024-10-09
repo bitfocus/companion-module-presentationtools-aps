@@ -150,7 +150,7 @@ exports.getActions = function (instance) {
 					choices: [
 						{ id: `Previous`, label: `Previous` },
 						{ id: `Next`, label: `Next` },
-					].concat(choices.getChoicesForFolder()),
+					].concat(choices.getChoicesForPresentationFolder()),
 				},
 			],
 			callback: action_callback,
@@ -185,7 +185,7 @@ exports.getActions = function (instance) {
 					id: 'FileNumber',
 					default: 'File1',
 					tooltip: 'Open the file with the filename (From the watched presentation folder)',
-					choices: choices.getChoicesForFolderFiles(instance.watchedPresentationFolderState.filesList),
+					choices: choices.getChoicesForPresentationFolderFiles(instance.watchedPresentationFolderState.filesList),
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -317,7 +317,7 @@ exports.getActions = function (instance) {
 					label: 'Folder',
 					id: 'Key',
 					default: 'Folder1',
-					choices: choices.getChoicesForFolder(),
+					choices: choices.getChoicesForPresentationFolder(),
 				},
 			],
 			callback: action_callback,
