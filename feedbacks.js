@@ -248,6 +248,70 @@ exports.getFeedbacks = function (instance) {
 			},
 		},
 
+		media_folder_exist: {
+			type: 'boolean',
+			name: 'Folder exists',
+			description: 'If there is a folder on the slot, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForMediaFolder(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.mediaFolderStates[feedback.options.Key].exists
+			},
+		},
+		media_folder_watched: {
+			type: 'boolean',
+			name: 'Folder is watched',
+			description: 'If folder file is watched, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: choices.getChoicesForMediaFolder(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return self.watchedMediaFolderState.number == parseInt(feedback.options.Key.substr(6))
+			},
+		},
+		media_file_exist: {
+			type: 'boolean',
+			name: 'Folder file media exists',
+			description: 'If there is a media on the folder file, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices.getChoicesForMediaFolderFiles(self.watchedMediaFolderState.filesList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.watchedMediaFolderState.filesState[feedback.options.Key]?.exists
+			},
+		},
+
 		Media_playing: {
 			type: 'boolean',
 			name: 'Media Player slot is playing',

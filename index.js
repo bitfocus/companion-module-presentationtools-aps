@@ -1,5 +1,12 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots, minNumberOfPresentationFolderFiles, numberOfPresentationFolders, numberOfImagesSlots } = require('./constants')
+const { 
+	numberOfPresentationSlots, 
+	numberOfMediaPlayerSlots, 
+	minNumberOfPresentationFolderFiles, 
+	numberOfPresentationFolders, 
+	numberOfImagesSlots,
+	minNumberOfMediaFolderFiles, numberOfMediaFolders,
+	} = require('./constants')
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -21,9 +28,15 @@ class APSInstance extends InstanceBase {
 		this.displayStates = states.generateDisplayStates()
 		this.slotStates = states.generateSlotStates()
 		this.presentationFolderStates = states.generatePresentationFolderStates()
+		this.mediaFolderStates = states.generateMediaFolderStates()
 		this.slotCaptureStates = states.generateSlotCaptureStates()
 		this.folderCaptureStates = states.generateFolderCaptureStates()
 		this.watchedPresentationFolderState = {
+			name: null,
+			filesList: [],
+			filesState: {}
+		}
+		this.watchedMediaFolderState = {
 			name: null,
 			filesList: [],
 			filesState: {}
@@ -147,7 +160,10 @@ class APSInstance extends InstanceBase {
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
-						} else if (jsonData.action === 'presentation_folders') {
+						} 
+						
+						// Presentation Folders
+						else if (jsonData.action === 'presentation_folders') {
 							self.setPresentationFolderVariables(jsonData.data)
 							states.updatePresentationFolderStates(self.presentationFolderStates, jsonData.data)
 							self.checkFeedbacks('presentation_folder_exist')
@@ -162,7 +178,28 @@ class APSInstance extends InstanceBase {
 						} else if (jsonData.action === 'opened_folder_presentation') {
 							states.updatePresentationFileStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index)
 							self.checkFeedbacks('presentation_file_exist', 'presentation_file_displayed')
-						} else if (jsonData.action === 'MediaPlayer') {
+						} 
+						
+						// Media Folders
+						else if (jsonData.action === 'media_folders') {
+							self.setMediaFolderVariables(jsonData.data)
+							states.updateMediaFolderStates(self.mediaFolderStates, jsonData.data)
+							self.checkFeedbacks('media_folder_exist')
+						} else if (jsonData.action === 'watched_media_folder') {
+							self.log('debug', JSON.stringify(jsonData.data))
+							states.updateWatchedMediaFolderState(self.watchedMediaFolderState, jsonData.data)
+							self.variables(true)
+							self.actions()
+							self.feedbacks()
+							self.presets()
+							self.setMediaFolderFilesVariables()
+							self.checkFeedbacks('media_folder_watched')
+						} else if (jsonData.action === 'opened_folder_media') {
+							states.updateMediaFileStates(self.watchedMediaFolderState, jsonData.data.current_opened_file_index)
+							self.checkFeedbacks('media_file_exist', 'media_file_displayed')
+						} 
+
+						else if (jsonData.action === 'MediaPlayer') {
 							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
 							self.checkFeedbacks(
@@ -238,6 +275,12 @@ class APSInstance extends InstanceBase {
 			{ name: 'Presentation: Selected in watched presentation folder (Path)', variableId: 'watched_presentation_folder_selected_presentation_path' },
 			{ name: 'Presentation: Selected in watched presentation folder (Number)', variableId: 'watched_presentation_folder_selected_presentation_number' },
 			{ name: 'Presentation: Watched presentation folder total files count', variableId: 'watched_presentation_folder_total_files_count' },
+
+			{ name: 'Media: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
+			{ name: 'Media: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
+			{ name: 'Media: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
+			{ name: 'Media: Watched media folder total files count', variableId: 'watched_media_folder_total_files_count' },
+
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
 			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
@@ -268,6 +311,12 @@ class APSInstance extends InstanceBase {
 				variableId: `presentation_folder${i}`,
 			})
 		}
+		for (let i = 1; i <= numberOfMediaFolders; i++) {
+			variables.push({
+				name: `Media Folder ${i}`,
+				variableId: `media_folder${i}`,
+			})
+		}
 
 		variables.push({
 			name: `Watched Presentation Folder Name`,
@@ -286,6 +335,26 @@ class APSInstance extends InstanceBase {
 			variables.push({
 				name: `Presentation Folder File ${i}`,
 				variableId: `presentation_folder_file${i}`,
+			})
+		}
+
+		variables.push({
+			name: `Watched Media Folder Name`,
+			variableId: `watched_media_folder_name`,
+		})
+		variables.push({
+			name: `Watched Media Folder number`,
+			variableId: `watched_media_folder_number`,
+		})
+		variables.push({
+			name: `Watched Media Folder Files Count`,
+			variableId: `watched_media_folder_files_count`,
+		})
+
+		for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, self.watchedMediaFolderState.filesList.length); i++) {
+			variables.push({
+				name: `Media Folder File ${i}`,
+				variableId: `media_folder_file${i}`,
 			})
 		}
 
@@ -335,6 +404,14 @@ class APSInstance extends InstanceBase {
 		try {
 			for (let i = numberOfPresentationFolders; i > 0; i--) {
 				values[`presentation_folder${i}`] = '-'
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		try {
+			for (let i = numberOfMediaFolders; i > 0; i--) {
+				values[`media_folder${i}`] = '-'
 			}
 		} catch (err) {
 			self.log('debug', err)
@@ -428,6 +505,58 @@ class APSInstance extends InstanceBase {
 			values['watched_presentation_folder_total_files_count'] = null
 			values['watched_presentation_folder_selected_presentation_path'] = null
 			values['watched_presentation_folder_selected_presentation_name'] = null
+		}
+		self.setVariableValues(values)
+	}
+
+
+	setMediaFolderVariables(data) {
+		var self = this
+		const values = {}
+
+		try {
+			for (let i = numberOfMediaFolders; i > 0; i--) {
+				values[`media_folder${i}`] = data.names[i - 1]
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		self.setVariableValues(values)
+	}
+
+	setMediaFolderFilesVariables() {
+		var self = this
+		const values = {}
+		values[`watched_media_folder_name`] = self.watchedMediaFolderState.name
+		values[`watched_media_folder_number`] = self.watchedMediaFolderState.number
+		values[`watched_media_folder_files_count`] = self.watchedMediaFolderState.filesList.length
+		let filesList = self.watchedMediaFolderState.filesList
+		try {
+			for (let i = Math.max(minNumberOfMediaFolderFiles, filesList.length); i > 0; i--) {
+				let text = ''
+				if(i <= filesList.length)
+					text = filesList[i - 1].split('\\').pop()
+				values[`media_folder_file${i}`] = text
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
+
+		
+		if(filesList.length > 0){
+			if(!filesList.includes(self.getVariableValue('watched_media_folder_selected_media_path'))){
+				values['watched_media_folder_selected_media_number'] = 1
+				values['watched_media_folder_total_files_count'] = filesList.length
+				values['watched_media_folder_selected_media_path'] = filesList[0]
+				values['watched_media_folder_selected_media_name'] = filesList[0].split('\\').pop()
+			}
+		}
+		else{
+			values['watched_media_folder_selected_media_number'] = null
+			values['watched_media_folder_total_files_count'] = null
+			values['watched_media_folder_selected_media_path'] = null
+			values['watched_media_folder_selected_media_name'] = null
 		}
 		self.setVariableValues(values)
 	}

@@ -1,4 +1,10 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots, numberOfPresentationFolders, minNumberOfPresentationFolderFiles } = require('./constants')
+const { 
+	numberOfPresentationSlots, 
+	numberOfMediaPlayerSlots, 
+	numberOfPresentationFolders, 
+	minNumberOfPresentationFolderFiles,
+	numberOfMediaFolders, 
+	minNumberOfMediaFolderFiles } = require('./constants')
 exports.getChoicesForCapture = function () {
 	return [
 		{ id: 'Capture1', label: 'Image 1' },
@@ -52,6 +58,26 @@ exports.getChoicesForPresentationFolder = function () {
 exports.getChoicesForPresentationFolderFiles = function (filesList) {
 	choicesList = []
 	for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, filesList.length); i++) {
+		let text = `${i} - `
+		if(i <= filesList.length)
+			text += filesList[i - 1].split('\\').pop()
+		
+		choicesList.push({ id: `File${i}`, label: text})
+	}
+	return choicesList
+}
+
+exports.getChoicesForMediaFolder = function () {
+	choicesList = []
+	for (let i = 1; i <= numberOfMediaFolders; i++) {
+		choicesList.push({ id: `Folder${i}`, label: i })
+	}
+	return choicesList
+}
+
+exports.getChoicesForMediaFolderFiles = function (filesList) {
+	choicesList = []
+	for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, filesList.length); i++) {
 		let text = `${i} - `
 		if(i <= filesList.length)
 			text += filesList[i - 1].split('\\').pop()

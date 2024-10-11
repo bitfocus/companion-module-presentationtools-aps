@@ -198,6 +198,58 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		SetSelected_MediaFolder: {
+			name: 'Set media folder X',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Folder',
+					id: 'Key',
+					default: 'Folder1',
+					choices: [
+						{ id: `Previous`, label: `Previous` },
+						{ id: `Next`, label: `Next` },
+					].concat(choices.getChoicesForMediaFolder()),
+				},
+			],
+			callback: action_callback,
+		},
+
+		Change_selected_media_in_watched_media_folder: {
+			name: 'Media: Scroll selected media in watched media folder',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Scroll value',
+					id: 'ScrollValue',
+					default: "1",
+					tooltip: 'Scroll value',
+					choices: [
+						{id: "-10", label: "-10"},
+						{id: "-1", label: "-1"},
+						{id: "1", label: "+1"},
+						{id: "10", label: "+10"},
+						
+					],
+				},
+			],
+			callback: action_callback,
+		},
+		open_media_from_watched_media_folder: {
+			name: 'Media: Open from watched media folder',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File name',
+					id: 'FileNumber',
+					default: 'File1',
+					tooltip: 'Open the file with the filename (From the watched media folder)',
+					choices: choices.getChoicesForMediaFolderFiles(instance.watchedMediaFolderState.filesList),
+				},
+			],
+			callback: action_callback,
+		},
+
 		OpenStart_Presentation: {
 			name: 'Presentation: Open from file path',
 			options: [
@@ -440,6 +492,7 @@ exports.getActions = function (instance) {
 						{id: "Media", label: "Media"},
 						{id: "SlotPresentations", label: "Slot Presentations"},
 						{id: "PresentationFolders", label: "Presentation Folders"},
+						{id: "MediaFolders", label: "Media Folders"},
 					],
 				},
 			],
@@ -538,6 +591,28 @@ async function getCommand(action, instance) {
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 			cmd += path
 			break
+		case 'SetSelected_MediaFolder':
+			if(action.options.Key == 'Next' || action.options.Key == 'Previous'){
+				cmd = action.actionId + separatorChar + action.options.Key
+			}else{
+				let folderNumMatches = action.options.Key.match(/\d+$/);
+				if (folderNumMatches) {
+					number = folderNumMatches[0];
+					cmd = action.actionId + separatorChar + number
+				}
+			}
+			break;
+		case 'open_media_from_watched_media_folder':
+			let mediaFileNumberMatches = action.options.FileNumber.match(/\d+$/);
+			if (mediaFileNumberMatches) {
+				cmd = 'OpenStart_Media' + separatorChar
+				cmd += action.options.SlideNumber + separatorChar
+				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
+				let fileNumber = mediaFileNumberMatches[0]
+				let filePath = instance.watchedMediaFolderState.filesList[fileNumber - 1]
+				cmd += filePath
+			}
+			break
 		case 'Generic':
 			cmd = 'Generic' + separatorChar
 			cmd += action.options.SlideNumber
@@ -568,6 +643,9 @@ async function getCommand(action, instance) {
 			break
 		case 'Change_selected_presentation_in_watched_presentation_folder':
 			scrollSelectedPresentation(instance, action.options.ScrollValue)
+			break
+		case 'Change_selected_media_in_watched_media_folder':
+			scrollSelectedMedia(instance, action.options.ScrollValue)
 			break
 		case 'ClearAll':
 			cmd = action.actionId + separatorChar + action.options.Key
@@ -602,5 +680,25 @@ function scrollSelectedPresentation(instance, delta) {
 	values['watched_presentation_folder_total_files_count'] = filesList.length
 	values['watched_presentation_folder_selected_presentation_path'] = filesList[sIndex]
 	values['watched_presentation_folder_selected_presentation_name'] = filesList[sIndex].split('\\').pop()
+	self.setVariableValues(values)
+}
+
+function scrollSelectedMedia(instance, delta) {
+	var self = instance
+	const values = {}
+	let filesList = self.watchedMediaFolderState.filesList
+	
+	if(!filesList || filesList.length == 0)
+		return
+
+	let oldSelectedNumber = self.getVariableValue('watched_media_folder_selected_media_number')
+	if(!oldSelectedNumber)
+		oldSelectedNumber = 1
+	let newSelectedNumber = parseInt(oldSelectedNumber) + parseInt(delta)
+	let sIndex = ((newSelectedNumber - 1) % filesList.length + filesList.length) % filesList.length;
+	values['watched_media_folder_selected_media_number'] = sIndex + 1
+	values['watched_media_folder_total_files_count'] = filesList.length
+	values['watched_media_folder_selected_media_path'] = filesList[sIndex]
+	values['watched_media_folder_selected_media_name'] = filesList[sIndex].split('\\').pop()
 	self.setVariableValues(values)
 }
