@@ -478,8 +478,8 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
-		ClearAll: {
-			name: 'Clear All',
+		Clear: {
+			name: 'Clear',
 			options: [
 				{
 					type: 'dropdown',
@@ -494,6 +494,56 @@ exports.getActions = function (instance) {
 						{id: "PresentationFolders", label: "Presentation Folders"},
 						{id: "MediaFolders", label: "Media Folders"},
 					],
+				},
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'StillImages',
+					default: 'All',
+					choices: [
+						{ id: `All`, label: `All` },
+					].concat(choices.getChoicesForCapture()),
+					isVisible: (opt, _d) => opt.Key == 'StillImages',
+				},
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'Media',
+					default: 'All',
+					choices: [
+						{ id: `All`, label: `All` },
+					].concat(choices.getChoicesForMediaPlayer()),
+					isVisible: (opt, _d) => opt.Key == 'Media',
+				},
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'SlotPresentations',
+					default: 'All',
+					choices: [
+						{ id: `All`, label: `All` },
+					].concat(choices.getChoicesForSlot()),
+					isVisible: (opt, _d) => opt.Key == 'SlotPresentations',
+				},
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'PresentationFolders',
+					default: 'All',
+					choices: [
+						{ id: `All`, label: `All` },
+					].concat(choices.getChoicesForPresentationFolder()),
+					isVisible: (opt, _d) => opt.Key == 'PresentationFolders',
+				},
+				{
+					type: 'dropdown',
+					label: 'Source',
+					id: 'MediaFolders',
+					default: 'All',
+					choices: [
+						{ id: `All`, label: `All` },
+					].concat(choices.getChoicesForMediaFolder()),
+					isVisible: (opt, _d) => opt.Key == 'MediaFolders',
 				},
 			],
 			callback: action_callback,
@@ -647,8 +697,20 @@ async function getCommand(action, instance) {
 		case 'Change_selected_media_in_watched_media_folder':
 			scrollSelectedMedia(instance, action.options.ScrollValue)
 			break
-		case 'ClearAll':
-			cmd = action.actionId + separatorChar + action.options.Key
+		case 'Clear':
+			let clearType = action.options[action.options.Key]
+			let source = ''
+			if(clearType == 'All'){
+				source = clearType
+			}else{
+				// Extcract number
+				let numberMatches = clearType.match(/\d+$/);
+				if (numberMatches) {
+					source = numberMatches[0]
+				}
+			}
+
+			cmd = action.actionId + separatorChar + action.options.Key + separatorChar + source
 			break
 		case 'SetSlotPath':
 			cmd = action.actionId + separatorChar + 
