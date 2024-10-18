@@ -46,6 +46,7 @@ exports.getPresets = function (instance) {
 	// Still Images - Display
 	for (let i = 1; i <= 10; i++) {
 		presets[`Display${i}`] = getPresetForStillImageDisplay(
+			i,
 			`Display Image ${i}`,
 			`${i} $(${instance.label}:image_slot${i})`,
 			`Display${i}`,
@@ -54,6 +55,7 @@ exports.getPresets = function (instance) {
 		)
 	}
 	presets['DisplayTest'] = getPresetForStillImageDisplay(
+		0,
 		'Display Test Image',
 		'Test image',
 		'DisplayTest',
@@ -62,6 +64,7 @@ exports.getPresets = function (instance) {
 		'18',
 	)
 	presets['Blackout'] = getPresetForStillImageDisplay(
+		0,
 		'Display Blackout',
 		'Blackout',
 		'Blackout',
@@ -70,6 +73,7 @@ exports.getPresets = function (instance) {
 		'14',
 	)
 	presets['Freeze'] = getPresetForStillImageDisplay(
+		0,
 		'Freeze',
 		'Freeze',
 		'Freeze',
@@ -168,7 +172,7 @@ exports.getPresets = function (instance) {
 		],
 	}
 	for (let i = 1; i <= numberOfPresentationFolders; i++) {
-		presets[`Folder${i}`] = getPresetforFolder(
+		presets[`PresentationFolder${i}`] = getPresetforPresentationFolder(
 			self.label,
 			`Folder ${i}`,
 			`presentation_folder${i}`,
@@ -355,7 +359,7 @@ exports.getPresets = function (instance) {
 		],
 	}
 	for (let i = 1; i <= numberOfMediaFolders; i++) {
-		presets[`Folder${i}`] = getPresetforFolder(
+		presets[`MediaFolder${i}`] = getPresetforMediaFolder(
 			self.label,
 			`Folder ${i}`,
 			`media_folder${i}`,
@@ -1237,6 +1241,7 @@ exports.getPresets = function (instance) {
 }
 
 function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
+	let key = `Load_MediaPlayer#${slot_num}`
 	return {
 		type: 'button',
 		category: 'Media Player',
@@ -1252,7 +1257,7 @@ function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
 			{
 				feedbackId: 'Media_loaded',
 				options: {
-					Key: `Load_MediaPlayer#${slot_num}`,
+					Key: key,
 				},
 				style: {
 					color: 16777215,
@@ -1262,7 +1267,7 @@ function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
 			{
 				feedbackId: 'Media_playing',
 				options: {
-					Key: `Load_MediaPlayer#${slot_num}`,
+					Key: key,
 				},
 				style: {
 					color: 16777215,
@@ -1272,15 +1277,29 @@ function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
 		],
 		steps: [
 			{
-				down: [
+				down: [],
+				up: [
 					{
 						actionId: 'Load_MediaPlayer',
 						options: {
-							Key: `Load_MediaPlayer#${slot_num}`,
+							Key: key,
 						},
 					},
 				],
-				up: [],
+				2000: {
+					options: {
+						runWhileHeld: true,
+					},
+					actions:[
+						{
+							actionId: "Clear",
+							options: {
+								Key: "Media",
+								Media: `Media${slot_num}`,
+							},
+						}
+					]
+				},
 			},
 		],
 	}
@@ -1354,7 +1373,41 @@ function getPresetForStillImageCapture(lbl, txt, key, clr) {
 	}
 }
 
-function getPresetForStillImageDisplay(lbl, txt, key, clr1, crl2, siz = 'auto') {
+function getPresetForStillImageDisplay(num, lbl, txt, key, clr1, crl2, siz = 'auto') {
+	let steps = [
+		{
+			down: [],
+			up: [
+				{
+					actionId: 'Display_Image',
+					delay: 0,
+					options: {
+						Key: key,
+					},
+				},
+			],
+		},
+	]
+
+	if(!['DisplayTest', 'Blackout', 'Freeze'].includes(key)){
+		steps[0][2000] = 
+			{
+				options: {
+					runWhileHeld: true,
+				},
+				actions:[
+					{
+						actionId: "Clear",
+						options: {
+							Key: "StillImages",
+							StillImages: `Image${num}`,
+						},
+					}
+				]
+			}
+		
+	}
+
 	return {
 		type: 'button',
 		category: 'Still Images',
@@ -1366,20 +1419,7 @@ function getPresetForStillImageDisplay(lbl, txt, key, clr1, crl2, siz = 'auto') 
 			size: siz,
 			color: 16777215,
 		},
-		steps: [
-			{
-				down: [
-					{
-						actionId: 'Display_Image',
-						delay: 0,
-						options: {
-							Key: key,
-						},
-					},
-				],
-				up: [],
-			},
-		],
+		steps: steps,
 		feedbacks: [
 			{
 				feedbackId: 'loaded',
@@ -1463,7 +1503,8 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 		},
 		steps: [
 			{
-				down: [
+				down: [],
+				up: [
 					{
 						actionId: 'OpenStart_Presentation_Slot',
 						options: {
@@ -1473,7 +1514,20 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 						},
 					},
 				],
-				up: [],
+				2000: {
+					options: {
+						runWhileHeld: true,
+					},
+					actions:[
+						{
+							actionId: "Clear",
+							options: {
+								Key: "SlotPresentations",
+								SlotPresentations: SlotNumber,
+							},
+						}
+					]
+				},
 			},
 		],
 		feedbacks: [
@@ -1501,7 +1555,7 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 	}
 }
 
-function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
+function getPresetforPresentationFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 	return {
 		type: 'button',
 		category: 'Presentation Folders',
@@ -1517,6 +1571,20 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 			{
 				down: [],
 				up: [],
+				2000: {
+					options: {
+						runWhileHeld: true,
+					},
+					actions:[
+						{
+							actionId: "Clear",
+							options: {
+								Key: "PresentationFolders",
+								PresentationFolders: FolderNumber,
+							},
+						}
+					]
+				},
 			},
 		],
 		feedbacks: [
@@ -1598,7 +1666,7 @@ function getPresetforWatchedPresentationFolderFiles(lbl, txt, i, cr, FileNumber,
 
 
 
-function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
+function getPresetforMediaFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 	return {
 		type: 'button',
 		category: 'Media Folders',
@@ -1614,6 +1682,20 @@ function getPresetforFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 			{
 				down: [],
 				up: [],
+				2000: {
+					options: {
+						runWhileHeld: true,
+					},
+					actions:[
+						{
+							actionId: "Clear",
+							options: {
+								Key: "MediaFolders",
+								MediaFolders: FolderNumber,
+							},
+						}
+					]
+				},
 			},
 		],
 		feedbacks: [
