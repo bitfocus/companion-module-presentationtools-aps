@@ -502,7 +502,7 @@ exports.getActions = function (instance) {
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
-					].concat(choices.getChoicesForCapture()),
+					].concat(choices.getChoicesForImage()),
 					isVisible: (opt, _d) => opt.Key == 'StillImages',
 				},
 				{
@@ -512,7 +512,7 @@ exports.getActions = function (instance) {
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
-					].concat(choices.getChoicesForMediaPlayer()),
+					].concat(choices.getChoicesForMedia()),
 					isVisible: (opt, _d) => opt.Key == 'Media',
 				},
 				{
