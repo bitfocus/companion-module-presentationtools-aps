@@ -1,10 +1,29 @@
 const { 
+	numberOfImagesSlots,
 	numberOfPresentationSlots, 
 	numberOfMediaPlayerSlots, 
 	numberOfPresentationFolders, 
 	minNumberOfPresentationFolderFiles,
 	numberOfMediaFolders, 
 	minNumberOfMediaFolderFiles } = require('./constants')
+
+
+exports.getChoicesForImage = function () {
+	choicesList = []
+	for (let i = 1; i <= numberOfImagesSlots; i++) {
+		choicesList.push({ id: `Image${i}`, label: i })
+	}
+	return choicesList
+}
+
+exports.getChoicesForMedia = function () {
+	choicesList = []
+	for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
+		choicesList.push({ id: `Media${i}`, label: i })
+	}
+	return choicesList
+}
+
 exports.getChoicesForCapture = function () {
 	return [
 		{ id: 'Capture1', label: 'Image 1' },
