@@ -247,6 +247,27 @@ exports.getFeedbacks = function (instance) {
 				return self.watchedPresentationFolderState.filesState[feedback.options.Key]?.exists
 			},
 		},
+		presentation_file_selected: {
+			type: 'boolean',
+			name: 'Folder file presentation selected',
+			description: 'If the presentation from the folder file is selected, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				return self.getVariableValue('watched_presentation_folder_selected_presentation_number') == feedback.options.Key.substr(4)
+			},
+		},
 
 		media_folder_exist: {
 			type: 'boolean',
@@ -290,10 +311,10 @@ exports.getFeedbacks = function (instance) {
 				return self.watchedMediaFolderState.number == parseInt(feedback.options.Key.substr(6))
 			},
 		},
-		media_file_exist: {
+		media_file_selected: {
 			type: 'boolean',
-			name: 'Folder file media exists',
-			description: 'If there is a media on the folder file, change the style',
+			name: 'Folder file media selected',
+			description: 'If the media from the folder file is selected, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -308,7 +329,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedMediaFolderState.filesState[feedback.options.Key]?.exists
+				return self.getVariableValue('watched_media_folder_selected_media_number') == feedback.options.Key.substr(4)
 			},
 		},
 

@@ -113,3 +113,12 @@ exports.getChoicesForMediaPlayer = function () {
 	}
 	return choicesList
 }
+
+exports.getDeltaValues = function() {
+	return [
+			{id: "-10", label: "-10"},
+			{id: "-1", label: "-1"},
+			{id: "1", label: "+1"},
+			{id: "10", label: "+10"},
+	]
+}
