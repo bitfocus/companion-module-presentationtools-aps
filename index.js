@@ -174,7 +174,7 @@ class APSInstance extends InstanceBase {
 							self.feedbacks()
 							self.presets()
 							self.setPresentationFolderFilesVariables()
-							self.checkFeedbacks('presentation_folder_watched')
+							self.checkFeedbacks('presentation_folder_watched', 'presentation_file_selected')
 						} else if (jsonData.action === 'opened_folder_presentation') {
 							states.updatePresentationFileStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index)
 							self.checkFeedbacks('presentation_file_exist', 'presentation_file_displayed')
@@ -193,10 +193,9 @@ class APSInstance extends InstanceBase {
 							self.feedbacks()
 							self.presets()
 							self.setMediaFolderFilesVariables()
-							self.checkFeedbacks('media_folder_watched')
+							self.checkFeedbacks('media_folder_watched', 'media_file_selected')
 						} else if (jsonData.action === 'opened_folder_media') {
 							states.updateMediaFileStates(self.watchedMediaFolderState, jsonData.data.current_opened_file_index)
-							self.checkFeedbacks('media_file_exist', 'media_file_displayed')
 						} 
 
 						else if (jsonData.action === 'MediaPlayer') {

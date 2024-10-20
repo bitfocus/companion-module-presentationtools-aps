@@ -157,21 +157,17 @@ exports.getActions = function (instance) {
 		},
 
 		Change_selected_presentation_in_watched_presentation_folder: {
-			name: 'Presentation: Scroll selected presentation in watched presentation folder',
+			name: 'Presentation: Select from watched folder',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Scroll value',
-					id: 'ScrollValue',
+					label: 'File',
+					id: 'File',
 					default: "1",
-					tooltip: 'Scroll value',
-					choices: [
-						{id: "-10", label: "-10"},
-						{id: "-1", label: "-1"},
-						{id: "1", label: "+1"},
-						{id: "10", label: "+10"},
-						
-					],
+					tooltip: 'File',
+					choices: 
+						choices.getDeltaValues()
+						.concat(choices.getChoicesForPresentationFolderFiles(instance.watchedPresentationFolderState.filesList)),
 				},
 			],
 			callback: action_callback,
@@ -216,35 +212,17 @@ exports.getActions = function (instance) {
 		},
 
 		Change_selected_media_in_watched_media_folder: {
-			name: 'Media: Scroll selected media in watched media folder',
+			name: 'Media: Select from watched folder',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Scroll value',
-					id: 'ScrollValue',
+					label: 'File',
+					id: 'File',
 					default: "1",
-					tooltip: 'Scroll value',
-					choices: [
-						{id: "-10", label: "-10"},
-						{id: "-1", label: "-1"},
-						{id: "1", label: "+1"},
-						{id: "10", label: "+10"},
-						
-					],
-				},
-			],
-			callback: action_callback,
-		},
-		open_media_from_watched_media_folder: {
-			name: 'Media: Open from watched media folder',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'File name',
-					id: 'FileNumber',
-					default: 'File1',
-					tooltip: 'Open the file with the filename (From the watched media folder)',
-					choices: choices.getChoicesForMediaFolderFiles(instance.watchedMediaFolderState.filesList),
+					tooltip: 'File',
+					choices: 
+						choices.getDeltaValues()
+						.concat(choices.getChoicesForMediaFolderFiles(instance.watchedMediaFolderState.filesList)),
 				},
 			],
 			callback: action_callback,
@@ -548,7 +526,7 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
-		SetSlotPath: {
+		SetPresentationSlotPath: {
 			name: 'Presentation: Set file path for slot',
 			options: [
 				{
@@ -563,6 +541,26 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					default: 'Slot1',
 					choices: choices.getChoicesForSlot(),
+				},
+				
+			],
+			callback: action_callback,
+		},
+		SetMediaSlotPath: {
+			name: 'Media: Set file path for slot',
+			options: [
+				{
+					type: 'textinput',
+					label: 'File Path',
+					id: 'FilePath',
+					useVariables: true,
+				},
+				{
+					type: 'dropdown',
+					label: 'Media',
+					id: 'Key',
+					default: 'Media1',
+					choices: choices.getChoicesForMedia(),
 				},
 				
 			],
@@ -652,17 +650,6 @@ async function getCommand(action, instance) {
 				}
 			}
 			break;
-		case 'open_media_from_watched_media_folder':
-			let mediaFileNumberMatches = action.options.FileNumber.match(/\d+$/);
-			if (mediaFileNumberMatches) {
-				cmd = 'OpenStart_Media' + separatorChar
-				cmd += action.options.SlideNumber + separatorChar
-				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-				let fileNumber = mediaFileNumberMatches[0]
-				let filePath = instance.watchedMediaFolderState.filesList[fileNumber - 1]
-				cmd += filePath
-			}
-			break
 		case 'Generic':
 			cmd = 'Generic' + separatorChar
 			cmd += action.options.SlideNumber
@@ -692,10 +679,18 @@ async function getCommand(action, instance) {
 			cmd += action.options.Seconds
 			break
 		case 'Change_selected_presentation_in_watched_presentation_folder':
-			scrollSelectedPresentation(instance, action.options.ScrollValue)
+			selectPresentationFile(
+				instance,
+				action.options.File,
+				choices.getDeltaValues().some(item => item.id === action.options.File))
+			instance.checkFeedbacks('presentation_file_selected')
 			break
 		case 'Change_selected_media_in_watched_media_folder':
-			scrollSelectedMedia(instance, action.options.ScrollValue)
+			selectMediaFile(
+				instance,
+				action.options.File,
+				choices.getDeltaValues().some(item => item.id === action.options.File))
+			instance.checkFeedbacks('media_file_selected')
 			break
 		case 'Clear':
 			let clearType = action.options[action.options.Key]
@@ -712,9 +707,14 @@ async function getCommand(action, instance) {
 
 			cmd = action.actionId + separatorChar + action.options.Key + separatorChar + source
 			break
-		case 'SetSlotPath':
+		case 'SetPresentationSlotPath':
 			cmd = action.actionId + separatorChar + 
 			action.options.Key.substring(4) + separatorChar + 
+			await instance.parseVariablesInString(action.options.FilePath)
+			break
+		case 'SetMediaSlotPath':
+			cmd = action.actionId + separatorChar + 
+			action.options.Key.substring(5) + separatorChar + 
 			await instance.parseVariablesInString(action.options.FilePath)
 			break
 		default:
@@ -725,7 +725,7 @@ async function getCommand(action, instance) {
 }
 
 
-function scrollSelectedPresentation(instance, delta) {
+function selectPresentationFile(instance, selectionValue, delta = false) {
 	var self = instance
 	const values = {}
 	let filesList = self.watchedPresentationFolderState.filesList
@@ -733,11 +733,22 @@ function scrollSelectedPresentation(instance, delta) {
 	if(!filesList || filesList.length == 0)
 		return
 
-	let oldSelectedNumber = self.getVariableValue('watched_presentation_folder_selected_presentation_number')
-	if(!oldSelectedNumber)
-		oldSelectedNumber = 1
-	let newSelectedNumber = parseInt(oldSelectedNumber) + parseInt(delta)
-	let sIndex = ((newSelectedNumber - 1) % filesList.length + filesList.length) % filesList.length;
+	let sIndex = 0
+	if(delta){
+		let oldSelectedNumber = self.getVariableValue('watched_presentation_folder_selected_presentation_number')
+		if(!oldSelectedNumber)
+			oldSelectedNumber = 1
+		let newSelectedNumber = parseInt(oldSelectedNumber) + parseInt(selectionValue)
+		sIndex = ((newSelectedNumber - 1) % filesList.length + filesList.length) % filesList.length;
+	}
+	else {
+		// Extcract number
+		let newSelectedNumber = parseInt(extcractNumber(selectionValue))
+		if(newSelectedNumber > filesList.length)
+			return
+		sIndex = newSelectedNumber - 1
+
+	}
 	values['watched_presentation_folder_selected_presentation_number'] = sIndex + 1
 	values['watched_presentation_folder_total_files_count'] = filesList.length
 	values['watched_presentation_folder_selected_presentation_path'] = filesList[sIndex]
@@ -745,22 +756,41 @@ function scrollSelectedPresentation(instance, delta) {
 	self.setVariableValues(values)
 }
 
-function scrollSelectedMedia(instance, delta) {
+function selectMediaFile(instance, selectionValue, delta = false) {
+	// delta means one of -1, +1, ...
 	var self = instance
 	const values = {}
 	let filesList = self.watchedMediaFolderState.filesList
 	
 	if(!filesList || filesList.length == 0)
 		return
+	let sIndex = 0
+	if(delta){
+		let oldSelectedNumber = self.getVariableValue('watched_media_folder_selected_media_number')
+		if(!oldSelectedNumber)
+			oldSelectedNumber = 1
+		let newSelectedNumber = parseInt(oldSelectedNumber) + parseInt(selectionValue)
+		sIndex = ((newSelectedNumber - 1) % filesList.length + filesList.length) % filesList.length;
+	}
+	else {
+		// Extcract number
+		let newSelectedNumber = parseInt(extcractNumber(selectionValue))
+		if(newSelectedNumber > filesList.length)
+			return
+		sIndex = newSelectedNumber - 1
 
-	let oldSelectedNumber = self.getVariableValue('watched_media_folder_selected_media_number')
-	if(!oldSelectedNumber)
-		oldSelectedNumber = 1
-	let newSelectedNumber = parseInt(oldSelectedNumber) + parseInt(delta)
-	let sIndex = ((newSelectedNumber - 1) % filesList.length + filesList.length) % filesList.length;
+	}
 	values['watched_media_folder_selected_media_number'] = sIndex + 1
 	values['watched_media_folder_total_files_count'] = filesList.length
 	values['watched_media_folder_selected_media_path'] = filesList[sIndex]
 	values['watched_media_folder_selected_media_name'] = filesList[sIndex].split('\\').pop()
 	self.setVariableValues(values)
+}
+
+function extcractNumber(str){
+	let numberMatches = str.match(/\d+$/);
+		if (numberMatches) {
+			return numberMatches[0]
+		}
+		return null
 }

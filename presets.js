@@ -182,11 +182,11 @@ exports.getPresets = function (instance) {
 		)
 	}
 
-	// Watched presentation folder scroll
-	presets['PresentationScroll +1'] = {
+	// Watched presentation folder select
+	presets['PresentationSelect +1'] = {
 		type: 'button',
-		category: 'Watched Presentation Folder Scroll',
-		name: 'Scroll +1',
+		category: 'Select From Watched Presentation Folder',
+		name: 'Select +1',
 		style: {
 			text: '+1',
 			size: 'auto',
@@ -201,7 +201,7 @@ exports.getPresets = function (instance) {
 					{
 						actionId: 'Change_selected_presentation_in_watched_presentation_folder',
 						options: {
-							ScrollValue: "1",
+							File: "1",
 						},
 					},
 				],
@@ -209,10 +209,10 @@ exports.getPresets = function (instance) {
 			},
 		],
 	}
-	presets['PresentationScroll -1'] = {
+	presets['PresentationSelect -1'] = {
 		type: 'button',
-		category: 'Watched Presentation Folder Scroll',
-		name: 'Scroll -1',
+		category: 'Select From Watched Presentation Folder',
+		name: 'Select -1',
 		style: {
 			text: '-1',
 			size: 'auto',
@@ -227,7 +227,7 @@ exports.getPresets = function (instance) {
 					{
 						actionId: 'Change_selected_presentation_in_watched_presentation_folder',
 						options: {
-							ScrollValue: "-1",
+							File: "-1",
 						},
 					},
 				],
@@ -238,7 +238,7 @@ exports.getPresets = function (instance) {
 
 	presets['CurrentSelectedPresentation'] = {
 		type: 'button',
-		category: 'Watched Presentation Folder Scroll',
+		category: 'Select From Watched Presentation Folder',
 		name: 'Current selected in watched presentation folder',
 		style: {
 			text: `$(${self.label}:watched_presentation_folder_selected_presentation_name)`,
@@ -267,7 +267,7 @@ exports.getPresets = function (instance) {
 
 	presets['CurrentSelectedPresentationNumber'] = {
 		type: 'button',
-		category: 'Watched Presentation Folder Scroll',
+		category: 'Select From Watched Presentation Folder',
 		name: 'Current selected in watched presentation folder (Number/Total)',
 		style: {
 			text: `$(${self.label}:watched_presentation_folder_selected_presentation_number)/$(${self.label}:watched_presentation_folder_total_files_count)`,
@@ -288,7 +288,7 @@ exports.getPresets = function (instance) {
 	//Watched Presentation Folder Presentations
 	for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, self.watchedPresentationFolderState.filesList.length); i++) {
 		try{
-		presets[`File${i}`] = getPresetforWatchedPresentationFolderFiles(
+		presets[`PresentationFile${i}`] = getPresetforWatchedPresentationFolderFiles(
 			`File ${i}`,
 			`${i} - $(${self.label}:presentation_folder_file${i})`,
 			i,
@@ -369,11 +369,11 @@ exports.getPresets = function (instance) {
 		)
 	}
 
-	// Watched media folder scroll
-	presets['MediaScroll +1'] = {
+	// Watched media folder select
+	presets['MediaSelect +1'] = {
 		type: 'button',
-		category: 'Watched Media Folder Scroll',
-		name: 'Scroll +1',
+		category: 'Select From Watched Media Folder',
+		name: 'Select +1',
 		style: {
 			text: '+1',
 			size: 'auto',
@@ -388,7 +388,7 @@ exports.getPresets = function (instance) {
 					{
 						actionId: 'Change_selected_media_in_watched_media_folder',
 						options: {
-							ScrollValue: "1",
+							File: "1",
 						},
 					},
 				],
@@ -396,10 +396,10 @@ exports.getPresets = function (instance) {
 			},
 		],
 	}
-	presets['MediaScroll -1'] = {
+	presets['MediaSelect -1'] = {
 		type: 'button',
-		category: 'Watched Media Folder Scroll',
-		name: 'Scroll -1',
+		category: 'Select From Watched Media Folder',
+		name: 'Select -1',
 		style: {
 			text: '-1',
 			size: 'auto',
@@ -414,7 +414,7 @@ exports.getPresets = function (instance) {
 					{
 						actionId: 'Change_selected_media_in_watched_media_folder',
 						options: {
-							ScrollValue: "-1",
+							File: "-1",
 						},
 					},
 				],
@@ -425,7 +425,7 @@ exports.getPresets = function (instance) {
 
 	presets['CurrentSelectedMedia'] = {
 		type: 'button',
-		category: 'Watched Media Folder Scroll',
+		category: 'Select From Watched Media Folder',
 		name: 'Current selected in watched media folder',
 		style: {
 			text: `$(${self.label}:watched_media_folder_selected_media_name)`,
@@ -437,16 +437,7 @@ exports.getPresets = function (instance) {
 		feedbacks: [],
 		steps: [
 			{
-				down: [
-					{
-						actionId: 'OpenStart_Media',
-						options: {
-							Filename: `$(${self.label}:watched_media_folder_selected_media_path)`,
-							SlideNumber: 1,
-							Fullscreen: 1,
-						},
-					},
-				],
+				down: [],
 				up: [],
 			},
 		],
@@ -454,7 +445,7 @@ exports.getPresets = function (instance) {
 
 	presets['CurrentSelectedMediaNumber'] = {
 		type: 'button',
-		category: 'Watched Media Folder Scroll',
+		category: 'Select From Watched Media Folder',
 		name: 'Current selected in watched media folder (Number/Total)',
 		style: {
 			text: `$(${self.label}:watched_media_folder_selected_media_number)/$(${self.label}:watched_media_folder_total_files_count)`,
@@ -475,7 +466,7 @@ exports.getPresets = function (instance) {
 	//Watched Media Folder Media files
 	for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, self.watchedMediaFolderState.filesList.length); i++) {
 		try{
-		presets[`File${i}`] = getPresetforWatchedMediaFolderFiles(
+		presets[`MediaFile${i}`] = getPresetforWatchedMediaFolderFiles(
 			`File ${i}`,
 			`${i} - $(${self.label}:media_folder_file${i})`,
 			i,
@@ -1641,7 +1632,7 @@ function getPresetforWatchedPresentationFolderFiles(lbl, txt, i, cr, FileNumber,
 		],
 		feedbacks: [
 			{
-				feedbackId: 'file_exist',
+				feedbackId: 'presentation_file_exist',
 				options: {
 					Key: FileNumber,
 				},
@@ -1651,13 +1642,23 @@ function getPresetforWatchedPresentationFolderFiles(lbl, txt, i, cr, FileNumber,
 				},
 			},
 			{
-				feedbackId: 'file_displayed',
+				feedbackId: 'presentation_file_displayed',
 				options: {
 					Key: FileNumber,
 				},
 				style: {
 					color: 16777215,
 					bgcolor: 13369344,
+				},
+			},
+			{
+				feedbackId: 'presentation_file_selected',
+				options: {
+					Key: FileNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 255,
 				},
 			},
 		],
@@ -1737,38 +1738,19 @@ function getPresetforWatchedMediaFolderFiles(lbl, txt, i, cr, FileNumber, SlideN
 		},
 		steps: [
 			{
-				down: [
-					{
-						actionId: 'open_media_from_watched_media_folder',
-						options: {
-							FileNumber: FileNumber,
-							SlideNumber: SlideNumber,
-							Fullscreen: Fullscreen,
-						},
-					},
-				],
+				down: [],
 				up: [],
 			},
 		],
 		feedbacks: [
 			{
-				feedbackId: 'file_exist',
+				feedbackId: 'media_file_selected',
 				options: {
 					Key: FileNumber,
 				},
 				style: {
 					color: 16777215,
-					bgcolor: 13421568,
-				},
-			},
-			{
-				feedbackId: 'file_displayed',
-				options: {
-					Key: FileNumber,
-				},
-				style: {
-					color: 16777215,
-					bgcolor: 13369344,
+					bgcolor: 255,
 				},
 			},
 		],
