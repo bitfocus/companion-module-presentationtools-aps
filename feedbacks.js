@@ -89,7 +89,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		presentation_folder_captured: {
 			type: 'boolean',
-			name: 'Folder capture',
+			name: 'Presentation folder capture',
 			description: "When capturing current presentation's folder, change the style",
 			options: [
 				{
@@ -110,7 +110,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		slot_displayed: {
 			type: 'boolean',
-			name: 'Slot presentation is displayed',
+			name: 'Presentation slot is displayed',
 			description: 'If the presentation from the slot is displayed, change the style',
 			options: [
 				{
@@ -131,7 +131,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		presentation_file_displayed: {
 			type: 'boolean',
-			name: 'Folder file presentation is displayed',
+			name: 'Presentation folder file is displayed',
 			description: 'If the presentation from the folder file is displayed, change the style',
 			options: [
 				{
@@ -165,7 +165,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		slot_exist: {
 			type: 'boolean',
-			name: 'Slot presentation exists',
+			name: 'Presentation slot exists',
 			description: 'If there is a presentation on the slot, change the style',
 			options: [
 				{
@@ -186,7 +186,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		presentation_folder_exist: {
 			type: 'boolean',
-			name: 'Folder exists',
+			name: 'Presentation folder exists',
 			description: 'If there is a folder on the slot, change the style',
 			options: [
 				{
@@ -207,8 +207,8 @@ exports.getFeedbacks = function (instance) {
 		},
 		presentation_folder_watched: {
 			type: 'boolean',
-			name: 'Folder is watched',
-			description: 'If folder file is watched, change the style',
+			name: 'Presentation folder is watched',
+			description: 'If folder is watched, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -228,7 +228,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		presentation_file_exist: {
 			type: 'boolean',
-			name: 'Folder file presentation exists',
+			name: 'Presentation folder file exists',
 			description: 'If there is a presentation on the folder file, change the style',
 			options: [
 				{
@@ -249,7 +249,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		presentation_file_selected: {
 			type: 'boolean',
-			name: 'Folder file presentation selected',
+			name: 'Presentation folder file is selected',
 			description: 'If the presentation from the folder file is selected, change the style',
 			options: [
 				{
@@ -271,7 +271,7 @@ exports.getFeedbacks = function (instance) {
 
 		media_folder_exist: {
 			type: 'boolean',
-			name: 'Folder exists',
+			name: 'Media folder exists',
 			description: 'If there is a folder on the slot, change the style',
 			options: [
 				{
@@ -292,8 +292,8 @@ exports.getFeedbacks = function (instance) {
 		},
 		media_folder_watched: {
 			type: 'boolean',
-			name: 'Folder is watched',
-			description: 'If folder file is watched, change the style',
+			name: 'Media folder is watched',
+			description: 'If folder is watched, change the style',
 			options: [
 				{
 					type: 'dropdown',
@@ -313,7 +313,7 @@ exports.getFeedbacks = function (instance) {
 		},
 		media_file_selected: {
 			type: 'boolean',
-			name: 'Folder file media selected',
+			name: 'Media folder file is selected',
 			description: 'If the media from the folder file is selected, change the style',
 			options: [
 				{
