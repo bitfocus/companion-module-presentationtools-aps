@@ -325,10 +325,6 @@ class APSInstance extends InstanceBase {
 			name: `Watched Presentation Folder number`,
 			variableId: `watched_presentation_folder_number`,
 		})
-		variables.push({
-			name: `Watched Presentation Folder Files Count`,
-			variableId: `watched_presentation_folder_files_count`,
-		})
 
 		for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, self.watchedPresentationFolderState.filesList.length); i++) {
 			variables.push({
@@ -344,10 +340,6 @@ class APSInstance extends InstanceBase {
 		variables.push({
 			name: `Watched Media Folder number`,
 			variableId: `watched_media_folder_number`,
-		})
-		variables.push({
-			name: `Watched Media Folder Files Count`,
-			variableId: `watched_media_folder_files_count`,
 		})
 
 		for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, self.watchedMediaFolderState.filesList.length); i++) {
@@ -477,7 +469,6 @@ class APSInstance extends InstanceBase {
 		const values = {}
 		values[`watched_presentation_folder_name`] = self.watchedPresentationFolderState.name
 		values[`watched_presentation_folder_number`] = self.watchedPresentationFolderState.number
-		values[`watched_presentation_folder_files_count`] = self.watchedPresentationFolderState.filesList.length
 		let filesList = self.watchedPresentationFolderState.filesList
 		try {
 			for (let i = Math.max(minNumberOfPresentationFolderFiles, filesList.length); i > 0; i--) {
@@ -529,7 +520,6 @@ class APSInstance extends InstanceBase {
 		const values = {}
 		values[`watched_media_folder_name`] = self.watchedMediaFolderState.name
 		values[`watched_media_folder_number`] = self.watchedMediaFolderState.number
-		values[`watched_media_folder_files_count`] = self.watchedMediaFolderState.filesList.length
 		let filesList = self.watchedMediaFolderState.filesList
 		try {
 			for (let i = Math.max(minNumberOfMediaFolderFiles, filesList.length); i > 0; i--) {
