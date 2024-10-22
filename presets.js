@@ -555,8 +555,9 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Generic',
+						actionId: 'GoToSlide',
 						options: {
+							App: 'Generic',
 							SlideNumber: 1,
 						},
 					},
@@ -634,8 +635,9 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Powerpoint_Go',
+						actionId: 'GoToSlide',
 						options: {
+							App: 'Powerpoint_Go',
 							SlideNumber: 1,
 						},
 					},
@@ -713,8 +715,9 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Keynote_Go',
+						actionId: 'GoToSlide',
 						options: {
+							App: 'Keynote_Go',
 							SlideNumber: 1,
 						},
 					},
@@ -792,8 +795,9 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Acrobat_Go',
+						actionId: 'GoToSlide',
 						options: {
+							App: 'Acrobat_Go',
 							SlideNumber: 1,
 						},
 					},
