@@ -250,17 +250,6 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
-		Generic: {
-			name: 'Slide: Go to slide',
-			options: [getSlideNumber('Slide Nr.')],
-			callback: action_callback,
-		},
-
-		Powerpoint_Go: {
-			name: 'Powerpoint: Go to slide',
-			options: [getSlideNumber('Slide Nr.')],
-			callback: action_callback,
-		},
 		Powerpoint_Previous: {
 			name: 'Powerpoint: Previous slide',
 			options: [],
@@ -272,11 +261,6 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
-		Acrobat_Go: {
-			name: 'Adobe Acrobat DC: Go to slide',
-			options: [getSlideNumber('Slide Nr.')],
-			callback: action_callback,
-		},
 		Acrobat_Previous: {
 			name: 'Adobe Acrobat DC: Previous slide',
 			options: [],
@@ -288,11 +272,6 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
-		Keynote_Go: {
-			name: 'Keynote: Go to slide',
-			options: [getSlideNumber('Slide Nr.')],
-			callback: action_callback,
-		},
 		Keynote_Previous: {
 			name: 'Keynote: Previous slide',
 			options: [],
@@ -301,6 +280,28 @@ exports.getActions = function (instance) {
 		Keynote_Next: {
 			name: 'Keynote: Next slide',
 			options: [],
+			callback: action_callback,
+		},
+
+		GoToSlide: {
+			name: 'Slide: Go to slide',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Application',
+					id: 'App',
+					default: "Generic",
+					tooltip: 'Application',
+					choices: 
+						[
+							{id: "Generic", label: "All"},
+							{id: "Powerpoint_Go", label: "Powerpoint"},
+							{id: "Acrobat_Go", label: "Acrobat"},
+							{id: "Keynote_Go", label: "Keynote"},
+						]
+				},
+				getSlideNumber('Slide Nr.')
+			],
 			callback: action_callback,
 		},
 
@@ -573,10 +574,12 @@ async function getCommand(action, instance) {
 	var cmd = ''
 	var separatorChar = '^'
 	var mediaPlayerSeparatorChar = '#'
+	let slideNumber = 1
 	switch (action.actionId) {
 		case 'Navigation_NextFS':
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			// case 'Navigation_NextNoFS':
-			if (action.options.SlideNumber === 1) {
+			if (slideNumber === 1) {
 				if (action.options.Fullscreen) {
 					cmd = 'Navigation_NextFS'
 				} else {
@@ -584,16 +587,17 @@ async function getCommand(action, instance) {
 				}
 			} else {
 				cmd = 'Navigation_NextFS' + separatorChar
-				cmd += action.options.SlideNumber + separatorChar
+				cmd += slideNumber + separatorChar
 				cmd += action.options.Fullscreen ? 1 : 0
 			}
 			break
 		case 'Navigation_PrevFS':
-			if (action.options.SlideNumber === 1 && action.options.Fullscreen) {
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
+			if (slideNumber === 1 && action.options.Fullscreen) {
 				cmd = 'Navigation_PrevFS'
 			} else {
 				cmd = 'Navigation_PrevFS' + separatorChar
-				cmd += action.options.SlideNumber + separatorChar
+				cmd += slideNumber + separatorChar
 				cmd += action.options.Fullscreen ? 1 : 0
 			}
 			break
@@ -618,10 +622,11 @@ async function getCommand(action, instance) {
 			}
 			break;
 		case 'open_presentation_from_watched_presentation_folder':
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			let fileNumberMatches = action.options.FileNumber.match(/\d+$/);
 			if (fileNumberMatches) {
 				cmd = 'OpenStart_Presentation' + separatorChar
-				cmd += action.options.SlideNumber + separatorChar
+				cmd += slideNumber + separatorChar
 				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 				let fileNumber = fileNumberMatches[0]
 				let filePath = instance.watchedPresentationFolderState.filesList[fileNumber - 1]
@@ -629,13 +634,14 @@ async function getCommand(action, instance) {
 			}
 			break
 		case 'OpenStart_Presentation':
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			let path = await instance.parseVariablesInString(action.options.Filename)
 			
 			if(!path)
 				return
 
 			cmd = action.actionId + separatorChar
-			cmd += action.options.SlideNumber + separatorChar
+			cmd += slideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 			cmd += path
 			break
@@ -650,21 +656,16 @@ async function getCommand(action, instance) {
 				}
 			}
 			break;
-		case 'Generic':
-			cmd = 'Generic' + separatorChar
-			cmd += action.options.SlideNumber
-			break
-		case 'Powerpoint_Go':
-		case 'Acrobat_Go':
-		case 'Keynote_Go':
-			cmd = action.actionId + separatorChar
-			cmd += action.options.SlideNumber
-			break
 		case 'OpenStart_Presentation_Slot':
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			cmd = 'OpenStart_Presentation_Slot' + separatorChar
-			cmd += action.options.SlideNumber + separatorChar
+			cmd += slideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 			cmd += action.options.Key.substring(4)
+			break
+		case 'GoToSlide':
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
+			cmd = action.options.App + separatorChar + slideNumber
 			break
 		case 'CapturePresentationSlot':
 			cmd = action.actionId + separatorChar + action.options.Key.substring(4)
