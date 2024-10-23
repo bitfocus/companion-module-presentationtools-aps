@@ -567,6 +567,26 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+		SetImageSlotPath: {
+			name: 'Still Images: Set file path for slot',
+			options: [
+				{
+					type: 'textinput',
+					label: 'File Path',
+					id: 'FilePath',
+					useVariables: true,
+				},
+				{
+					type: 'dropdown',
+					label: 'Image',
+					id: 'Key',
+					default: 'Image1',
+					choices: choices.getChoicesForImage(),
+				},
+				
+			],
+			callback: action_callback,
+		},
 	}
 }
 
@@ -709,13 +729,10 @@ async function getCommand(action, instance) {
 			cmd = action.actionId + separatorChar + action.options.Key + separatorChar + source
 			break
 		case 'SetPresentationSlotPath':
-			cmd = action.actionId + separatorChar + 
-			action.options.Key.substring(4) + separatorChar + 
-			await instance.parseVariablesInString(action.options.FilePath)
-			break
 		case 'SetMediaSlotPath':
+		case 'SetImageSlotPath':
 			cmd = action.actionId + separatorChar + 
-			action.options.Key.substring(5) + separatorChar + 
+			extcractNumber(action.options.Key) + separatorChar + 
 			await instance.parseVariablesInString(action.options.FilePath)
 			break
 		default:
