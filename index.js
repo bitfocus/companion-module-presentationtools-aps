@@ -13,6 +13,7 @@ var feedbacks = require('./feedbacks')
 var states = require('./states')
 var presets = require('./presets')
 
+const API_VERSION = 2
 class APSInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
@@ -49,9 +50,9 @@ class APSInstance extends InstanceBase {
 			fade_on: false,
 		}
 		this.captureTimeoutObj = null
+		this.checkAPIsVersionsCompatibilityTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
 		this.folderCaptureTimeoutObj = null
-		this.receiver = new MessageBuffer('$')
 
 		this.initTCP()
 		this.actions() // export actions
@@ -62,6 +63,17 @@ class APSInstance extends InstanceBase {
 
 	async init(config) {
 		this.configUpdated(config)
+	}
+
+	CheckAPIsVersionsCompatibility(){
+		if(this.serverAPIVersion > API_VERSION){
+			this.updateStatus(InstanceStatus.UnknownWarning, 
+				"APS is more recent than Companion module.\nPlease upgrade Companion to ensure maximum compatibility.")
+		}
+		else if(this.serverAPIVersion < API_VERSION){
+			this.updateStatus(InstanceStatus.UnknownWarning, 
+				"The Connected Companion module is more recent than APS.\nPlease upgrade APS to ensure maximum compatibility.")
+		}
 	}
 
 	initTCP() {
@@ -85,10 +97,31 @@ class APSInstance extends InstanceBase {
 			})
 
 			self.socket.on('connect', () => {
+				self.serverAPIVersion = 1
+				self.receiver = new MessageBuffer('$')
+				self.socket.send(`api_version:${API_VERSION}$`)
 				self.updateStatus(InstanceStatus.Ok)
+
+				if (self.checkAPIsVersionsCompatibilityTimeoutObj !== null) {
+					clearTimeout(self.checkAPIsVersionsCompatibilityTimeoutObj)
+				}
+
+				self.checkAPIsVersionsCompatibilityTimeoutObj = setTimeout(() => {
+					try {
+						self.CheckAPIsVersionsCompatibility()
+					} catch (err) {
+						this.log('debug', err)
+					}
+				}, 2000)
 			})
 
 			self.socket.on('data', (data) => {
+				if(data.toString().includes('api_version:')){
+					self.serverAPIVersion = data.toString().split(":")[1].split("$")[0]
+					self.log('debug', `Server API version: ${self.serverAPIVersion}`)
+					self.receiver = new MessageBuffer(self.serverAPIVersion == 1 ? '$' : '\0')
+					return
+				}
 				self.receiver.push(data)
 				let messages = self.receiver.getMessages()
 				if (messages == null) return

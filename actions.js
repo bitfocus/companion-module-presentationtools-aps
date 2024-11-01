@@ -13,7 +13,7 @@ function getSlideNumber(txtLabel) {
 exports.getActions = function (instance) {
 	async function action_callback(action) {
 		var cmd = ''
-		var terminationChar = '$'
+		var terminationChar = instance.serverAPIVersion == 1 ? '$' : '\0'
 		cmd = await getCommand(action, instance)
 		if(!cmd)
 			return
@@ -591,6 +591,15 @@ exports.getActions = function (instance) {
 }
 
 async function getCommand(action, instance) {
+	if(instance.serverAPIVersion == 1){
+		return await getCommandV1(action, instance)
+	}
+	else if(instance.serverAPIVersion == 2){
+		return await getCommandV2(action, instance)
+	}
+}
+
+async function getCommandV1(action, instance) {
 	var cmd = ''
 	var separatorChar = '^'
 	var mediaPlayerSeparatorChar = '#'
@@ -740,6 +749,174 @@ async function getCommand(action, instance) {
 			break
 	}
 	return cmd
+}
+
+async function getCommandV2(action, instance) {
+	let data = {
+		"command": action.actionId,
+		"parameters": {}
+	}
+
+	let slideNumber = 1
+	switch (action.actionId) {
+		case 'Navigation_NextFS':
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
+			if (slideNumber === 1 && !action.options.Fullscreen) {
+				data.command = 'Navigation_NextNoFS'
+			} else {
+				data.parameters = {
+					slideNr: slideNumber,
+					isFullscreen: action.options.Fullscreen,
+				}
+			}
+			break
+		case 'Navigation_PrevFS':
+			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
+			if (slideNumber !== 1 || !action.options.Fullscreen) {
+				data.parameters = {
+					slideNr: slideNumber,
+					isFullscreen: action.options.Fullscreen,
+				}
+			}
+			break
+		case 'PresentationExit':
+		case 'SlideNext':
+		case 'SlidePrevious':
+			data.command = await instance.parseVariablesInString(action.options.Key)
+			break
+		case 'Capture_Image':
+		case 'Display_Image':
+			let bankNumber = extcractNumber(action.options.Key)
+			if(!bankNumber){
+				// Test | Freeze | Black
+				data.command = action.options.Key
+			}else{
+				data.parameters = {
+					bank_number: bankNumber,
+				}
+			}
+			break
+		case 'Load_MediaPlayer':
+			if(action.options.Key.includes('#Next') || action.options.Key.includes('#Previous')){
+				data.parameters = {
+					bank_number: action.options.Key.split('#')[1],
+				}
+			}else{
+				data.parameters = {
+					bank_number: extcractNumber(action.options.Key),
+				}
+			}
+			break
+		case 'SetSelected_PresentationFolder':
+			if(action.options.Key == 'Next' || action.options.Key == 'Previous'){
+				data.parameters = {
+					bank_number: action.options.Key,
+				}
+			}else{
+				data.parameters = {
+					bank_number: extcractNumber(action.options.Key),
+				}
+			}
+			break;
+		case 'open_presentation_from_watched_presentation_folder':
+			data.command = 'OpenStart_Presentation'
+			data.parameters = {
+				file_path: instance.watchedPresentationFolderState.filesList[extcractNumber(action.options.FileNumber) - 1],
+				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
+				isFullscreen: action.options.Fullscreen,
+			}
+			break
+		case 'OpenStart_Presentation':
+			let path = await instance.parseVariablesInString(action.options.Filename)
+			
+			if(!path)
+				return
+
+			data.parameters = {
+				file_path: path,
+				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
+				isFullscreen: action.options.Fullscreen,
+			}
+			break
+		case 'SetSelected_MediaFolder':
+
+			if(action.options.Key == 'Next' || action.options.Key == 'Previous'){
+				data.parameters = {
+					bank_number: action.options.Key,
+				}
+			}else{
+				data.parameters = {
+					bank_number: extcractNumber(action.options.Key),
+				}
+			}
+			break;
+		case 'OpenStart_Presentation_Slot':
+			data.parameters = {
+				slot: action.options.Key.substring(4),
+				isFullscreen: action.options.Fullscreen,
+				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
+			}
+			break
+		case 'GoToSlide':
+			data.command = action.options.App,
+			data.parameters = {
+				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
+			}
+			break
+		case 'CapturePresentationSlot':
+			case 'CaptureFolder':
+			data.parameters = {
+				bank_number: extcractNumber(action.options.Key),
+			}
+			break
+		case 'MediaPlayer_Position':
+		case 'MediaPlayer_Forward':
+		case 'MediaPlayer_Rewind':
+			data.parameters = {
+				video_seconds: action.options.Seconds,
+			}
+			break
+		case 'Change_selected_presentation_in_watched_presentation_folder':
+			selectPresentationFile(
+				instance,
+				action.options.File,
+				choices.getDeltaValues().some(item => item.id === action.options.File))
+			instance.checkFeedbacks('presentation_file_selected')
+			break
+		case 'Change_selected_media_in_watched_media_folder':
+			selectMediaFile(
+				instance,
+				action.options.File,
+				choices.getDeltaValues().some(item => item.id === action.options.File))
+			instance.checkFeedbacks('media_file_selected')
+			break
+		case 'Clear':
+			let clear_type_key = action.options.Key
+			let clearType = action.options[clear_type_key]
+			let source = clearType == 'All'? clearType : extcractNumber(clearType)
+
+			data.parameters = {
+				clear_type_key: clear_type_key,
+				bank_number: source,
+			}
+			break
+		case 'SetPresentationSlotPath':
+			data.parameters = {
+				slot: extcractNumber(action.options.Key),
+				file_path: await instance.parseVariablesInString(action.options.FilePath),
+			}
+			break
+		case 'SetMediaSlotPath':
+		case 'SetImageSlotPath':
+			data.parameters = {
+				bank_number: extcractNumber(action.options.Key),
+				file_path: await instance.parseVariablesInString(action.options.FilePath),
+			}
+			break
+		default:
+			break
+	}
+	return JSON.stringify(data)
 }
 
 
