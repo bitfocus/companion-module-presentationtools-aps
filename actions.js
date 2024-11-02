@@ -85,11 +85,18 @@ exports.getActions = function (instance) {
 			name: 'Slide: Next',
 			options: [
 				{
+					type: 'dropdown',
+					label: 'Application',
 					id: 'Key',
-					type: 'textinput',
-					default: 'Key_Right',
-					isVisible: (_o, _d) => false,
-					useVariables: true,
+					default: "Key_Right",
+					tooltip: 'Application',
+					choices: 
+						[
+							{id: "Key_Right", label: "All"},
+							{id: "Powerpoint_Next", label: "Powerpoint"},
+							{id: "Acrobat_Next", label: "Acrobat"},
+							{id: "Keynote_Next", label: "Keynote"},
+						]
 				},
 			],
 			callback: action_callback,
@@ -99,11 +106,18 @@ exports.getActions = function (instance) {
 			name: 'Slide: Previous',
 			options: [
 				{
+					type: 'dropdown',
+					label: 'Application',
 					id: 'Key',
-					type: 'textinput',
-					default: 'Key_Left',
-					isVisible: (_o, _d) => false,
-					useVariables: true,
+					default: "Key_Left",
+					tooltip: 'Application',
+					choices: 
+						[
+							{id: "Key_Left", label: "All"},
+							{id: "Powerpoint_Previous", label: "Powerpoint"},
+							{id: "Acrobat_Previous", label: "Acrobat"},
+							{id: "Keynote_Previous", label: "Keynote"},
+						]
 				},
 			],
 			callback: action_callback,
@@ -250,38 +264,6 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
-		Powerpoint_Previous: {
-			name: 'Powerpoint: Previous slide',
-			options: [],
-			callback: action_callback,
-		},
-		Powerpoint_Next: {
-			name: 'Powerpoint: Next slide',
-			options: [],
-			callback: action_callback,
-		},
-
-		Acrobat_Previous: {
-			name: 'Adobe Acrobat DC: Previous slide',
-			options: [],
-			callback: action_callback,
-		},
-		Acrobat_Next: {
-			name: 'Adobe Acrobat DC: Next slide',
-			options: [],
-			callback: action_callback,
-		},
-
-		Keynote_Previous: {
-			name: 'Keynote: Previous slide',
-			options: [],
-			callback: action_callback,
-		},
-		Keynote_Next: {
-			name: 'Keynote: Next slide',
-			options: [],
-			callback: action_callback,
-		},
 
 		GoToSlide: {
 			name: 'Slide: Go to slide',
