@@ -586,7 +586,10 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Powerpoint_Previous',
+						actionId: 'SlidePrevious',
+						options: {
+							Key: 'Powerpoint_Previous',
+						},
 					},
 				],
 				up: [],
@@ -612,7 +615,10 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Powerpoint_Next',
+						actionId: 'SlideNext',
+						options: {
+							Key: 'Powerpoint_Next',
+						},
 					},
 				],
 				up: [],
@@ -666,7 +672,10 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Keynote_Previous',
+						actionId: 'SlidePrevious',
+						options: {
+							Key: 'Keynote_Previous',
+						},
 					},
 				],
 				up: [],
@@ -692,7 +701,10 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Keynote_Next',
+						actionId: 'SlideNext',
+						options: {
+							Key: 'Keynote_Next',
+						},
 					},
 				],
 				up: [],
@@ -746,7 +758,10 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Acrobat_Previous',
+						actionId: 'SlidePrevious',
+						options: {
+							Key: 'Acrobat_Previous',
+						},
 					},
 				],
 				up: [],
@@ -772,7 +787,10 @@ exports.getPresets = function (instance) {
 			{
 				down: [
 					{
-						actionId: 'Acrobat_Next',
+						actionId: 'SlideNext',
+						options: {
+							Key: 'Acrobat_Next',
+						},
 					},
 				],
 				up: [],
