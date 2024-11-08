@@ -10,22 +10,46 @@ function getSlideNumber(txtLabel) {
 	}
 }
 
+function sendMessage(socket, message){
+	// Convert the message to a Buffer
+    const messageBuffer = Buffer.from(message, 'utf-8');
+    const messageLength = messageBuffer.length;
+
+    // Create a Buffer for the message length (4 bytes, big-endian)
+    const lengthBuffer = Buffer.alloc(4);
+    lengthBuffer.writeUInt32BE(messageLength);
+
+    // Concatenate the buffers: prefix + length + message
+    const fullMessage = Buffer.concat([lengthBuffer, messageBuffer]);
+
+    // Send the full message to the server
+    socket.send(fullMessage);
+}
+
+exports.send = sendMessage
+
 exports.getActions = function (instance) {
 	async function action_callback(action) {
-		var cmd = ''
-		var terminationChar = instance.serverAPIVersion == 1 ? '$' : '\0'
-		cmd = await getCommand(action, instance)
-		if(!cmd)
+		let cmd = ''		
+		const handler = instance.apiVersionMapping[instance.toBeUsedAPIversion].commandHandler;
+		data = await handler(action, instance);
+		
+		if (instance.socket == undefined || !instance.socket.isConnected)
 			return
-		cmd += terminationChar
-		if (cmd !== undefined && cmd !== terminationChar) {
-			instance.log('debug', `sending ${cmd}`)
-			if (instance.socket !== undefined && instance.socket.isConnected) {
-				instance.socket.send(cmd)
-			} else {
-				instance.log('warn', 'Cannot send command. Socket not connected.')
-			}
+
+		if(!data.command)
+			return
+
+		if(instance.toBeUsedAPIversion == 1){
+			cmd = data.command
+			cmd += '$'
+			instance.socket.send(cmd)
+		}else{
+			cmd = JSON.stringify(data)
+			sendMessage(instance.socket, cmd)
 		}
+
+		instance.log('debug', `sending ${cmd}`)
 	}
 
 	return {
@@ -572,16 +596,7 @@ exports.getActions = function (instance) {
 	}
 }
 
-async function getCommand(action, instance) {
-	if(instance.serverAPIVersion == 1){
-		return await getCommandV1(action, instance)
-	}
-	else if(instance.serverAPIVersion == 2){
-		return await getCommandV2(action, instance)
-	}
-}
-
-async function getCommandV1(action, instance) {
+exports.getCommandV1 = async function (action, instance) {
 	var cmd = ''
 	var separatorChar = '^'
 	var mediaPlayerSeparatorChar = '#'
@@ -730,13 +745,12 @@ async function getCommandV1(action, instance) {
 			cmd = action.actionId
 			break
 	}
-	return cmd
+	return {command: cmd}
 }
 
-async function getCommandV2(action, instance) {
+exports.getCommandV2 = async function (action, instance) {
 	let data = {
 		"command": action.actionId,
-		"parameters": {}
 	}
 
 	let slideNumber = 1
@@ -859,6 +873,7 @@ async function getCommandV2(action, instance) {
 			}
 			break
 		case 'Change_selected_presentation_in_watched_presentation_folder':
+			data.command = ''
 			selectPresentationFile(
 				instance,
 				action.options.File,
@@ -866,6 +881,7 @@ async function getCommandV2(action, instance) {
 			instance.checkFeedbacks('presentation_file_selected')
 			break
 		case 'Change_selected_media_in_watched_media_folder':
+			data.command = ''
 			selectMediaFile(
 				instance,
 				action.options.File,
@@ -898,7 +914,7 @@ async function getCommandV2(action, instance) {
 		default:
 			break
 	}
-	return JSON.stringify(data)
+	return data
 }
 
 

@@ -13,7 +13,6 @@ var feedbacks = require('./feedbacks')
 var states = require('./states')
 var presets = require('./presets')
 
-const API_VERSION = 2
 class APSInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
@@ -21,6 +20,14 @@ class APSInstance extends InstanceBase {
 
 	async configUpdated(config) {
 		this.config = config
+
+		this.apiVersionMapping = {
+			1: {commandHandler: actions.getCommandV1, receiver: MessageBuffer},
+			2: {commandHandler: actions.getCommandV2, receiver: MessageBufferV2},
+		};
+		this.apiVersion = Math.max(...Object.keys(this.apiVersionMapping).map(Number));
+		this.log('info', `API version: ${this.apiVersion}`)
+		
 
 		this.generalState = {
 			isAnyPresentationDisplayed: false
@@ -66,11 +73,15 @@ class APSInstance extends InstanceBase {
 	}
 
 	CheckAPIsVersionsCompatibility(){
-		if(this.serverAPIVersion > API_VERSION){
+		
+		if(!this.socket.isConnected)
+			return
+
+		if(this.serverAPIVersion > this.apiVersion){
 			this.updateStatus(InstanceStatus.UnknownWarning, 
 				"APS is more recent than Companion module.\nPlease upgrade Companion to ensure maximum compatibility.")
 		}
-		else if(this.serverAPIVersion < API_VERSION){
+		else if(this.serverAPIVersion < this.apiVersion){
 			this.updateStatus(InstanceStatus.UnknownWarning, 
 				"The Connected Companion module is more recent than APS.\nPlease upgrade APS to ensure maximum compatibility.")
 		}
@@ -98,8 +109,10 @@ class APSInstance extends InstanceBase {
 
 			self.socket.on('connect', () => {
 				self.serverAPIVersion = 1
-				self.receiver = new MessageBuffer('$')
-				self.socket.send(`api_version:${API_VERSION}$`)
+				self.toBeUsedAPIversion = 1
+				self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
+				let apiVersionMesage = JSON.stringify({command: "api_version", api_version: self.apiVersion}) + "$"
+				actions.send(self.socket, apiVersionMesage)
 				self.updateStatus(InstanceStatus.Ok)
 
 				if (self.checkAPIsVersionsCompatibilityTimeoutObj !== null) {
@@ -112,14 +125,17 @@ class APSInstance extends InstanceBase {
 					} catch (err) {
 						this.log('debug', err)
 					}
-				}, 2000)
+				}, 5000)
 			})
 
 			self.socket.on('data', (data) => {
-				if(data.toString().includes('api_version:')){
-					self.serverAPIVersion = data.toString().split(":")[1].split("$")[0]
-					self.log('debug', `Server API version: ${self.serverAPIVersion}`)
-					self.receiver = new MessageBuffer(self.serverAPIVersion == 1 ? '$' : '\0')
+				if(data.toString().includes('"api_version"')){
+					const messageLength = data.readUInt32BE(0);
+					const message = data.slice(4, 4 + messageLength).toString('utf-8');
+					self.serverAPIVersion = JSON.parse(message).api_version
+					self.log('info', `Server API version: ${self.serverAPIVersion}`)
+					self.toBeUsedAPIversion = Math.min(self.apiVersion, self.serverAPIVersion)
+					self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
 					return
 				}
 				self.receiver.push(data)
@@ -244,6 +260,7 @@ class APSInstance extends InstanceBase {
 							)
 						}
 					} catch (e) {
+						self.log('debug', message)
 						console.error(e)
 					}
 				}
@@ -628,8 +645,8 @@ class APSInstance extends InstanceBase {
 }
 
 class MessageBuffer {
-	constructor(delimiter) {
-		this.delimiter = delimiter
+	constructor() {
+		this.delimiter = '$'
 		this.buffer = ''
 	}
 
@@ -653,6 +670,44 @@ class MessageBuffer {
 			}
 		}
 		return messages.length > 0 ? messages : null
+	}
+}
+
+class MessageBufferV2 {
+	constructor() {
+		this.buffer = Buffer.alloc(0); // Use a Buffer instead of string for binary data
+	}
+
+	// Check if there is enough data to parse a full message
+	isFinished() {
+		if (this.buffer.length < 4) return true; // Less than 4 bytes means no length prefix yet
+
+		const messageLength = this.buffer.readUInt32BE(0); // Read the length prefix
+		return this.buffer.length < 4 + messageLength; // Check if the buffer has the full message
+	}
+
+	// Append new data to the buffer
+	push(data) {
+		this.buffer = Buffer.concat([this.buffer, Buffer.from(data)]);
+	}
+
+	// Extract complete messages based on length prefix
+	getMessages() {
+		const messages = [];
+
+		while (!this.isFinished()) {
+			// Read the length prefix (4 bytes) to get message length
+			const messageLength = this.buffer.readUInt32BE(0);
+
+			// Extract the message based on the prefixed length
+			const message = this.buffer.slice(4, 4 + messageLength).toString('utf-8');
+			messages.push(message);
+
+			// Remove the processed message and its length prefix from the buffer
+			this.buffer = this.buffer.slice(4 + messageLength);
+		}
+
+		return messages.length > 0 ? messages : null;
 	}
 }
 
