@@ -251,7 +251,7 @@ exports.getActions = function (instance) {
 		},
 
 		Change_selected_media_in_watched_media_folder: {
-			name: 'Media: Select from watched folder',
+			name: 'Media Player: Select from watched folder',
 			options: [
 				{
 					type: 'dropdown',
@@ -555,7 +555,7 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 		SetMediaSlotPath: {
-			name: 'Media: Set file path for slot',
+			name: 'Media Player: Set file path for slot',
 			options: [
 				{
 					type: 'textinput',

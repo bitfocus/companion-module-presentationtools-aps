@@ -324,10 +324,10 @@ class APSInstance extends InstanceBase {
 			{ name: 'Presentation: Selected in watched presentation folder (Number)', variableId: 'watched_presentation_folder_selected_presentation_number' },
 			{ name: 'Presentation: Watched presentation folder total files count', variableId: 'watched_presentation_folder_total_files_count' },
 
-			{ name: 'Media: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
-			{ name: 'Media: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
-			{ name: 'Media: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
-			{ name: 'Media: Watched media folder total files count', variableId: 'watched_media_folder_total_files_count' },
+			{ name: 'Media Player: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
+			{ name: 'Media Player: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
+			{ name: 'Media Player: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
+			{ name: 'Media Player: Watched media folder total files count', variableId: 'watched_media_folder_total_files_count' },
 
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
