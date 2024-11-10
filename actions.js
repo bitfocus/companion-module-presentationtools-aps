@@ -179,7 +179,7 @@ exports.getActions = function (instance) {
 		ExitImages: { name: 'Still Image: Exit', options: [], callback: action_callback },
 
 		SetSelected_PresentationFolder: {
-			name: 'Set presentation folder X',
+			name: 'Presentation: Set watched folder',
 			options: [
 				{
 					type: 'dropdown',
@@ -234,7 +234,7 @@ exports.getActions = function (instance) {
 		},
 
 		SetSelected_MediaFolder: {
-			name: 'Set media folder X',
+			name: 'Media Player: Set watched folder',
 			options: [
 				{
 					type: 'dropdown',
