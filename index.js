@@ -244,8 +244,6 @@ class APSInstance extends InstanceBase {
 							self.presets()
 							self.setMediaFolderFilesVariables()
 							self.checkFeedbacks('media_folder_watched', 'media_file_selected')
-						} else if (jsonData.action === 'opened_folder_media') {
-							states.updateMediaFileStates(self.watchedMediaFolderState, jsonData.data.current_opened_file_index)
 						} 
 
 						else if (jsonData.action === 'MediaPlayer') {

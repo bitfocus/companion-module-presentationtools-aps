@@ -164,20 +164,6 @@ exports.updateMediaFolderStates = function (states, data) {
 		states[si].exists = data.exists[i - 1]
 	}
 }
-exports.updateMediaFileStates = function (states, openedFileIndex) {
-	let filesState = states.filesState
-	let numberOfFiles = states.filesList.length
-	for (var i = Math.max(minNumberOfMediaFolderFiles, numberOfFiles); i > 0; i--) {
-		const si = 'File' + i
-		filesState[si] = new Object()
-		filesState[si].opened = false
-		filesState[si].exists = false
-		if(i == openedFileIndex + 1)
-			filesState[si].opened = true
-		if(i <= numberOfFiles)
-			filesState[si].exists = true
-	}
-}
 exports.updateSlotCaptureStates = function (states, index) {
 	const key = 'Slot' + (index + 1)
 	for (const k in states) {
