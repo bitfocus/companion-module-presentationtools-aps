@@ -12,6 +12,7 @@ var actions = require('./actions')
 var feedbacks = require('./feedbacks')
 var states = require('./states')
 var presets = require('./presets')
+var utils = require('./utils')
 
 class APSInstance extends InstanceBase {
 	constructor(internal) {
@@ -524,7 +525,7 @@ class APSInstance extends InstanceBase {
 			for (let i = Math.max(minNumberOfPresentationFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''
 				if(i <= filesList.length)
-					text = filesList[i - 1].split('\\').pop()
+					text = utils.getNameFromPath(filesList[i - 1])
 				values[`presentation_folder_file${i}`] = text
 			}
 		} catch (err) {
@@ -537,7 +538,7 @@ class APSInstance extends InstanceBase {
 				values['watched_presentation_folder_selected_presentation_number'] = 1
 				values['watched_presentation_folder_total_files_count'] = filesList.length
 				values['watched_presentation_folder_selected_presentation_path'] = filesList[0]
-				values['watched_presentation_folder_selected_presentation_name'] = filesList[0].split('\\').pop()
+				values['watched_presentation_folder_selected_presentation_name'] = utils.getNameFromPath(filesList[0])
 			}
 		}
 		else{
@@ -575,7 +576,7 @@ class APSInstance extends InstanceBase {
 			for (let i = Math.max(minNumberOfMediaFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''
 				if(i <= filesList.length)
-					text = filesList[i - 1].split('\\').pop()
+					text = utils.getNameFromPath(filesList[i - 1])
 				values[`media_folder_file${i}`] = text
 			}
 		} catch (err) {
@@ -588,7 +589,7 @@ class APSInstance extends InstanceBase {
 				values['watched_media_folder_selected_media_number'] = 1
 				values['watched_media_folder_total_files_count'] = filesList.length
 				values['watched_media_folder_selected_media_path'] = filesList[0]
-				values['watched_media_folder_selected_media_name'] = filesList[0].split('\\').pop()
+				values['watched_media_folder_selected_media_name'] = utils.getNameFromPath(filesList[0])
 			}
 		}
 		else{

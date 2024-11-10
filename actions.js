@@ -1,4 +1,5 @@
 var choices = require('./choices')
+var utils = require('./utils')
 function getSlideNumber(txtLabel) {
 	return {
 		type: 'textinput',
@@ -945,7 +946,7 @@ function selectPresentationFile(instance, selectionValue, delta = false) {
 	values['watched_presentation_folder_selected_presentation_number'] = sIndex + 1
 	values['watched_presentation_folder_total_files_count'] = filesList.length
 	values['watched_presentation_folder_selected_presentation_path'] = filesList[sIndex]
-	values['watched_presentation_folder_selected_presentation_name'] = filesList[sIndex].split('\\').pop()
+	values['watched_presentation_folder_selected_presentation_name'] = utils.getNameFromPath(filesList[sIndex])
 	self.setVariableValues(values)
 }
 
@@ -976,7 +977,7 @@ function selectMediaFile(instance, selectionValue, delta = false) {
 	values['watched_media_folder_selected_media_number'] = sIndex + 1
 	values['watched_media_folder_total_files_count'] = filesList.length
 	values['watched_media_folder_selected_media_path'] = filesList[sIndex]
-	values['watched_media_folder_selected_media_name'] = filesList[sIndex].split('\\').pop()
+	values['watched_media_folder_selected_media_name'] = utils.getNameFromPath(filesList[sIndex])
 	self.setVariableValues(values)
 }
 
