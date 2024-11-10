@@ -333,29 +333,34 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
-		CapturePresentationSlot: {
+		CapturePresentation: {
 			name: 'Presentation: Capture current presentation',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Slot',
-					id: 'Key',
-					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					label: 'Destination',
+					id: 'destination',
+					default: 'Slot',
+					choices: [
+						{id: "Slot", label: "Slot"},
+						{id: "Folder", label: "Folder"},
+					],
 				},
-			],
-			callback: action_callback,
-		},
-
-		CaptureFolder: {
-			name: "Presentation: Capture current presentation's folder",
-			options: [
 				{
 					type: 'dropdown',
-					label: 'Folder',
-					id: 'Key',
+					label: 'Number',
+					id: 'Slot',
+					default: 'Slot1',
+					choices: choices.getChoicesForSlot(),
+					isVisible: (opt, _d) => opt.destination == 'Slot',
+				},
+				{
+					type: 'dropdown',
+					label: 'Number',
+					id: 'Folder',
 					default: 'Folder1',
 					choices: choices.getChoicesForPresentationFolder(),
+					isVisible: (opt, _d) => opt.destination == 'Folder',
 				},
 			],
 			callback: action_callback,
@@ -694,11 +699,13 @@ exports.getCommandV1 = async function (action, instance) {
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			cmd = action.options.App + separatorChar + slideNumber
 			break
-		case 'CapturePresentationSlot':
-			cmd = action.actionId + separatorChar + utils.extcractNumber(action.options.Key)
-			break
-		case 'CaptureFolder':
-			cmd = action.actionId + separatorChar + utils.extcractNumber(action.options.Key)
+		case 'CapturePresentation':
+			if(action.options.destination == 'Slot'){
+				cmd = 'CapturePresentationSlot' + separatorChar + utils.extcractNumber(action.options.Slot)
+			}
+			else if (action.options.destination == 'Folder'){
+				cmd = 'CaptureFolder' + separatorChar + utils.extcractNumber(action.options.Folder)
+			}
 			break
 		case 'MediaPlayer_Position':
 		case 'MediaPlayer_Forward':
@@ -860,10 +867,18 @@ exports.getCommandV2 = async function (action, instance) {
 				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			}
 			break
-		case 'CapturePresentationSlot':
-			case 'CaptureFolder':
-			data.parameters = {
-				bank_number: utils.extcractNumber(action.options.Key),
+		case 'CapturePresentation':
+			if(action.options.destination == 'Slot'){
+				data.command = 'CapturePresentationSlot'
+				data.parameters = {
+					bank_number: utils.extcractNumber(action.options.Slot),
+				}
+			}
+			else if (action.options.destination == 'Folder'){
+				data.command = 'CaptureFolder'
+				data.parameters = {
+					bank_number: utils.extcractNumber(action.options.Folder),
+				}
 			}
 			break
 		case 'MediaPlayer_Position':
