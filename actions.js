@@ -688,17 +688,17 @@ exports.getCommandV1 = async function (action, instance) {
 			cmd = 'OpenStart_Presentation_Slot' + separatorChar
 			cmd += slideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-			cmd += action.options.Key.substring(4)
+			cmd += utils.extcractNumber(action.options.Key)
 			break
 		case 'GoToSlide':
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			cmd = action.options.App + separatorChar + slideNumber
 			break
 		case 'CapturePresentationSlot':
-			cmd = action.actionId + separatorChar + action.options.Key.substring(4)
+			cmd = action.actionId + separatorChar + utils.extcractNumber(action.options.Key)
 			break
 		case 'CaptureFolder':
-			cmd = action.actionId + separatorChar + action.options.Key.substring(6)
+			cmd = action.actionId + separatorChar + utils.extcractNumber(action.options.Key)
 			break
 		case 'MediaPlayer_Position':
 		case 'MediaPlayer_Forward':
@@ -739,7 +739,7 @@ exports.getCommandV1 = async function (action, instance) {
 		case 'SetMediaSlotPath':
 		case 'SetImageSlotPath':
 			cmd = action.actionId + separatorChar + 
-			extcractNumber(action.options.Key) + separatorChar + 
+			utils.extcractNumber(action.options.Key) + separatorChar + 
 			await instance.parseVariablesInString(action.options.FilePath)
 			break
 		default:
@@ -783,7 +783,7 @@ exports.getCommandV2 = async function (action, instance) {
 			break
 		case 'Capture_Image':
 		case 'Display_Image':
-			let bankNumber = extcractNumber(action.options.Key)
+			let bankNumber = utils.extcractNumber(action.options.Key)
 			if(!bankNumber){
 				// Test | Freeze | Black
 				data.command = action.options.Key
@@ -800,7 +800,7 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 			}else{
 				data.parameters = {
-					bank_number: extcractNumber(action.options.Key),
+					bank_number: utils.extcractNumber(action.options.Key),
 				}
 			}
 			break
@@ -811,14 +811,14 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 			}else{
 				data.parameters = {
-					bank_number: extcractNumber(action.options.Key),
+					bank_number: utils.extcractNumber(action.options.Key),
 				}
 			}
 			break;
 		case 'open_presentation_from_watched_presentation_folder':
 			data.command = 'OpenStart_Presentation'
 			data.parameters = {
-				file_path: instance.watchedPresentationFolderState.filesList[extcractNumber(action.options.FileNumber) - 1],
+				file_path: instance.watchedPresentationFolderState.filesList[utils.extcractNumber(action.options.FileNumber) - 1],
 				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
 				isFullscreen: action.options.Fullscreen,
 			}
@@ -843,13 +843,13 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 			}else{
 				data.parameters = {
-					bank_number: extcractNumber(action.options.Key),
+					bank_number: utils.extcractNumber(action.options.Key),
 				}
 			}
 			break;
 		case 'OpenStart_Presentation_Slot':
 			data.parameters = {
-				slot: action.options.Key.substring(4),
+				slot: utils.extcractNumber(action.options.Key),
 				isFullscreen: action.options.Fullscreen,
 				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
 			}
@@ -863,7 +863,7 @@ exports.getCommandV2 = async function (action, instance) {
 		case 'CapturePresentationSlot':
 			case 'CaptureFolder':
 			data.parameters = {
-				bank_number: extcractNumber(action.options.Key),
+				bank_number: utils.extcractNumber(action.options.Key),
 			}
 			break
 		case 'MediaPlayer_Position':
@@ -892,7 +892,7 @@ exports.getCommandV2 = async function (action, instance) {
 		case 'Clear':
 			let clear_type_key = action.options.Key
 			let clearType = action.options[clear_type_key]
-			let source = clearType == 'All'? clearType : extcractNumber(clearType)
+			let source = clearType == 'All'? clearType : utils.extcractNumber(clearType)
 
 			data.parameters = {
 				clear_type_key: clear_type_key,
@@ -901,14 +901,14 @@ exports.getCommandV2 = async function (action, instance) {
 			break
 		case 'SetPresentationSlotPath':
 			data.parameters = {
-				slot: extcractNumber(action.options.Key),
+				slot: utils.extcractNumber(action.options.Key),
 				file_path: await instance.parseVariablesInString(action.options.FilePath),
 			}
 			break
 		case 'SetMediaSlotPath':
 		case 'SetImageSlotPath':
 			data.parameters = {
-				bank_number: extcractNumber(action.options.Key),
+				bank_number: utils.extcractNumber(action.options.Key),
 				file_path: await instance.parseVariablesInString(action.options.FilePath),
 			}
 			break
@@ -937,7 +937,7 @@ function selectPresentationFile(instance, selectionValue, delta = false) {
 	}
 	else {
 		// Extcract number
-		let newSelectedNumber = parseInt(extcractNumber(selectionValue))
+		let newSelectedNumber = parseInt(utils.extcractNumber(selectionValue))
 		if(newSelectedNumber > filesList.length)
 			return
 		sIndex = newSelectedNumber - 1
@@ -968,7 +968,7 @@ function selectMediaFile(instance, selectionValue, delta = false) {
 	}
 	else {
 		// Extcract number
-		let newSelectedNumber = parseInt(extcractNumber(selectionValue))
+		let newSelectedNumber = parseInt(utils.extcractNumber(selectionValue))
 		if(newSelectedNumber > filesList.length)
 			return
 		sIndex = newSelectedNumber - 1
@@ -979,12 +979,4 @@ function selectMediaFile(instance, selectionValue, delta = false) {
 	values['watched_media_folder_selected_media_path'] = filesList[sIndex]
 	values['watched_media_folder_selected_media_name'] = utils.getNameFromPath(filesList[sIndex])
 	self.setVariableValues(values)
-}
-
-function extcractNumber(str){
-	let numberMatches = str.match(/\d+$/);
-		if (numberMatches) {
-			return numberMatches[0]
-		}
-		return null
 }

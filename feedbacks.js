@@ -1,5 +1,6 @@
 const { combineRgb } = require('@companion-module/base')
 var choices = require('./choices')
+var utils = require('./utils')
 exports.getFeedbacks = function (instance) {
 	var self = instance
 	return {
@@ -223,7 +224,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedPresentationFolderState.number == parseInt(feedback.options.Key.substr(6))
+				return self.watchedPresentationFolderState.number == parseInt(utils.extcractNumber(feedback.options.Key))
 			},
 		},
 		presentation_file_exist: {
@@ -265,7 +266,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.getVariableValue('watched_presentation_folder_selected_presentation_number') == feedback.options.Key.substr(4)
+				return self.getVariableValue('watched_presentation_folder_selected_presentation_number') == utils.extcractNumber(feedback.options.Key)
 			},
 		},
 
@@ -308,7 +309,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedMediaFolderState.number == parseInt(feedback.options.Key.substr(6))
+				return self.watchedMediaFolderState.number == parseInt(utils.extcractNumber(feedback.options.Key))
 			},
 		},
 		media_file_selected: {
@@ -329,7 +330,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.getVariableValue('watched_media_folder_selected_media_number') == feedback.options.Key.substr(4)
+				return self.getVariableValue('watched_media_folder_selected_media_number') == utils.extcractNumber(feedback.options.Key)
 			},
 		},
 
