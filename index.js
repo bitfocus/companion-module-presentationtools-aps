@@ -146,7 +146,7 @@ class APSInstance extends InstanceBase {
 					let message = messages[i]
 					try {
 						let jsonData = JSON.parse(message)
-						if (jsonData.action === 'imagesstates') {
+						if (jsonData.action === 'imagesstates' || jsonData.action === 'states') { // states for backward compatibility untill dropping API v1 support
 							states.updateStates(self.displayStates, jsonData.data)
 							self.setImagesVariables(jsonData.data)
 							self.checkFeedbacks('loaded', 'displayed')
