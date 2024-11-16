@@ -324,6 +324,12 @@ class APSInstance extends InstanceBase {
 			{ name: 'Presentation: Selected in watched presentation folder (Number)', variableId: 'watched_presentation_folder_selected_presentation_number' },
 			{ name: 'Presentation: Watched presentation folder total files count', variableId: 'watched_presentation_folder_total_files_count' },
 
+			{ name: 'Presentation: Selected slot (Number)', variableId: 'presentation_slot_selected_number' },
+			{ name: 'Presentation: Selected slot (Name)', variableId: 'presentation_slot_selected_filename' },
+
+			{ name: 'Media: Selected slot (Number)', variableId: 'media_slot_selected_number' },
+			{ name: 'Media: Selected slot (Name)', variableId: 'media_slot_selected_filename' },
+
 			{ name: 'Media Player: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
 			{ name: 'Media Player: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
 			{ name: 'Media Player: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
@@ -465,6 +471,9 @@ class APSInstance extends InstanceBase {
 			self.log('debug', err)
 		}
 
+		values['presentation_slot_selected_number'] = 1
+		values['media_slot_selected_number'] = 1
+
 		self.setVariableValues(values)
 	}
 
@@ -479,6 +488,8 @@ class APSInstance extends InstanceBase {
 		} catch (err) {
 			self.log('debug', err)
 		}
+
+		values['presentation_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('presentation_slot_selected_number')) - 1]
 
 		self.setVariableValues(values)
 	}
@@ -619,6 +630,8 @@ class APSInstance extends InstanceBase {
 		} catch (err) {
 			self.log('debug', err)
 		}
+
+		values['media_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('media_slot_selected_number')) - 1]
 
 		self.setVariableValues(values)
 	}

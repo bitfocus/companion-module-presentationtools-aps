@@ -130,6 +130,48 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[feedback.options.Key].opened
 			},
 		},
+		presentation_slot_selected: {
+			type: 'boolean',
+			name: 'Presentation slot is selected',
+			description: 'If the presentation slot is selected, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: 'Slot1',
+					choices: choices.getChoicesForSlot(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 255),
+			},
+			callback: function (feedback) {
+				return self.getVariableValue('presentation_slot_selected_number') == utils.extcractNumber(feedback.options.Slot)
+			},
+		},
+		media_slot_selected: {
+			type: 'boolean',
+			name: 'Media slot is selected',
+			description: 'If the media slot is selected, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: 'Media1',
+					choices: choices.getChoicesForMedia(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 255),
+			},
+			callback: function (feedback) {
+				return self.getVariableValue('media_slot_selected_number') == utils.extcractNumber(feedback.options.Slot)
+			},
+		},
 		presentation_file_displayed: {
 			type: 'boolean',
 			name: 'Presentation folder file is displayed',

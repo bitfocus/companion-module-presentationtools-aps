@@ -1287,6 +1287,16 @@ function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
 					bgcolor: 16711680,
 				},
 			},
+			{
+				feedbackId: 'media_slot_selected',
+				options: {
+					Slot: `Media${slot_num}`,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 255,
+				},
+			},
 		],
 		steps: [
 			{
@@ -1562,6 +1572,16 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 				style: {
 					color: 16777215,
 					bgcolor: 13369344,
+				},
+			},
+			{
+				feedbackId: 'presentation_slot_selected',
+				options: {
+					Slot: SlotNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 255,
 				},
 			},
 		],

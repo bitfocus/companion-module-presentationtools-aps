@@ -1,4 +1,5 @@
 var choices = require('./choices')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
 var utils = require('./utils')
 function getSlideNumber(txtLabel) {
 	return {
@@ -228,6 +229,40 @@ exports.getActions = function (instance) {
 					label: 'Run presentation in fullscreen',
 					id: 'Fullscreen',
 					default: true,
+				},
+			],
+			callback: action_callback,
+		},
+
+		select_presentation_slot: {
+			name: 'Presentation: Select slot',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: "Slot1",
+					tooltip: 'Slot',
+					choices: 
+						choices.getNextPrevDeltaValues()
+						.concat(choices.getChoicesForSlot()),
+				},
+			],
+			callback: action_callback,
+		},
+
+		select_media_slot: {
+			name: 'Media: Select slot',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: "Media1",
+					tooltip: 'Slot',
+					choices: 
+						choices.getNextPrevDeltaValues()
+						.concat(choices.getChoicesForMedia()),
 				},
 			],
 			callback: action_callback,
@@ -904,6 +939,22 @@ exports.getCommandV2 = async function (action, instance) {
 				choices.getDeltaValues().some(item => item.id === action.options.File))
 			instance.checkFeedbacks('media_file_selected')
 			break
+		case 'select_presentation_slot':
+			data.command = ''
+			selectPresentationSlot(
+				instance,
+				action.options.Slot,
+				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
+			instance.checkFeedbacks('presentation_slot_selected')
+			break
+		case 'select_media_slot':
+			data.command = ''
+			selectMediaSlot(
+				instance,
+				action.options.Slot,
+				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
+			instance.checkFeedbacks('media_slot_selected')
+			break
 		case 'Clear':
 			let clear_type_key = action.options.Key
 			let clearType = action.options[clear_type_key]
@@ -994,4 +1045,38 @@ function selectMediaFile(instance, selectionValue, delta = false) {
 	values['watched_media_folder_selected_media_path'] = filesList[sIndex]
 	values['watched_media_folder_selected_media_name'] = utils.getNameFromPath(filesList[sIndex])
 	self.setVariableValues(values)
+}
+
+
+function getNewSelectedNumber(input, current, max, delta){
+	let newSelectedNumber = 1
+	if(delta){
+		if(!current)
+			current = 1
+		newSelectedNumber = (parseInt(current) - 1 + parseInt(input) + max) % max + 1;
+	}
+	else {
+		newSelectedNumber = parseInt(utils.extcractNumber(input))
+	}
+	return newSelectedNumber
+}
+
+function selectPresentationSlot(instance, selectionValue, delta = false) {
+	let newSelectedNumber = getNewSelectedNumber(
+		selectionValue, instance.getVariableValue('presentation_slot_selected_number'), numberOfPresentationSlots, delta)
+		
+	instance.setVariableValues({
+		'presentation_slot_selected_number': newSelectedNumber,
+		'presentation_slot_selected_filename': instance.getVariableValue(`presentation_slot${newSelectedNumber}`),
+	})
+}
+
+function selectMediaSlot(instance, selectionValue, delta = false) {
+	let newSelectedNumber = getNewSelectedNumber(
+		selectionValue, instance.getVariableValue('media_slot_selected_number'), numberOfMediaPlayerSlots, delta)
+
+	instance.setVariableValues({
+		'media_slot_selected_number': newSelectedNumber,
+		'media_slot_selected_filename': instance.getVariableValue(`media_slot${newSelectedNumber}`),
+	})
 }

@@ -123,3 +123,10 @@ exports.getDeltaValues = function() {
 			{id: "10", label: "+10"},
 	]
 }
+
+exports.getNextPrevDeltaValues = function() {
+	return [
+			{id: "-1", label: "Previous"},
+			{id: "1", label: "Next"},
+	]
+}
