@@ -684,29 +684,6 @@ exports.getCommandV1 = async function (action, instance) {
 		case 'Load_MediaPlayer':
 			cmd = action.options.Key
 			break
-		case 'SetSelected_PresentationFolder':
-			if(action.options.Key == 'Next' || action.options.Key == 'Previous'){
-				cmd = action.actionId + separatorChar + action.options.Key
-			}else{
-				let folderNumMatches = action.options.Key.match(/\d+$/);
-				if (folderNumMatches) {
-					number = folderNumMatches[0];
-					cmd = action.actionId + separatorChar + number
-				}
-			}
-			break;
-		case 'open_presentation_from_watched_presentation_folder':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
-			let fileNumberMatches = action.options.FileNumber.match(/\d+$/);
-			if (fileNumberMatches) {
-				cmd = 'OpenStart_Presentation' + separatorChar
-				cmd += slideNumber + separatorChar
-				cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-				let fileNumber = fileNumberMatches[0]
-				let filePath = instance.watchedPresentationFolderState.filesList[fileNumber - 1]
-				cmd += filePath
-			}
-			break
 		case 'OpenStart_Presentation':
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			let path = await instance.parseVariablesInString(action.options.Filename)
@@ -719,17 +696,6 @@ exports.getCommandV1 = async function (action, instance) {
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
 			cmd += path
 			break
-		case 'SetSelected_MediaFolder':
-			if(action.options.Key == 'Next' || action.options.Key == 'Previous'){
-				cmd = action.actionId + separatorChar + action.options.Key
-			}else{
-				let folderNumMatches = action.options.Key.match(/\d+$/);
-				if (folderNumMatches) {
-					number = folderNumMatches[0];
-					cmd = action.actionId + separatorChar + number
-				}
-			}
-			break;
 		case 'OpenStart_Presentation_Slot':
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			cmd = 'OpenStart_Presentation_Slot' + separatorChar
@@ -741,55 +707,11 @@ exports.getCommandV1 = async function (action, instance) {
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
 			cmd = action.options.App + separatorChar + slideNumber
 			break
-		case 'CapturePresentation':
-			if(action.options.destination == 'Slot'){
-				cmd = 'CapturePresentationSlot' + separatorChar + utils.extcractNumber(action.options.Slot)
-			}
-			else if (action.options.destination == 'Folder'){
-				cmd = 'CaptureFolder' + separatorChar + utils.extcractNumber(action.options.Folder)
-			}
-			break
 		case 'MediaPlayer_Position':
 		case 'MediaPlayer_Forward':
 		case 'MediaPlayer_Rewind':
 			cmd = action.actionId + mediaPlayerSeparatorChar
 			cmd += action.options.Seconds
-			break
-		case 'Change_selected_presentation_in_watched_presentation_folder':
-			selectPresentationFile(
-				instance,
-				action.options.File,
-				choices.getDeltaValues().some(item => item.id === action.options.File))
-			instance.checkFeedbacks('presentation_file_selected')
-			break
-		case 'Change_selected_media_in_watched_media_folder':
-			selectMediaFile(
-				instance,
-				action.options.File,
-				choices.getDeltaValues().some(item => item.id === action.options.File))
-			instance.checkFeedbacks('media_file_selected')
-			break
-		case 'Clear':
-			let clearType = action.options[action.options.Key]
-			let source = ''
-			if(clearType == 'All'){
-				source = clearType
-			}else{
-				// Extcract number
-				let numberMatches = clearType.match(/\d+$/);
-				if (numberMatches) {
-					source = numberMatches[0]
-				}
-			}
-
-			cmd = action.actionId + separatorChar + action.options.Key + separatorChar + source
-			break
-		case 'SetPresentationSlotPath':
-		case 'SetMediaSlotPath':
-		case 'SetImageSlotPath':
-			cmd = action.actionId + separatorChar + 
-			utils.extcractNumber(action.options.Key) + separatorChar + 
-			await instance.parseVariablesInString(action.options.FilePath)
 			break
 		default:
 			cmd = action.actionId
