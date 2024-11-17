@@ -355,7 +355,7 @@ exports.getActions = function (instance) {
 					label: 'Slot',
 					id: 'Key',
 					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
 				},
 				getSlideNumber('Go to slide'),
 				{
@@ -386,7 +386,7 @@ exports.getActions = function (instance) {
 					label: 'Number',
 					id: 'Slot',
 					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
 					isVisible: (opt, _d) => opt.destination == 'Slot',
 				},
 				{
@@ -448,7 +448,7 @@ exports.getActions = function (instance) {
 					choices: [
 						{ id: `Load_MediaPlayer#Previous`, label: `Previous` },
 						{ id: `Load_MediaPlayer#Next`, label: `Next` },
-					].concat(choices.getChoicesForMediaPlayer()),
+					].concat(choices.getItemForSelectedOption()).concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			callback: action_callback,
@@ -536,22 +536,24 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'Media',
-					tooltip: 'Set <<All>> to clear all slots',
+					tooltip: 'Set <<All>> to clear all slots\nSet <<Selected>> to clear selected slot',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
-					].concat(choices.getChoicesForMedia()),
+					].concat(choices.getItemForSelectedOption())
+					.concat(choices.getChoicesForMedia()),
 					isVisible: (opt, _d) => opt.Key == 'Media',
 				},
 				{
 					type: 'dropdown',
 					label: 'Source',
 					id: 'SlotPresentations',
-					tooltip: 'Set <<All>> to clear all slots',
+					tooltip: 'Set <<All>> to clear all slots\nSet <<Selected>> to clear selected slot',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
-					].concat(choices.getChoicesForSlot()),
+					].concat(choices.getItemForSelectedOption())
+					.concat(choices.getChoicesForSlot()),
 					isVisible: (opt, _d) => opt.Key == 'SlotPresentations',
 				},
 				{
@@ -593,7 +595,7 @@ exports.getActions = function (instance) {
 					label: 'Slot',
 					id: 'Key',
 					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
 				},
 				
 			],
@@ -613,7 +615,7 @@ exports.getActions = function (instance) {
 					label: 'Media',
 					id: 'Key',
 					default: 'Media1',
-					choices: choices.getChoicesForMedia(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForMedia()),
 				},
 				
 			],
@@ -845,6 +847,10 @@ exports.getCommandV2 = async function (action, instance) {
 				data.parameters = {
 					bank_number: action.options.Key.split('#')[1],
 				}
+			}else if(action.options.Key == 'selected'){
+				data.parameters = {
+					bank_number: instance.getVariableValue('media_slot_selected_number'),
+				}
 			}else{
 				data.parameters = {
 					bank_number: utils.extcractNumber(action.options.Key),
@@ -895,8 +901,12 @@ exports.getCommandV2 = async function (action, instance) {
 			}
 			break;
 		case 'OpenStart_Presentation_Slot':
+			let slot = action.options.Key
+			if(slot == 'selected'){
+				slot = instance.getVariableValue('presentation_slot_selected_number')
+			}
 			data.parameters = {
-				slot: utils.extcractNumber(action.options.Key),
+				slot: utils.extcractNumber(slot),
 				isFullscreen: action.options.Fullscreen,
 				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
 			}
@@ -909,9 +919,13 @@ exports.getCommandV2 = async function (action, instance) {
 			break
 		case 'CapturePresentation':
 			if(action.options.destination == 'Slot'){
+				let slot = action.options.Slot
+				if(slot == 'selected'){
+					slot = instance.getVariableValue('presentation_slot_selected_number')
+				}
 				data.command = 'CapturePresentationSlot'
 				data.parameters = {
-					bank_number: utils.extcractNumber(action.options.Slot),
+					bank_number: utils.extcractNumber(slot),
 				}
 			}
 			else if (action.options.destination == 'Folder'){
@@ -963,7 +977,22 @@ exports.getCommandV2 = async function (action, instance) {
 		case 'Clear':
 			let clear_type_key = action.options.Key
 			let clearType = action.options[clear_type_key]
-			let source = clearType == 'All'? clearType : utils.extcractNumber(clearType)
+			let source = ''
+			if(clearType == 'All'){
+				source = 'All'
+			}
+			else if(clearType == 'selected'){
+				if(clear_type_key == 'SlotPresentations'){
+					source = instance.getVariableValue('presentation_slot_selected_number')
+				}
+				else if(clear_type_key == 'Media'){
+					source = instance.getVariableValue('media_slot_selected_number')
+				}
+			}
+			else{
+				source = utils.extcractNumber(clearType)
+			}
+			
 
 			data.parameters = {
 				clear_type_key: clear_type_key,
@@ -971,12 +1000,29 @@ exports.getCommandV2 = async function (action, instance) {
 			}
 			break
 		case 'SetPresentationSlotPath':
-			data.parameters = {
-				slot: utils.extcractNumber(action.options.Key),
-				file_path: await instance.parseVariablesInString(action.options.FilePath),
+			{
+				let key = action.options.Key
+				if(key == 'selected'){
+					key = instance.getVariableValue('presentation_slot_selected_number')
+				}
+				data.parameters = {
+					slot: utils.extcractNumber(key),
+					file_path: await instance.parseVariablesInString(action.options.FilePath),
+				}
 			}
 			break
 		case 'SetMediaSlotPath':
+			{
+				let key = action.options.Key
+				if(key == 'selected'){
+					key = instance.getVariableValue('media_slot_selected_number')
+				}
+				data.parameters = {
+					bank_number: utils.extcractNumber(key),
+					file_path: await instance.parseVariablesInString(action.options.FilePath),
+				}
+			}
+			break
 		case 'SetImageSlotPath':
 			data.parameters = {
 				bank_number: utils.extcractNumber(action.options.Key),
