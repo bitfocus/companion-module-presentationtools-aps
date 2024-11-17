@@ -682,7 +682,11 @@ exports.getCommandV1 = async function (action, instance) {
 		case 'Capture_Image':
 		case 'Display_Image':
 		case 'Load_MediaPlayer':
-			cmd = action.options.Key
+			if(action.options.Key == 'selected'){
+				cmd = 'Load_MediaPlayer#' + instance.getVariableValue('media_slot_selected_number')
+			}else{
+				cmd = action.options.Key
+			}
 			break
 		case 'OpenStart_Presentation':
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
@@ -698,10 +702,15 @@ exports.getCommandV1 = async function (action, instance) {
 			break
 		case 'OpenStart_Presentation_Slot':
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
-			cmd = 'OpenStart_Presentation_Slot' + separatorChar
+			cmd = action.actionId + separatorChar
 			cmd += slideNumber + separatorChar
 			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-			cmd += utils.extcractNumber(action.options.Key)
+
+			let slot = action.options.Key
+			if(slot == 'selected'){
+				slot = instance.getVariableValue('presentation_slot_selected_number')
+			}
+			cmd += utils.extcractNumber(slot)
 			break
 		case 'GoToSlide':
 			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
@@ -712,6 +721,21 @@ exports.getCommandV1 = async function (action, instance) {
 		case 'MediaPlayer_Rewind':
 			cmd = action.actionId + mediaPlayerSeparatorChar
 			cmd += action.options.Seconds
+			break
+
+		case 'select_presentation_slot':
+			selectPresentationSlot(
+				instance,
+				action.options.Slot,
+				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
+			instance.checkFeedbacks('presentation_slot_selected', 'slot_exist', 'slot_displayed')
+			break
+		case 'select_media_slot':
+			selectMediaSlot(
+				instance,
+				action.options.Slot,
+				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
+			instance.checkFeedbacks('media_slot_selected', 'Media_loaded', 'Media_playing')
 			break
 		default:
 			cmd = action.actionId
