@@ -119,7 +119,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Slot',
 					id: 'Key',
 					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
 				},
 			],
 			defaultStyle: {
@@ -127,7 +127,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.slotStates[feedback.options.Key].opened
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Slot' + self.getVariableValue('presentation_slot_selected_number')
+				}
+				return self.slotStates[key].opened
 			},
 		},
 		presentation_slot_selected: {
@@ -216,7 +220,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Slot',
 					id: 'Key',
 					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
 				},
 			],
 			defaultStyle: {
@@ -224,7 +228,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.slotStates[feedback.options.Key].exists
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Slot' + self.getVariableValue('presentation_slot_selected_number')
+				}
+				return self.slotStates[key].exists
 			},
 		},
 		presentation_folder_exist: {
@@ -386,7 +394,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Media Slot',
 					id: 'Key',
 					default: 'Load_MediaPlayer#1',
-					choices: choices.getChoicesForMediaPlayer(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			defaultStyle: {
@@ -394,7 +402,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.mediaPlayerState.slots[feedback.options.Key].playing
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Load_MediaPlayer#' + self.getVariableValue('media_slot_selected_number')
+				}
+				return self.mediaPlayerState.slots[key].playing
 			},
 		},
 
@@ -408,7 +420,9 @@ exports.getFeedbacks = function (instance) {
 					label: 'Media Slot',
 					id: 'Key',
 					default: 'Load_MediaPlayer#1',
-					choices: [{ id: `any_media_loaded`, label: `Any media loaded` }].concat(choices.getChoicesForMediaPlayer()),
+					choices: [{ id: `any_media_loaded`, label: `Any media loaded` }]
+								.concat(choices.getItemForSelectedOption())
+								.concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			defaultStyle: {
@@ -416,7 +430,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.mediaPlayerState.slots[feedback.options.Key].loaded
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Load_MediaPlayer#' + self.getVariableValue('media_slot_selected_number')
+				}
+				return self.mediaPlayerState.slots[key].loaded
 			},
 		},
 

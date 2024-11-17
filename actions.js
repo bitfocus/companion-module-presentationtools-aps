@@ -950,7 +950,7 @@ exports.getCommandV2 = async function (action, instance) {
 				instance,
 				action.options.Slot,
 				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
-			instance.checkFeedbacks('presentation_slot_selected')
+			instance.checkFeedbacks('presentation_slot_selected', 'slot_exist', 'slot_displayed')
 			break
 		case 'select_media_slot':
 			data.command = ''
@@ -958,7 +958,7 @@ exports.getCommandV2 = async function (action, instance) {
 				instance,
 				action.options.Slot,
 				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
-			instance.checkFeedbacks('media_slot_selected')
+			instance.checkFeedbacks('media_slot_selected', 'Media_loaded', 'Media_playing')
 			break
 		case 'Clear':
 			let clear_type_key = action.options.Key

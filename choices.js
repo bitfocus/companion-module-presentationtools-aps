@@ -130,3 +130,7 @@ exports.getNextPrevDeltaValues = function() {
 			{id: "1", label: "Next"},
 	]
 }
+
+exports.getItemForSelectedOption = function() {
+	return [{id: 'selected', label: 'Selected'}]
+}
