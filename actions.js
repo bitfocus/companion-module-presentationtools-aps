@@ -525,6 +525,7 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'StillImages',
+					tooltip: 'Set <<All>> to clear all slots',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
@@ -535,6 +536,7 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'Media',
+					tooltip: 'Set <<All>> to clear all slots',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
@@ -545,6 +547,7 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'SlotPresentations',
+					tooltip: 'Set <<All>> to clear all slots',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
@@ -555,6 +558,7 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'PresentationFolders',
+					tooltip: 'Set <<All>> to clear all slots',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
@@ -565,6 +569,7 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'MediaFolders',
+					tooltip: 'Set <<All>> to clear all slots',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
