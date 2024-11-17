@@ -3,7 +3,7 @@ exports.getNameFromPath = function(fullPath){
 }
 
 exports.extcractNumber = function(str){
-	let numberMatches = str.match(/\d+$/);
+	let numberMatches = str.toString().match(/\d+$/);
 		if (numberMatches) {
 			return numberMatches[0]
 		}
