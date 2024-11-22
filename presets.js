@@ -1464,6 +1464,16 @@ function getPresetForStillImageDisplay(num, lbl, txt, key, clr1, crl2, siz = 'au
 					bgcolor: crl2,
 				},
 			},
+			{
+				feedbackId: 'image_slot_selected',
+				options: {
+					Slot: `Image${num}`,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 255,
+				},
+			},
 		],
 	}
 }

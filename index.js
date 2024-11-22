@@ -330,6 +330,9 @@ class APSInstance extends InstanceBase {
 			{ name: 'Media: Selected slot (Number)', variableId: 'media_slot_selected_number' },
 			{ name: 'Media: Selected slot (Name)', variableId: 'media_slot_selected_filename' },
 
+			{ name: 'Media: Selected slot (Number)', variableId: 'image_slot_selected_number' },
+			{ name: 'Media: Selected slot (Name)', variableId: 'image_slot_selected_filename' },
+
 			{ name: 'Media Player: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
 			{ name: 'Media Player: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
 			{ name: 'Media Player: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
@@ -473,6 +476,7 @@ class APSInstance extends InstanceBase {
 
 		values['presentation_slot_selected_number'] = 1
 		values['media_slot_selected_number'] = 1
+		values['image_slot_selected_number'] = 1
 
 		self.setVariableValues(values)
 	}
@@ -505,7 +509,7 @@ class APSInstance extends InstanceBase {
 		} catch (err) {
 			self.log('debug', err)
 		}
-
+		values['image_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('image_slot_selected_number')) - 1]
 		self.setVariableValues(values)
 	}
 

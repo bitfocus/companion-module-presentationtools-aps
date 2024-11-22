@@ -1,5 +1,5 @@
 var choices = require('./choices')
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { numberOfPresentationSlots, numberOfMediaPlayerSlots, numberOfImagesSlots } = require('./constants')
 var utils = require('./utils')
 function getSlideNumber(txtLabel) {
 	return {
@@ -157,7 +157,7 @@ exports.getActions = function (instance) {
 					label: 'Destination',
 					id: 'Key',
 					default: 'Capture1',
-					choices: choices.getChoicesForCapture(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForCapture()),
 				},
 			],
 			callback: action_callback,
@@ -171,7 +171,7 @@ exports.getActions = function (instance) {
 					label: 'Source',
 					id: 'Key',
 					default: 'Display1',
-					choices: choices.getChoicesForDisplay(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForDisplay()),
 				},
 			],
 			callback: action_callback,
@@ -263,6 +263,23 @@ exports.getActions = function (instance) {
 					choices: 
 						choices.getNextPrevDeltaValues()
 						.concat(choices.getChoicesForMedia()),
+				},
+			],
+			callback: action_callback,
+		},
+
+		select_image_slot: {
+			name: 'Still Image: Select slot',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: "Image1",
+					tooltip: 'Slot',
+					choices: 
+						choices.getNextPrevDeltaValues()
+						.concat(choices.getChoicesForImage()),
 				},
 			],
 			callback: action_callback,
@@ -515,8 +532,8 @@ exports.getActions = function (instance) {
 					tooltip: 'Type',
 					choices: [
 						{id: "StillImages", label: "Still Images"},
-						{id: "Media", label: "Media"},
-						{id: "SlotPresentations", label: "Slot Presentations"},
+						{id: "Media", label: "Media Slot"},
+						{id: "SlotPresentations", label: "Presentation Slot"},
 						{id: "PresentationFolders", label: "Presentation Folders"},
 						{id: "MediaFolders", label: "Media Folders"},
 					],
@@ -635,7 +652,7 @@ exports.getActions = function (instance) {
 					label: 'Image',
 					id: 'Key',
 					default: 'Image1',
-					choices: choices.getChoicesForImage(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForImage()),
 				},
 				
 			],
@@ -680,7 +697,19 @@ exports.getCommandV1 = async function (action, instance) {
 		case 'SlidePrevious':
 			cmd = await instance.parseVariablesInString(action.options.Key)
 		case 'Capture_Image':
+			if(action.options.Key == 'selected'){
+				cmd = 'Capture' + instance.getVariableValue('image_slot_selected_number')
+			}else{
+				cmd = action.options.Key
+			}
+			break
 		case 'Display_Image':
+			if(action.options.Key == 'selected'){
+				cmd = 'Display' + instance.getVariableValue('image_slot_selected_number')
+			}else{
+				cmd = action.options.Key
+			}
+			break
 		case 'Load_MediaPlayer':
 			if(action.options.Key == 'selected'){
 				cmd = 'Load_MediaPlayer#' + instance.getVariableValue('media_slot_selected_number')
@@ -737,6 +766,13 @@ exports.getCommandV1 = async function (action, instance) {
 				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
 			instance.checkFeedbacks('media_slot_selected', 'Media_loaded', 'Media_playing')
 			break
+		case 'select_image_slot':
+			selectImageSlot(
+				instance,
+				action.options.Slot,
+				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
+			instance.checkFeedbacks('image_slot_selected', 'loaded', 'displayed')
+			break
 		default:
 			cmd = action.actionId
 			break
@@ -778,10 +814,17 @@ exports.getCommandV2 = async function (action, instance) {
 			break
 		case 'Capture_Image':
 		case 'Display_Image':
-			let bankNumber = utils.extcractNumber(action.options.Key)
+			let key = action.options.Key
+			let bankNumber = null
+			if(action.options.Key == 'selected'){
+				bankNumber = instance.getVariableValue('image_slot_selected_number')
+			}
+			else{
+				bankNumber = utils.extcractNumber(key)
+			}
 			if(!bankNumber){
 				// Test | Freeze | Black
-				data.command = action.options.Key
+				data.command = key
 			}else{
 				data.parameters = {
 					bank_number: bankNumber,
@@ -920,6 +963,14 @@ exports.getCommandV2 = async function (action, instance) {
 				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
 			instance.checkFeedbacks('media_slot_selected', 'Media_loaded', 'Media_playing')
 			break
+		case 'select_image_slot':
+			data.command = ''
+			selectImageSlot(
+				instance,
+				action.options.Slot,
+				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
+			instance.checkFeedbacks('image_slot_selected', 'loaded', 'displayed')
+			break
 		case 'Clear':
 			let clear_type_key = action.options.Key
 			let clearType = action.options[clear_type_key]
@@ -970,9 +1021,15 @@ exports.getCommandV2 = async function (action, instance) {
 			}
 			break
 		case 'SetImageSlotPath':
-			data.parameters = {
-				bank_number: utils.extcractNumber(action.options.Key),
-				file_path: await instance.parseVariablesInString(action.options.FilePath),
+			{
+				let key = action.options.Key
+				if(key == 'selected'){
+					key = instance.getVariableValue('image_slot_selected_number')
+				}
+				data.parameters = {
+					bank_number: utils.extcractNumber(key),
+					file_path: await instance.parseVariablesInString(action.options.FilePath),
+				}
 			}
 			break
 		default:
@@ -1075,5 +1132,15 @@ function selectMediaSlot(instance, selectionValue, delta = false) {
 	instance.setVariableValues({
 		'media_slot_selected_number': newSelectedNumber,
 		'media_slot_selected_filename': instance.getVariableValue(`media_slot${newSelectedNumber}`),
+	})
+}
+
+function selectImageSlot(instance, selectionValue, delta = false) {
+	let newSelectedNumber = getNewSelectedNumber(
+		selectionValue, instance.getVariableValue('image_slot_selected_number'), numberOfImagesSlots, delta)
+
+	instance.setVariableValues({
+		'image_slot_selected_number': newSelectedNumber,
+		'image_slot_selected_filename': instance.getVariableValue(`image_slot${newSelectedNumber}`),
 	})
 }
