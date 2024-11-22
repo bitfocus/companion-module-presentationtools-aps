@@ -327,11 +327,11 @@ class APSInstance extends InstanceBase {
 			{ name: 'Presentation: Selected slot (Number)', variableId: 'presentation_slot_selected_number' },
 			{ name: 'Presentation: Selected slot (Name)', variableId: 'presentation_slot_selected_filename' },
 
-			{ name: 'Media: Selected slot (Number)', variableId: 'media_slot_selected_number' },
-			{ name: 'Media: Selected slot (Name)', variableId: 'media_slot_selected_filename' },
+			{ name: 'Media player: Selected slot (Number)', variableId: 'media_slot_selected_number' },
+			{ name: 'Media player: Selected slot (Name)', variableId: 'media_slot_selected_filename' },
 
-			{ name: 'Media: Selected slot (Number)', variableId: 'image_slot_selected_number' },
-			{ name: 'Media: Selected slot (Name)', variableId: 'image_slot_selected_filename' },
+			{ name: 'Still image: Selected slot (Number)', variableId: 'image_slot_selected_number' },
+			{ name: 'Still image: Selected slot (Name)', variableId: 'image_slot_selected_filename' },
 
 			{ name: 'Media Player: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
 			{ name: 'Media Player: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
