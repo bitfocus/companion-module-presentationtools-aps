@@ -113,7 +113,16 @@ exports.getPresets = function (instance) {
 				up: [],
 			},
 		],
-		feedbacks: [],
+		feedbacks: [
+			{
+				feedbackId: 'presentation_displayed_in_edit_mode',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: 26112,
+				},
+			},
+		],
 	}
 	presets['Navigation_CloseOthers'] = {
 		type: 'button',
@@ -137,7 +146,16 @@ exports.getPresets = function (instance) {
 				up: [],
 			},
 		],
-		feedbacks: [],
+		feedbacks: [
+			{
+				feedbackId: 'presentation_displayed',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: combineRgb(51, 0, 0),
+				},
+			},
+		],
 	}
 
 	presets['Exit'] = {
@@ -164,7 +182,16 @@ exports.getPresets = function (instance) {
 				up: [],
 			},
 		],
-		feedbacks: [],
+		feedbacks: [
+			{
+				feedbackId: 'presentation_displayed',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: combineRgb(51, 0, 0),
+				},
+			},
+		],
 	}
 
 	// Still Images - Capture
@@ -245,7 +272,7 @@ exports.getPresets = function (instance) {
 			alignment: 'center:center',
 			size: 'auto',
 			color: 16777215,
-			bgcolor: combineRgb(255, 0, 0),
+			bgcolor: 0,
 		},
 		steps: [
 			{
@@ -253,7 +280,16 @@ exports.getPresets = function (instance) {
 				up: [],
 			},
 		],
-		feedbacks: [],
+		feedbacks: [
+			{
+				feedbackId: 'presentation_displayed',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: combineRgb(255, 0, 0),
+				},
+			},
+		],
 	}
 	presets['PresentationFilesNext'] = {
 		type: 'button',
@@ -264,7 +300,7 @@ exports.getPresets = function (instance) {
 			alignment: 'center:center',
 			size: 'auto',
 			color: 16777215,
-			bgcolor: 26112,
+			bgcolor: 0,
 		},
 		steps: [
 			{
@@ -272,7 +308,16 @@ exports.getPresets = function (instance) {
 				up: [],
 			},
 		],
-		feedbacks: [],
+		feedbacks: [
+			{
+				feedbackId: 'presentation_displayed',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: 26112,
+				},
+			},
+		],
 	}
 
 	//Slot Presentations
