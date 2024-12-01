@@ -241,6 +241,19 @@ exports.getFeedbacks = function (instance) {
 				return self.generalState.isAnyPresentationDisplayed
 			},
 		},
+		presentation_displayed_in_edit_mode: {
+			type: 'boolean',
+			name: 'Presentation is in edit mode',
+			description: 'If any presentation is in edit mode, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (_feedback) {
+				return self.generalState.isAnyPresentationDisplayedInEditMode
+			},
+		},
 		slot_exist: {
 			type: 'boolean',
 			name: 'Presentation slot exists',

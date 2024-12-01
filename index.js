@@ -31,7 +31,8 @@ class APSInstance extends InstanceBase {
 		
 
 		this.generalState = {
-			isAnyPresentationDisplayed: false
+			isAnyPresentationDisplayed: false,
+			isAnyPresentationDisplayedInEditMode: false,
 		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
@@ -192,7 +193,8 @@ class APSInstance extends InstanceBase {
 							self.checkFeedbacks('loaded')
 						} else if (jsonData.action === 'any_presentation_displayed') {
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
-							self.checkFeedbacks('presentation_displayed')
+							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
+							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
 						} else if (jsonData.action === 'files') {
 							let update_obj = {
 								Presentation_previous: jsonData.data.prev,
