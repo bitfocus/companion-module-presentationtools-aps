@@ -6,6 +6,7 @@ const {
 	minNumberOfPresentationFolderFiles,
 	numberOfMediaFolders, 
 	minNumberOfMediaFolderFiles } = require('./constants')
+var utils = require('./utils')
 
 
 exports.getChoicesForImage = function () {
@@ -79,7 +80,7 @@ exports.getChoicesForPresentationFolderFiles = function (filesList) {
 	for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, filesList.length); i++) {
 		let text = `${i} - `
 		if(i <= filesList.length)
-			text += filesList[i - 1].split('\\').pop()
+			text += utils.getNameFromPath(filesList[i - 1])
 		
 		choicesList.push({ id: `File${i}`, label: text})
 	}
@@ -99,7 +100,7 @@ exports.getChoicesForMediaFolderFiles = function (filesList) {
 	for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, filesList.length); i++) {
 		let text = `${i} - `
 		if(i <= filesList.length)
-			text += filesList[i - 1].split('\\').pop()
+			text += utils.getNameFromPath(filesList[i - 1])
 		
 		choicesList.push({ id: `File${i}`, label: text})
 	}
@@ -121,4 +122,15 @@ exports.getDeltaValues = function() {
 			{id: "1", label: "+1"},
 			{id: "10", label: "+10"},
 	]
+}
+
+exports.getNextPrevDeltaValues = function() {
+	return [
+			{id: "-1", label: "Previous"},
+			{id: "1", label: "Next"},
+	]
+}
+
+exports.getItemForSelectedOption = function() {
+	return [{id: 'selected', label: 'Selected'}]
 }

@@ -1,5 +1,6 @@
 const { combineRgb } = require('@companion-module/base')
 var choices = require('./choices')
+var utils = require('./utils')
 exports.getFeedbacks = function (instance) {
 	var self = instance
 	return {
@@ -13,15 +14,21 @@ exports.getFeedbacks = function (instance) {
 					label: 'Source',
 					id: 'Key',
 					default: 'Display1',
-					choices: choices.getChoicesForDisplay(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForDisplay()),
 				},
 			],
 			defaultStyle: {
 				color: combineRgb(255, 255, 255),
-				bgcolor: combineRgb(0, 255, 0),
+				bgcolor: combineRgb(0, 90, 0),
 			},
 			callback: function (feedback) {
-				return self.displayStates[feedback.options.Key].loaded
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Display' + self.getVariableValue('image_slot_selected_number')
+					self.log('debug', key)
+				}
+				
+				return self.displayStates[key].loaded
 			},
 		},
 		displayed: {
@@ -34,7 +41,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Source',
 					id: 'Key',
 					default: 'Display1',
-					choices: choices.getChoicesForDisplay(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForDisplay()),
 				},
 			],
 			defaultStyle: {
@@ -42,7 +49,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.displayStates[feedback.options.Key].displayed
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Display' + self.getVariableValue('image_slot_selected_number')
+				}
+				return self.displayStates[key].displayed
 			},
 		},
 		captured: {
@@ -118,7 +129,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Slot',
 					id: 'Key',
 					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
 				},
 			],
 			defaultStyle: {
@@ -126,7 +137,74 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.slotStates[feedback.options.Key].opened
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Slot' + self.getVariableValue('presentation_slot_selected_number')
+				}
+				return self.slotStates[key].opened
+			},
+		},
+		presentation_slot_selected: {
+			type: 'boolean',
+			name: 'Presentation slot is selected',
+			description: 'If the presentation slot is selected, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: 'Slot1',
+					choices: choices.getChoicesForSlot(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 255),
+			},
+			callback: function (feedback) {
+				return self.getVariableValue('presentation_slot_selected_number') == utils.extcractNumber(feedback.options.Slot)
+			},
+		},
+		media_slot_selected: {
+			type: 'boolean',
+			name: 'Media slot is selected',
+			description: 'If the media slot is selected, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: 'Media1',
+					choices: choices.getChoicesForMedia(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 255),
+			},
+			callback: function (feedback) {
+				return self.getVariableValue('media_slot_selected_number') == utils.extcractNumber(feedback.options.Slot)
+			},
+		},
+		image_slot_selected: {
+			type: 'boolean',
+			name: 'Still Image slot is selected',
+			description: 'If the image slot is selected, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Slot',
+					default: 'Image1',
+					choices: choices.getChoicesForImage(),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 255),
+			},
+			callback: function (feedback) {
+				return self.getVariableValue('image_slot_selected_number') == utils.extcractNumber(feedback.options.Slot)
 			},
 		},
 		presentation_file_displayed: {
@@ -163,6 +241,19 @@ exports.getFeedbacks = function (instance) {
 				return self.generalState.isAnyPresentationDisplayed
 			},
 		},
+		presentation_displayed_in_edit_mode: {
+			type: 'boolean',
+			name: 'Presentation is in edit mode',
+			description: 'If any presentation is in edit mode, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (_feedback) {
+				return self.generalState.isAnyPresentationDisplayedInEditMode
+			},
+		},
 		slot_exist: {
 			type: 'boolean',
 			name: 'Presentation slot exists',
@@ -173,7 +264,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Slot',
 					id: 'Key',
 					default: 'Slot1',
-					choices: choices.getChoicesForSlot(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
 				},
 			],
 			defaultStyle: {
@@ -181,7 +272,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.slotStates[feedback.options.Key].exists
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Slot' + self.getVariableValue('presentation_slot_selected_number')
+				}
+				return self.slotStates[key].exists
 			},
 		},
 		presentation_folder_exist: {
@@ -223,7 +318,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedPresentationFolderState.number == parseInt(feedback.options.Key.substr(6))
+				return self.watchedPresentationFolderState.number == parseInt(utils.extcractNumber(feedback.options.Key))
 			},
 		},
 		presentation_file_exist: {
@@ -265,7 +360,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.getVariableValue('watched_presentation_folder_selected_presentation_number') == feedback.options.Key.substr(4)
+				return self.getVariableValue('watched_presentation_folder_selected_presentation_number') == utils.extcractNumber(feedback.options.Key)
 			},
 		},
 
@@ -308,7 +403,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedMediaFolderState.number == parseInt(feedback.options.Key.substr(6))
+				return self.watchedMediaFolderState.number == parseInt(utils.extcractNumber(feedback.options.Key))
 			},
 		},
 		media_file_selected: {
@@ -329,7 +424,7 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.getVariableValue('watched_media_folder_selected_media_number') == feedback.options.Key.substr(4)
+				return self.getVariableValue('watched_media_folder_selected_media_number') == utils.extcractNumber(feedback.options.Key)
 			},
 		},
 
@@ -343,7 +438,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'Media Slot',
 					id: 'Key',
 					default: 'Load_MediaPlayer#1',
-					choices: choices.getChoicesForMediaPlayer(),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			defaultStyle: {
@@ -351,7 +446,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.mediaPlayerState.slots[feedback.options.Key].playing
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Load_MediaPlayer#' + self.getVariableValue('media_slot_selected_number')
+				}
+				return self.mediaPlayerState.slots[key].playing
 			},
 		},
 
@@ -365,7 +464,9 @@ exports.getFeedbacks = function (instance) {
 					label: 'Media Slot',
 					id: 'Key',
 					default: 'Load_MediaPlayer#1',
-					choices: [{ id: `any_media_loaded`, label: `Any media loaded` }].concat(choices.getChoicesForMediaPlayer()),
+					choices: [{ id: `any_media_loaded`, label: `Any media loaded` }]
+								.concat(choices.getItemForSelectedOption())
+								.concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			defaultStyle: {
@@ -373,7 +474,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.mediaPlayerState.slots[feedback.options.Key].loaded
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'Load_MediaPlayer#' + self.getVariableValue('media_slot_selected_number')
+				}
+				return self.mediaPlayerState.slots[key].loaded
 			},
 		},
 

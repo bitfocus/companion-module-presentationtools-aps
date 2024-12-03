@@ -12,6 +12,7 @@ var actions = require('./actions')
 var feedbacks = require('./feedbacks')
 var states = require('./states')
 var presets = require('./presets')
+var utils = require('./utils')
 
 class APSInstance extends InstanceBase {
 	constructor(internal) {
@@ -21,8 +22,17 @@ class APSInstance extends InstanceBase {
 	async configUpdated(config) {
 		this.config = config
 
+		this.apiVersionMapping = {
+			1: {commandHandler: actions.getCommandV1, receiver: MessageBuffer},
+			2: {commandHandler: actions.getCommandV2, receiver: MessageBufferV2},
+		};
+		this.apiVersion = Math.max(...Object.keys(this.apiVersionMapping).map(Number));
+		this.log('info', `API version: ${this.apiVersion}`)
+		
+
 		this.generalState = {
-			isAnyPresentationDisplayed: false
+			isAnyPresentationDisplayed: false,
+			isAnyPresentationDisplayedInEditMode: false,
 		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
@@ -49,9 +59,9 @@ class APSInstance extends InstanceBase {
 			fade_on: false,
 		}
 		this.captureTimeoutObj = null
+		this.checkAPIsVersionsCompatibilityTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
 		this.folderCaptureTimeoutObj = null
-		this.receiver = new MessageBuffer('$')
 
 		this.initTCP()
 		this.actions() // export actions
@@ -62,6 +72,21 @@ class APSInstance extends InstanceBase {
 
 	async init(config) {
 		this.configUpdated(config)
+	}
+
+	CheckAPIsVersionsCompatibility(){
+		
+		if(!this.socket.isConnected)
+			return
+
+		if(this.serverAPIVersion > this.apiVersion){
+			this.updateStatus(InstanceStatus.UnknownWarning, 
+				"APS is more recent than Companion module.\nPlease upgrade Companion to ensure maximum compatibility.")
+		}
+		else if(this.serverAPIVersion < this.apiVersion){
+			this.updateStatus(InstanceStatus.UnknownWarning, 
+				"The Connected Companion module is more recent than APS.\nPlease upgrade APS to ensure maximum compatibility.")
+		}
 	}
 
 	initTCP() {
@@ -85,10 +110,36 @@ class APSInstance extends InstanceBase {
 			})
 
 			self.socket.on('connect', () => {
+				self.serverAPIVersion = 1
+				self.toBeUsedAPIversion = 1
+				self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
+				let apiVersionMesage = JSON.stringify({command: "api_version", api_version: self.apiVersion}) + "$"
+				actions.send(self.socket, apiVersionMesage)
 				self.updateStatus(InstanceStatus.Ok)
+
+				if (self.checkAPIsVersionsCompatibilityTimeoutObj !== null) {
+					clearTimeout(self.checkAPIsVersionsCompatibilityTimeoutObj)
+				}
+
+				self.checkAPIsVersionsCompatibilityTimeoutObj = setTimeout(() => {
+					try {
+						self.CheckAPIsVersionsCompatibility()
+					} catch (err) {
+						this.log('debug', err)
+					}
+				}, 5000)
 			})
 
 			self.socket.on('data', (data) => {
+				if(data.toString().includes('"api_version"')){
+					const messageLength = data.readUInt32BE(0);
+					const message = data.slice(4, 4 + messageLength).toString('utf-8');
+					self.serverAPIVersion = JSON.parse(message).api_version
+					self.log('info', `Server API version: ${self.serverAPIVersion}`)
+					self.toBeUsedAPIversion = Math.min(self.apiVersion, self.serverAPIVersion)
+					self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
+					return
+				}
 				self.receiver.push(data)
 				let messages = self.receiver.getMessages()
 				if (messages == null) return
@@ -96,7 +147,7 @@ class APSInstance extends InstanceBase {
 					let message = messages[i]
 					try {
 						let jsonData = JSON.parse(message)
-						if (jsonData.action === 'imagesstates') {
+						if (jsonData.action === 'imagesstates' || jsonData.action === 'states') { // states for backward compatibility untill dropping API v1 support
 							states.updateStates(self.displayStates, jsonData.data)
 							self.setImagesVariables(jsonData.data)
 							self.checkFeedbacks('loaded', 'displayed')
@@ -142,7 +193,8 @@ class APSInstance extends InstanceBase {
 							self.checkFeedbacks('loaded')
 						} else if (jsonData.action === 'any_presentation_displayed') {
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
-							self.checkFeedbacks('presentation_displayed')
+							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
+							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
 						} else if (jsonData.action === 'files') {
 							let update_obj = {
 								Presentation_previous: jsonData.data.prev,
@@ -194,8 +246,6 @@ class APSInstance extends InstanceBase {
 							self.presets()
 							self.setMediaFolderFilesVariables()
 							self.checkFeedbacks('media_folder_watched', 'media_file_selected')
-						} else if (jsonData.action === 'opened_folder_media') {
-							states.updateMediaFileStates(self.watchedMediaFolderState, jsonData.data.current_opened_file_index)
 						} 
 
 						else if (jsonData.action === 'MediaPlayer') {
@@ -211,6 +261,7 @@ class APSInstance extends InstanceBase {
 							)
 						}
 					} catch (e) {
+						self.log('debug', message)
 						console.error(e)
 					}
 				}
@@ -275,10 +326,19 @@ class APSInstance extends InstanceBase {
 			{ name: 'Presentation: Selected in watched presentation folder (Number)', variableId: 'watched_presentation_folder_selected_presentation_number' },
 			{ name: 'Presentation: Watched presentation folder total files count', variableId: 'watched_presentation_folder_total_files_count' },
 
-			{ name: 'Media: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
-			{ name: 'Media: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
-			{ name: 'Media: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
-			{ name: 'Media: Watched media folder total files count', variableId: 'watched_media_folder_total_files_count' },
+			{ name: 'Presentation: Selected slot (Number)', variableId: 'presentation_slot_selected_number' },
+			{ name: 'Presentation: Selected slot (Name)', variableId: 'presentation_slot_selected_filename' },
+
+			{ name: 'Media player: Selected slot (Number)', variableId: 'media_slot_selected_number' },
+			{ name: 'Media player: Selected slot (Name)', variableId: 'media_slot_selected_filename' },
+
+			{ name: 'Still image: Selected slot (Number)', variableId: 'image_slot_selected_number' },
+			{ name: 'Still image: Selected slot (Name)', variableId: 'image_slot_selected_filename' },
+
+			{ name: 'Media Player: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
+			{ name: 'Media Player: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
+			{ name: 'Media Player: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
+			{ name: 'Media Player: Watched media folder total files count', variableId: 'watched_media_folder_total_files_count' },
 
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
@@ -416,6 +476,10 @@ class APSInstance extends InstanceBase {
 			self.log('debug', err)
 		}
 
+		values['presentation_slot_selected_number'] = 1
+		values['media_slot_selected_number'] = 1
+		values['image_slot_selected_number'] = 1
+
 		self.setVariableValues(values)
 	}
 
@@ -431,6 +495,8 @@ class APSInstance extends InstanceBase {
 			self.log('debug', err)
 		}
 
+		values['presentation_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('presentation_slot_selected_number')) - 1]
+
 		self.setVariableValues(values)
 	}
 
@@ -445,7 +511,7 @@ class APSInstance extends InstanceBase {
 		} catch (err) {
 			self.log('debug', err)
 		}
-
+		values['image_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('image_slot_selected_number')) - 1]
 		self.setVariableValues(values)
 	}
 
@@ -474,7 +540,7 @@ class APSInstance extends InstanceBase {
 			for (let i = Math.max(minNumberOfPresentationFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''
 				if(i <= filesList.length)
-					text = filesList[i - 1].split('\\').pop()
+					text = utils.getNameFromPath(filesList[i - 1])
 				values[`presentation_folder_file${i}`] = text
 			}
 		} catch (err) {
@@ -487,7 +553,7 @@ class APSInstance extends InstanceBase {
 				values['watched_presentation_folder_selected_presentation_number'] = 1
 				values['watched_presentation_folder_total_files_count'] = filesList.length
 				values['watched_presentation_folder_selected_presentation_path'] = filesList[0]
-				values['watched_presentation_folder_selected_presentation_name'] = filesList[0].split('\\').pop()
+				values['watched_presentation_folder_selected_presentation_name'] = utils.getNameFromPath(filesList[0])
 			}
 		}
 		else{
@@ -525,7 +591,7 @@ class APSInstance extends InstanceBase {
 			for (let i = Math.max(minNumberOfMediaFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''
 				if(i <= filesList.length)
-					text = filesList[i - 1].split('\\').pop()
+					text = utils.getNameFromPath(filesList[i - 1])
 				values[`media_folder_file${i}`] = text
 			}
 		} catch (err) {
@@ -538,7 +604,7 @@ class APSInstance extends InstanceBase {
 				values['watched_media_folder_selected_media_number'] = 1
 				values['watched_media_folder_total_files_count'] = filesList.length
 				values['watched_media_folder_selected_media_path'] = filesList[0]
-				values['watched_media_folder_selected_media_name'] = filesList[0].split('\\').pop()
+				values['watched_media_folder_selected_media_name'] = utils.getNameFromPath(filesList[0])
 			}
 		}
 		else{
@@ -571,6 +637,8 @@ class APSInstance extends InstanceBase {
 			self.log('debug', err)
 		}
 
+		values['media_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('media_slot_selected_number')) - 1]
+
 		self.setVariableValues(values)
 	}
 
@@ -595,8 +663,8 @@ class APSInstance extends InstanceBase {
 }
 
 class MessageBuffer {
-	constructor(delimiter) {
-		this.delimiter = delimiter
+	constructor() {
+		this.delimiter = '$'
 		this.buffer = ''
 	}
 
@@ -620,6 +688,44 @@ class MessageBuffer {
 			}
 		}
 		return messages.length > 0 ? messages : null
+	}
+}
+
+class MessageBufferV2 {
+	constructor() {
+		this.buffer = Buffer.alloc(0); // Use a Buffer instead of string for binary data
+	}
+
+	// Check if there is enough data to parse a full message
+	isFinished() {
+		if (this.buffer.length < 4) return true; // Less than 4 bytes means no length prefix yet
+
+		const messageLength = this.buffer.readUInt32BE(0); // Read the length prefix
+		return this.buffer.length < 4 + messageLength; // Check if the buffer has the full message
+	}
+
+	// Append new data to the buffer
+	push(data) {
+		this.buffer = Buffer.concat([this.buffer, Buffer.from(data)]);
+	}
+
+	// Extract complete messages based on length prefix
+	getMessages() {
+		const messages = [];
+
+		while (!this.isFinished()) {
+			// Read the length prefix (4 bytes) to get message length
+			const messageLength = this.buffer.readUInt32BE(0);
+
+			// Extract the message based on the prefixed length
+			const message = this.buffer.slice(4, 4 + messageLength).toString('utf-8');
+			messages.push(message);
+
+			// Remove the processed message and its length prefix from the buffer
+			this.buffer = this.buffer.slice(4 + messageLength);
+		}
+
+		return messages.length > 0 ? messages : null;
 	}
 }
 
