@@ -1,4 +1,10 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { 
+	numberOfPresentationSlots, 
+	numberOfMediaPlayerSlots, 
+	minNumberOfPresentationFolderFiles, 
+	numberOfPresentationFolders,
+	minNumberOfMediaFolderFiles, 
+	numberOfMediaFolders } = require('./constants')
 var choices = require('./choices')
 exports.generateCaptureStates = function () {
 	var cchoices = choices.getChoicesForCapture()
@@ -28,6 +34,44 @@ exports.generateSlotStates = function () {
 		states[si] = new Object()
 		states[si].exists = false
 		states[si].opened = false
+	}
+	return states
+}
+exports.generatePresentationFolderStates = function () {
+	var schoices = choices.getChoicesForPresentationFolder()
+	var states = new Object()
+	for (var i = numberOfPresentationFolders - 1; i >= 0; i--) {
+		const si = schoices[i].id
+		states[si] = new Object()
+		states[si].exists = false
+	}
+	return states
+}
+exports.generateMediaFolderStates = function () {
+	var schoices = choices.getChoicesForMediaFolder()
+	var states = new Object()
+	for (var i = numberOfMediaFolders - 1; i >= 0; i--) {
+		const si = schoices[i].id
+		states[si] = new Object()
+		states[si].exists = false
+	}
+	return states
+}
+exports.generateSlotCaptureStates = function () {
+	var cchoices = choices.getChoicesForSlot()
+	var states = new Object()
+	for (var i = cchoices.length - 1; i >= 0; i--) {
+		var ci = cchoices[i].id
+		states[ci] = false
+	}
+	return states
+}
+exports.generateFolderCaptureStates = function () {
+	var cchoices = choices.getChoicesForPresentationFolder()
+	var states = new Object()
+	for (var i = cchoices.length - 1; i >= 0; i--) {
+		var ci = cchoices[i].id
+		states[ci] = false
 	}
 	return states
 }
@@ -93,6 +137,62 @@ exports.updateSlotStates = function (states, data) {
 		states[si].exists = data.exists[i - 1]
 		states[si].opened = data.opened[i - 1]
 	}
+}
+exports.updatePresentationFolderStates = function (states, data) {
+	for (var i = numberOfPresentationFolders; i > 0; i--) {
+		const si = 'Folder' + i
+		states[si].exists = data.exists[i - 1]
+	}
+}
+exports.updatePresentationFileStates = function (states, openedFileIndex) {
+	let filesState = states.filesState
+	let numberOfFiles = states.filesList.length
+	for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
+		const si = 'File' + i
+		filesState[si] = new Object()
+		filesState[si].opened = false
+		filesState[si].exists = false
+		if(i == openedFileIndex + 1)
+			filesState[si].opened = true
+		if(i <= numberOfFiles)
+			filesState[si].exists = true
+	}
+}
+exports.updateMediaFolderStates = function (states, data) {
+	for (var i = numberOfMediaFolders; i > 0; i--) {
+		const si = 'Folder' + i
+		states[si].exists = data.exists[i - 1]
+	}
+}
+exports.updateSlotCaptureStates = function (states, index) {
+	const key = 'Slot' + (index + 1)
+	for (const k in states) {
+		if (key === k) {
+			states[k] = true
+		} else {
+			states[k] = false
+		}
+	}
+}
+exports.updateFolderCaptureStates = function (states, index) {
+	const key = 'Folder' + (index + 1)
+	for (const k in states) {
+		if (key === k) {
+			states[k] = true
+		} else {
+			states[k] = false
+		}
+	}
+}
+exports.updateWatchedPresentationFolderState = function (states, data) {
+		states.name = data.name
+		states.number = data.number
+		states.filesList = data.files_list
+}
+exports.updateWatchedMediaFolderState = function (states, data) {
+		states.name = data.name
+		states.number = data.number
+		states.filesList = data.files_list
 }
 
 exports.generateMediaSlotStates = function () {

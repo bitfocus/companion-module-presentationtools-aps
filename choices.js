@@ -1,4 +1,30 @@
-const { numberOfPresentationSlots, numberOfMediaPlayerSlots } = require('./constants')
+const { 
+	numberOfImagesSlots,
+	numberOfPresentationSlots, 
+	numberOfMediaPlayerSlots, 
+	numberOfPresentationFolders, 
+	minNumberOfPresentationFolderFiles,
+	numberOfMediaFolders, 
+	minNumberOfMediaFolderFiles } = require('./constants')
+var utils = require('./utils')
+
+
+exports.getChoicesForImage = function () {
+	choicesList = []
+	for (let i = 1; i <= numberOfImagesSlots; i++) {
+		choicesList.push({ id: `Image${i}`, label: i })
+	}
+	return choicesList
+}
+
+exports.getChoicesForMedia = function () {
+	choicesList = []
+	for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
+		choicesList.push({ id: `Media${i}`, label: i })
+	}
+	return choicesList
+}
+
 exports.getChoicesForCapture = function () {
 	return [
 		{ id: 'Capture1', label: 'Image 1' },
@@ -41,10 +67,70 @@ exports.getChoicesForSlot = function () {
 	return choicesList
 }
 
+exports.getChoicesForPresentationFolder = function () {
+	choicesList = []
+	for (let i = 1; i <= numberOfPresentationFolders; i++) {
+		choicesList.push({ id: `Folder${i}`, label: i })
+	}
+	return choicesList
+}
+
+exports.getChoicesForPresentationFolderFiles = function (filesList) {
+	choicesList = []
+	for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, filesList.length); i++) {
+		let text = `${i} - `
+		if(i <= filesList.length)
+			text += utils.getNameFromPath(filesList[i - 1])
+		
+		choicesList.push({ id: `File${i}`, label: text})
+	}
+	return choicesList
+}
+
+exports.getChoicesForMediaFolder = function () {
+	choicesList = []
+	for (let i = 1; i <= numberOfMediaFolders; i++) {
+		choicesList.push({ id: `Folder${i}`, label: i })
+	}
+	return choicesList
+}
+
+exports.getChoicesForMediaFolderFiles = function (filesList) {
+	choicesList = []
+	for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, filesList.length); i++) {
+		let text = `${i} - `
+		if(i <= filesList.length)
+			text += utils.getNameFromPath(filesList[i - 1])
+		
+		choicesList.push({ id: `File${i}`, label: text})
+	}
+	return choicesList
+}
+
 exports.getChoicesForMediaPlayer = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
 		choicesList.push({ id: `Load_MediaPlayer#${i}`, label: `Media ${i}` })
 	}
 	return choicesList
+}
+
+exports.getDeltaValues = function() {
+	return [
+			{id: "-10", label: "-10"},
+			{id: "-1", label: "-1"},
+			{id: "1", label: "+1"},
+			{id: "10", label: "+10"},
+	]
+}
+
+exports.getNextPrevDeltaValues = function() {
+	return [
+			{id: "-1", label: "Previous"},
+			{id: "1", label: "Next"},
+	]
+}
+
+exports.getItemForSelectedOption = function() {
+	return [{id: 'selected', label: 'Selected'}]
 }
