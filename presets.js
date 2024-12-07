@@ -600,7 +600,7 @@ presets['StorePresentationSlot'] = {
 				{
 					actionId: 'SetPresentationSlotPath',
 					options: {
-						FilePath: "$(aps:watched_presentation_folder_selected_presentation_path)",
+						FilePath: `$(${self.label}:watched_presentation_folder_selected_presentation_path)`,
 						Key: "selected",
 					},
 				},
@@ -929,7 +929,7 @@ presets['StorePresentationSlot'] = {
 					{
 						actionId: 'SetMediaSlotPath',
 						options: {
-							FilePath: "$(aps:watched_media_folder_selected_media_path)",
+							FilePath: `$(${self.label}:watched_media_folder_selected_media_path)`,
 							Key: "selected",
 						},
 					},
