@@ -195,14 +195,12 @@ exports.updateWatchedPresentationFolderState = function (states, data) {
 		states.number = data.number
 		states.filesList = data.files_list
 
-		if(Object.keys(states.filesState).length === 0){
-			let numberOfFiles = states.filesList.length
-			for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
-				const si = 'File' + i
-				states.filesState[si] = new Object()
-				states.filesState[si].opened = false
-				states.filesState[si].exists = false
-			}
+		let numberOfFiles = states.filesList.length
+		for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
+			const si = 'File' + i
+			states.filesState[si] = new Object()
+			states.filesState[si].opened = false
+			states.filesState[si].exists = false
 		}
 }
 exports.updateWatchedMediaFolderState = function (states, data) {
