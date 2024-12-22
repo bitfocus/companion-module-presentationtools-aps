@@ -1006,6 +1006,11 @@ exports.getCommandV2 = async function (action, instance) {
 					slot: utils.extcractNumber(key),
 					file_path: await instance.parseVariablesInString(action.options.FilePath),
 				}
+
+				if(!data.parameters.file_path){
+					// Don't send the command
+					data.command = ''
+				}
 			}
 			break
 		case 'SetMediaSlotPath':
@@ -1018,6 +1023,11 @@ exports.getCommandV2 = async function (action, instance) {
 					bank_number: utils.extcractNumber(key),
 					file_path: await instance.parseVariablesInString(action.options.FilePath),
 				}
+
+				if(!data.parameters.file_path){
+					// Don't send the command
+					data.command = ''
+				}
 			}
 			break
 		case 'SetImageSlotPath':
@@ -1029,6 +1039,11 @@ exports.getCommandV2 = async function (action, instance) {
 				data.parameters = {
 					bank_number: utils.extcractNumber(key),
 					file_path: await instance.parseVariablesInString(action.options.FilePath),
+				}
+
+				if(!data.parameters.file_path){
+					// Don't send the command
+					data.command = ''
 				}
 			}
 			break
