@@ -600,7 +600,7 @@ presets['StorePresentationSlot'] = {
 				{
 					actionId: 'SetPresentationSlotPath',
 					options: {
-						FilePath: "$(aps:watched_presentation_folder_selected_presentation_path)",
+						FilePath: `$(${self.label}:watched_presentation_folder_selected_presentation_path)`,
 						Key: "selected",
 					},
 				},
@@ -929,7 +929,7 @@ presets['StorePresentationSlot'] = {
 					{
 						actionId: 'SetMediaSlotPath',
 						options: {
-							FilePath: "$(aps:watched_media_folder_selected_media_path)",
+							FilePath: `$(${self.label}:watched_media_folder_selected_media_path)`,
 							Key: "selected",
 						},
 					},
@@ -1632,7 +1632,7 @@ presets['StorePresentationSlot'] = {
 				feedbackId: 'Media_player_loop_on',
 				style: {
 					color: 16777215,
-					bgcolor: 13421568,
+					bgcolor: '#999900',
 				},
 			},
 		],
@@ -1667,7 +1667,7 @@ presets['StorePresentationSlot'] = {
 				feedbackId: 'Media_player_fade_on',
 				style: {
 					color: 16777215,
-					bgcolor: 13421568,
+					bgcolor: '#999900',
 				},
 			},
 		],
@@ -1783,16 +1783,6 @@ function getPresetforMediaPlayerSlots(instanceLabel, slot_num) {
 				style: {
 					color: 16777215,
 					bgcolor: 16711680,
-				},
-			},
-			{
-				feedbackId: 'media_slot_selected',
-				options: {
-					Slot: `Media${slot_num}`,
-				},
-				style: {
-					color: 16777215,
-					bgcolor: 255,
 				},
 			},
 		],
@@ -1936,16 +1926,6 @@ function getPresetForStillImageDisplay(num, lbl, txt, key, clr1, crl2, siz = 'au
 					bgcolor: crl2,
 				},
 			},
-			{
-				feedbackId: 'image_slot_selected',
-				options: {
-					Slot: `Image${num}`,
-				},
-				style: {
-					color: 16777215,
-					bgcolor: 255,
-				},
-			},
 		],
 	}
 }
@@ -2022,7 +2002,7 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 				},
 				style: {
 					color: 16777215,
-					bgcolor: 13421568,
+					bgcolor: '#999900',
 				},
 			},
 			{
@@ -2033,16 +2013,6 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 				style: {
 					color: 16777215,
 					bgcolor: 13369344,
-				},
-			},
-			{
-				feedbackId: 'presentation_slot_selected',
-				options: {
-					Slot: SlotNumber,
-				},
-				style: {
-					color: 16777215,
-					bgcolor: 255,
 				},
 			},
 		],
@@ -2096,7 +2066,7 @@ function getPresetforPresentationFolder(instanceLabel, lbl, txt, i, cr, FolderNu
 				},
 				style: {
 					color: 16777215,
-					bgcolor: 13421568,
+					bgcolor: '#999900',
 				},
 			},
 			{
@@ -2148,7 +2118,7 @@ function getPresetforWatchedPresentationFolderFilesOpen(lbl, txt, cr, FileNumber
 				},
 				style: {
 					color: 16777215,
-					bgcolor: 13421568,
+					bgcolor: '#999900',
 				},
 			},
 			{
@@ -2264,7 +2234,7 @@ function getPresetforMediaFolder(instanceLabel, lbl, txt, i, cr, FolderNumber) {
 				},
 				style: {
 					color: 16777215,
-					bgcolor: 13421568,
+					bgcolor: '#999900',
 				},
 			},
 			{

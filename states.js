@@ -144,18 +144,24 @@ exports.updatePresentationFolderStates = function (states, data) {
 		states[si].exists = data.exists[i - 1]
 	}
 }
-exports.updatePresentationFileStates = function (states, openedFileIndex) {
+exports.updatePresentationFileExistanceStates = function (states) {
 	let filesState = states.filesState
 	let numberOfFiles = states.filesList.length
 	for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
 		const si = 'File' + i
-		filesState[si] = new Object()
-		filesState[si].opened = false
 		filesState[si].exists = false
-		if(i == openedFileIndex + 1)
-			filesState[si].opened = true
 		if(i <= numberOfFiles)
 			filesState[si].exists = true
+	}
+}
+exports.updatePresentationFileOpenStates = function (states, openedFileIndex) {
+	let filesState = states.filesState
+	let numberOfFiles = states.filesList.length
+	for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
+		const si = 'File' + i
+		filesState[si].opened = false
+		if(i == openedFileIndex + 1)
+			filesState[si].opened = true
 	}
 }
 exports.updateMediaFolderStates = function (states, data) {
@@ -188,6 +194,14 @@ exports.updateWatchedPresentationFolderState = function (states, data) {
 		states.name = data.name
 		states.number = data.number
 		states.filesList = data.files_list
+
+		let numberOfFiles = states.filesList.length
+		for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
+			const si = 'File' + i
+			states.filesState[si] = new Object()
+			states.filesState[si].opened = false
+			states.filesState[si].exists = false
+		}
 }
 exports.updateWatchedMediaFolderState = function (states, data) {
 		states.name = data.name

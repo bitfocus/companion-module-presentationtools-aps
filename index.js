@@ -205,6 +205,7 @@ class APSInstance extends InstanceBase {
 							if (jsonData.data.slide_number) {
 								update_obj['slide_number'] = jsonData.data.slide_number
 								update_obj['slides_count'] = jsonData.data.slides_count
+								update_obj['Slides_current_build'] = jsonData.data.current_build
 								update_obj['Slides_builds_count'] = jsonData.data.builds_count
 							}
 							self.setVariableValues(update_obj)
@@ -226,10 +227,11 @@ class APSInstance extends InstanceBase {
 							self.feedbacks()
 							self.presets()
 							self.setPresentationFolderFilesVariables()
-							self.checkFeedbacks('presentation_folder_watched', 'presentation_file_selected')
+							states.updatePresentationFileExistanceStates(self.watchedPresentationFolderState)
+							self.checkFeedbacks('presentation_file_exist', 'presentation_folder_watched', 'presentation_file_selected')
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							states.updatePresentationFileStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index)
-							self.checkFeedbacks('presentation_file_exist', 'presentation_file_displayed')
+							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index)
+							self.checkFeedbacks('presentation_file_displayed')
 						} 
 						
 						// Media Folders
@@ -342,6 +344,7 @@ class APSInstance extends InstanceBase {
 
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
+			{ name: 'Slide: Current build', variableId: 'Slides_current_build' },
 			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
 			{ name: 'Media player: Playing media', variableId: 'Media_playing' },
 			{ name: 'Media player: Loaded media', variableId: 'Media_loaded' },
@@ -427,6 +430,7 @@ class APSInstance extends InstanceBase {
 			Presentation_next: '',
 			slide_number: '',
 			slides_count: '',
+			Slides_current_build: '',
 			Slides_builds_count: '',
 			Media_playing: '',
 			Media_loaded: '',
