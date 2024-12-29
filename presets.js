@@ -2092,7 +2092,7 @@ function getPresetforWatchedPresentationFolderFilesOpen(lbl, txt, cr, FileNumber
 			text: txt,
 			alignment: 'center:center',
 			size: 'auto',
-			color: 16777215,
+			color: combineRgb(72, 72, 72),
 			bgcolor: cr,
 		},
 		steps: [
