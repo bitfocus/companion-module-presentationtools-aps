@@ -937,7 +937,7 @@ exports.getCommandV2 = async function (action, instance) {
 				instance,
 				action.options.File,
 				choices.getDeltaValues().some(item => item.id === action.options.File))
-			instance.checkFeedbacks('presentation_file_selected')
+			instance.checkFeedbacks('presentation_file_selected', 'presentation_file_displayed')
 			break
 		case 'Change_selected_media_in_watched_media_folder':
 			data.command = ''
