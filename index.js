@@ -300,8 +300,27 @@ class APSInstance extends InstanceBase {
 				type: 'static-text',
 				id: 'info-defaultport',
 				width: 12,
-				label:
+				value:
 					'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
+			},
+			{
+				type: 'dropdown',
+				id: 'sort',
+				label: 'Presentation watched folder: Sorting method',
+				default: 'normal',
+				width: 8,
+				choices: [
+					{id: "normal", label: "Normal"},
+					{id: "Numberedonly", label: "Numbered only"},
+				]
+			},
+			{
+				type: 'static-text',
+				id: 'info-sort',
+				width: 12,
+				value:
+					'<b>Normal:</b> All presentation-files in the folder are shown in alphabetical order. <br/>' +
+					'<b>Numbered only:</b> Onlypresentation filenames starting with numbers are shown, and always put in the folder-position with the same number. Example: «4.john.pptx» will go to position 4, also when its the first presentation alphabetically in the folder.',
 			},
 		]
 	}
