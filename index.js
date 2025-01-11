@@ -48,7 +48,8 @@ class APSInstance extends InstanceBase {
 		}
 		this.watchedMediaFolderState = {
 			name: null,
-			filesList: [],
+			originalFilesList: [], // Will save the original here (in case numbered-only sorting used)
+			filesList: [], // This will be modified if numbered-only sorting used
 			filesState: {}
 		}
 		this.mediaPlayerState = {
@@ -221,16 +222,15 @@ class APSInstance extends InstanceBase {
 							states.updatePresentationFolderStates(self.presentationFolderStates, jsonData.data)
 							self.checkFeedbacks('presentation_folder_exist')
 						} else if (jsonData.action === 'watched_presentation_folder') {
-							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data)
+							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data, self.config.sort == 'Numberedonly')
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
 							self.presets()
 							self.setPresentationFolderFilesVariables()
-							states.updatePresentationFileExistanceStates(self.watchedPresentationFolderState)
 							self.checkFeedbacks('presentation_file_exist', 'presentation_folder_watched', 'presentation_file_selected')
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index)
+							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index, self.config.sort == 'Numberedonly')
 							self.checkFeedbacks('presentation_file_displayed')
 						} 
 						
@@ -240,7 +240,6 @@ class APSInstance extends InstanceBase {
 							states.updateMediaFolderStates(self.mediaFolderStates, jsonData.data)
 							self.checkFeedbacks('media_folder_exist')
 						} else if (jsonData.action === 'watched_media_folder') {
-							self.log('debug', JSON.stringify(jsonData.data))
 							states.updateWatchedMediaFolderState(self.watchedMediaFolderState, jsonData.data)
 							self.variables(true)
 							self.actions()
