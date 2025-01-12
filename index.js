@@ -323,8 +323,9 @@ class APSInstance extends InstanceBase {
 				id: 'info-sort',
 				width: 12,
 				value:
-					'<b>Normal:</b> All presentation-files in the folder are shown in alphabetical order. <br/>' +
-					'<b>Numbered only:</b> Onlypresentation filenames starting with numbers are shown, and always put in the folder-position with the same number. Example: «4.john.pptx» will go to position 4, also when its the first presentation alphabetically in the folder.',
+					'<b>Normal:</b> All presentation-files in the folder are shown in alphabetical order.<br/>' +
+					'<b>Numbered only:</b> Only presentation filenames starting with numbers are shown, and always put in the folder-position with the same number. Example: «4.john.pptx» will go to position 4, also when its the first presentation alphabetically in the folder.<br/><br/>' +
+					'Please note: You need to restart the Companion-module after making changes to these settings.',
 			},
 		]
 	}
