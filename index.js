@@ -72,6 +72,11 @@ class APSInstance extends InstanceBase {
 	}
 
 	async init(config) {
+
+		if(!config.sort){
+			config.sort = 'normal'
+		}
+
 		this.configUpdated(config)
 	}
 
@@ -222,7 +227,7 @@ class APSInstance extends InstanceBase {
 							states.updatePresentationFolderStates(self.presentationFolderStates, jsonData.data)
 							self.checkFeedbacks('presentation_folder_exist')
 						} else if (jsonData.action === 'watched_presentation_folder') {
-							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data, self.config.sort == 'Numberedonly')
+							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data, self.config.sort == 'numberedonly')
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
@@ -230,7 +235,7 @@ class APSInstance extends InstanceBase {
 							self.setPresentationFolderFilesVariables()
 							self.checkFeedbacks('presentation_file_exist', 'presentation_folder_watched', 'presentation_file_selected')
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index, self.config.sort == 'Numberedonly')
+							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index, self.config.sort == 'numberedonly')
 							self.checkFeedbacks('presentation_file_displayed')
 						} 
 						
@@ -310,7 +315,7 @@ class APSInstance extends InstanceBase {
 				width: 8,
 				choices: [
 					{id: "normal", label: "Normal"},
-					{id: "Numberedonly", label: "Numbered only"},
+					{id: "numberedonly", label: "Numbered only"},
 				]
 			},
 			{
