@@ -48,7 +48,8 @@ class APSInstance extends InstanceBase {
 		}
 		this.watchedMediaFolderState = {
 			name: null,
-			filesList: [],
+			originalFilesList: [], // Will save the original here (in case numbered-only sorting used)
+			filesList: [], // This will be modified if numbered-only sorting used
 			filesState: {}
 		}
 		this.mediaPlayerState = {
@@ -71,6 +72,11 @@ class APSInstance extends InstanceBase {
 	}
 
 	async init(config) {
+
+		if(!config.sort){
+			config.sort = 'normal'
+		}
+
 		this.configUpdated(config)
 	}
 
@@ -221,16 +227,15 @@ class APSInstance extends InstanceBase {
 							states.updatePresentationFolderStates(self.presentationFolderStates, jsonData.data)
 							self.checkFeedbacks('presentation_folder_exist')
 						} else if (jsonData.action === 'watched_presentation_folder') {
-							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data)
+							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data, self.config.sort == 'numberedonly')
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
 							self.presets()
 							self.setPresentationFolderFilesVariables()
-							states.updatePresentationFileExistanceStates(self.watchedPresentationFolderState)
 							self.checkFeedbacks('presentation_file_exist', 'presentation_folder_watched', 'presentation_file_selected')
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index)
+							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index, self.config.sort == 'numberedonly')
 							self.checkFeedbacks('presentation_file_displayed')
 						} 
 						
@@ -240,7 +245,6 @@ class APSInstance extends InstanceBase {
 							states.updateMediaFolderStates(self.mediaFolderStates, jsonData.data)
 							self.checkFeedbacks('media_folder_exist')
 						} else if (jsonData.action === 'watched_media_folder') {
-							self.log('debug', JSON.stringify(jsonData.data))
 							states.updateWatchedMediaFolderState(self.watchedMediaFolderState, jsonData.data)
 							self.variables(true)
 							self.actions()
@@ -300,8 +304,28 @@ class APSInstance extends InstanceBase {
 				type: 'static-text',
 				id: 'info-defaultport',
 				width: 12,
-				label:
+				value:
 					'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
+			},
+			{
+				type: 'dropdown',
+				id: 'sort',
+				label: 'Presentation watched folder: Sorting method',
+				default: 'normal',
+				width: 8,
+				choices: [
+					{id: "normal", label: "Normal"},
+					{id: "numberedonly", label: "Numbered only"},
+				]
+			},
+			{
+				type: 'static-text',
+				id: 'info-sort',
+				width: 12,
+				value:
+					'<b>Normal:</b> All presentation-files in the folder are shown in alphabetical order.<br/>' +
+					'<b>Numbered only:</b> Only presentation filenames starting with numbers are shown, and always put in the folder-position with the same number. Example: «4.john.pptx» will go to position 4, also when its the first presentation alphabetically in the folder.<br/><br/>' +
+					'Please note: You need to restart the Companion-module after making changes to these settings.',
 			},
 		]
 	}

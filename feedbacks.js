@@ -217,7 +217,7 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList),
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList)),
 				},
 			],
 			defaultStyle: {
@@ -225,7 +225,11 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return self.watchedPresentationFolderState.filesState[feedback.options.Key]?.opened
+				let key = feedback.options.Key
+				if(key == 'selected'){
+					key = 'File' + self.getVariableValue('watched_presentation_folder_selected_presentation_number')
+				}
+				return self.watchedPresentationFolderState.filesState[key]?.opened
 			},
 		},
 		presentation_displayed: {
