@@ -658,6 +658,41 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+
+		OpenWebPage: {
+			name: 'WebPage: Open',
+			options: [
+				{
+					type: 'textinput',
+					label: 'Web address',
+					id: 'url',
+					useVariables: true,
+				},
+				{
+					type: 'number',
+					label: 'Time to load (seconds)',
+					id: 'seconds',
+					default: 0,
+					min: 0,
+					step: 1,
+					required: true,
+					range: false,
+				},
+				{
+					type: 'checkbox',
+					label: 'Run in fullscreen',
+					id: 'fullscreen',
+					default: true,
+				},
+				{
+					type: 'checkbox',
+					label: 'Open in a new tab',
+					id: 'newtab',
+					default: true,
+				},
+			],
+			callback: action_callback,
+		},
 	}
 }
 
@@ -1047,6 +1082,20 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 			}
 			break
+		case 'OpenWebPage':
+			{
+				data.parameters = {
+					url: await instance.parseVariablesInString(action.options.url),
+					seconds: action.options.seconds,
+					fullscreen: action.options.fullscreen,
+					newtab: action.options.newtab,
+				}
+
+				if(!data.parameters.url){
+					// Don't send the command
+					data.command = ''
+				}
+			}
 		default:
 			break
 	}
