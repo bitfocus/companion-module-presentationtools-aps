@@ -266,6 +266,16 @@ class APSInstance extends InstanceBase {
 								'Media_player_fade_on',
 							)
 						}
+						else if (jsonData.action === 'webpage') {
+							
+							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
+							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
+							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
+
+							self.setVariableValues({
+								Presentation_current: jsonData.data.url
+							})
+						}
 					} catch (e) {
 						self.log('debug', message)
 						console.error(e)
