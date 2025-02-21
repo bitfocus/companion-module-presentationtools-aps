@@ -134,3 +134,13 @@ exports.getNextPrevDeltaValues = function() {
 exports.getItemForSelectedOption = function() {
 	return [{id: 'selected', label: 'Selected'}]
 }
+
+exports.getChoicesForTabs = function (TabsList) {
+	choicesList = []
+	for (let i = 1; i <= TabsList.length; i++) {
+		let text = `${i} - ${utils.getNameFromPath(TabsList[i - 1]?.title)}`
+		
+		choicesList.push({ id: `Tab${i}`, label: text})
+	}
+	return choicesList
+}

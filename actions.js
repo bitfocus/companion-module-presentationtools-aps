@@ -674,6 +674,27 @@ exports.getActions = function (instance) {
 					id: 'fullscreen',
 					default: true,
 				},
+				{
+					type: 'checkbox',
+					label: 'New tab',
+					id: 'newTab',
+					default: true,
+				},
+			],
+			callback: action_callback,
+		},
+
+		SwitchTab: {
+			name: 'WebPage: Switch tab',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Tab',
+					id: 'Tab',
+					default: "Tab1",
+					tooltip: 'Tab',
+					choices: choices.getChoicesForTabs(instance.browserState.tabsList),
+				},
 			],
 			callback: action_callback,
 		},
@@ -1071,8 +1092,17 @@ exports.getCommandV2 = async function (action, instance) {
 				data.parameters = {
 					url: await instance.parseVariablesInString(action.options.url),
 					fullscreen: action.options.fullscreen,
+					new_tab: action.options.newTab,
 				}
 			}
+			break
+		case 'SwitchTab':
+			{
+				data.parameters = {
+					tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
+				}
+			}
+			break
 		default:
 			break
 	}

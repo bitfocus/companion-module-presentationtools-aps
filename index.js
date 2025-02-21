@@ -59,6 +59,11 @@ class APSInstance extends InstanceBase {
 			loop_on: false,
 			fade_on: false,
 		}
+
+		this.browserState = {
+			tabsList: [],
+		}
+
 		this.captureTimeoutObj = null
 		this.checkAPIsVersionsCompatibilityTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
@@ -267,7 +272,13 @@ class APSInstance extends InstanceBase {
 							)
 						}
 						else if (jsonData.action === 'webpage') {
-							
+							let reInitVars = jsonData.data.tabs.length != self.browserState.tabsList.length
+							self.browserState.tabsList = jsonData.data.tabs
+							if(reInitVars){
+								this.variables()
+								this.actions()
+							}
+							self.setBrowserVariables()
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
 							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
 							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
@@ -450,6 +461,18 @@ class APSInstance extends InstanceBase {
 			variables.push({
 				name: `Media ${i}`,
 				variableId: `media_slot${i}`,
+			})
+		}
+
+		for (let i = 1; i <= self.browserState.tabsList.length; i++) {
+			variables.push({
+				name: `tab title ${i}`,
+				variableId: `tab_title${i}`,
+			})
+
+			variables.push({
+				name: `tab url ${i}`,
+				variableId: `tab_url${i}`,
 			})
 		}
 
@@ -676,6 +699,22 @@ class APSInstance extends InstanceBase {
 		}
 
 		values['media_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('media_slot_selected_number')) - 1]
+
+		self.setVariableValues(values)
+	}
+
+	setBrowserVariables() {
+		var self = this
+		const values = {}
+		let tabsList = self.browserState.tabsList
+		try {
+			for (let i = tabsList.length; i > 0; i--) {
+				values[`tab_title${i}`] = tabsList[i - 1].title
+				values[`tab_url${i}`] = tabsList[i - 1].url
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
 
 		self.setVariableValues(values)
 	}
