@@ -273,12 +273,13 @@ class APSInstance extends InstanceBase {
 							)
 						}
 						else if (jsonData.action === 'webpage') {
-							let reInitVars = JSON.stringify(jsonData.data.tabs) != JSON.stringify(self.browserState.tabsList)
+							let reInit = JSON.stringify(jsonData.data.tabs) != JSON.stringify(self.browserState.tabsList)
 							self.browserState.tabsList = jsonData.data.tabs
 							self.browserState.activeTabId = jsonData.data.active_tab_id
-							if(reInitVars){
+							if(reInit){
 								this.variables(true)
 								this.actions()
+								this.feedbacks()
 							}
 							self.setBrowserVariables()
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
