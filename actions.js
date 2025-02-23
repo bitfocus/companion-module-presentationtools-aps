@@ -454,6 +454,12 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		HoldAtEnd_MediaPlayer: {
+			name: 'Media Player: hold at end',
+			options: [],
+			callback: action_callback,
+		},
+
 		Load_MediaPlayer: {
 			name: 'Media Player: Load',
 			options: [
@@ -542,11 +548,12 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'StillImages',
-					tooltip: 'Set <<All>> to clear all slots',
+					tooltip: 'Set <<All>> to clear all slots\nSet <<Selected>> to clear selected slot',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
-					].concat(choices.getChoicesForImage()),
+					].concat(choices.getItemForSelectedOption())
+					.concat(choices.getChoicesForImage()),
 					isVisible: (opt, _d) => opt.Key == 'StillImages',
 				},
 				{
@@ -1039,6 +1046,9 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 				else if(clear_type_key == 'Media'){
 					source = instance.getVariableValue('media_slot_selected_number')
+				}
+				else if(clear_type_key == 'StillImages'){
+					source = instance.getVariableValue('image_slot_selected_number')
 				}
 			}
 			else{

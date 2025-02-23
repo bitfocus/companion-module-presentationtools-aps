@@ -58,6 +58,7 @@ class APSInstance extends InstanceBase {
 			paused: false,
 			loop_on: false,
 			fade_on: false,
+			hold_at_end_on: false,
 		}
 
 		this.browserState = {
@@ -270,6 +271,7 @@ class APSInstance extends InstanceBase {
 								'Media_playback_state_paused',
 								'Media_player_loop_on',
 								'Media_player_fade_on',
+								'Media_player_hold_at_end_on',
 							)
 						}
 						else if (jsonData.action === 'webpage') {
