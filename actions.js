@@ -698,6 +698,21 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+
+		DeleteTab: {
+			name: 'WebPage: Delete tab',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Tab',
+					id: 'Tab',
+					default: "Tab1",
+					tooltip: 'Tab',
+					choices: choices.getChoicesForTabs(instance.browserState.tabsList),
+				},
+			],
+			callback: action_callback,
+		},
 	}
 }
 
@@ -1097,6 +1112,13 @@ exports.getCommandV2 = async function (action, instance) {
 			}
 			break
 		case 'SwitchTab':
+			{
+				data.parameters = {
+					tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
+				}
+			}
+			break
+		case 'DeleteTab':
 			{
 				data.parameters = {
 					tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
