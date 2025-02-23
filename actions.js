@@ -454,6 +454,12 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		HoldAtEnd_MediaPlayer: {
+			name: 'Media Player: hold at end',
+			options: [],
+			callback: action_callback,
+		},
+
 		Load_MediaPlayer: {
 			name: 'Media Player: Load',
 			options: [

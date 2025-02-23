@@ -542,6 +542,20 @@ exports.getFeedbacks = function (instance) {
 			},
 		},
 
+		Media_player_hold_at_end_on: {
+			type: 'boolean',
+			name: 'Media Player hold at end',
+			description: 'If Hold at end is on, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.hold_at_end_on
+			},
+		},
+
 		active_tab: {
 			type: 'boolean',
 			name: 'WebPage tab is active',

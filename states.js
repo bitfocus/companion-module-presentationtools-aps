@@ -294,6 +294,7 @@ exports.updateMediaPlayerState = function (mediaPlayerState, data) {
 	mediaPlayerState.paused = data.Media_playback_state == 'paused'
 	mediaPlayerState.loop_on = data.Media_player_loop_status == 'on'
 	mediaPlayerState.fade_on = data.Media_player_fade_status == 'on'
+	mediaPlayerState.hold_at_end_on = data.Media_player_hold_at_end_status == 'on'
 	mediaPlayerState.slots['any_media_loaded'].loaded = false
 
 	// Slots
