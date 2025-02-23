@@ -61,6 +61,7 @@ class APSInstance extends InstanceBase {
 		}
 
 		this.browserState = {
+			activeTabId: null,
 			tabsList: [],
 		}
 
@@ -274,6 +275,7 @@ class APSInstance extends InstanceBase {
 						else if (jsonData.action === 'webpage') {
 							let reInitVars = JSON.stringify(jsonData.data.tabs) != JSON.stringify(self.browserState.tabsList)
 							self.browserState.tabsList = jsonData.data.tabs
+							self.browserState.activeTabId = jsonData.data.active_tab_id
 							if(reInitVars){
 								this.variables(true)
 								this.actions()
@@ -281,10 +283,10 @@ class APSInstance extends InstanceBase {
 							self.setBrowserVariables()
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
 							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
-							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
+							self.checkFeedbacks('active_tab', 'presentation_displayed', 'presentation_displayed_in_edit_mode')
 
 							self.setVariableValues({
-								Presentation_current: jsonData.data.url
+								Presentation_current: jsonData.data.tabs.find(el => el.id === jsonData.data.active_tab_id)?.url
 							})
 						}
 					} catch (e) {

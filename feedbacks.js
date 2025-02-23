@@ -541,5 +541,27 @@ exports.getFeedbacks = function (instance) {
 				return self.mediaPlayerState.fade_on
 			},
 		},
+
+		active_tab: {
+			type: 'boolean',
+			name: 'WebPage tab is active',
+			description: 'If tab is active, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Tab',
+					id: 'Tab',
+					default: 'Tab1',
+					choices: choices.getChoicesForTabs(self.browserState.tabsList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return (self.browserState.tabsList.findIndex(item => item.id === self.browserState.activeTabId) + 1) == parseInt(utils.extcractNumber(feedback.options.Tab))
+			},
+		},
 	}
 }
