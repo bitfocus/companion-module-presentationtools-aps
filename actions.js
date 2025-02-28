@@ -720,6 +720,25 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+
+		ActivateApplication: {
+			name: 'Activate application',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Application',
+					id: 'Application',
+					default: "PowerPoint",
+					tooltip: 'Application',
+					choices: [
+						{ id: 'PowerPoint', label: 'PowerPoint'},
+						{ id: 'PDF', label: 'PDF'},
+						{ id: 'Webpage', label: 'Webpage'},
+					],
+				},
+			],
+			callback: action_callback,
+		},
 	}
 }
 
@@ -1132,6 +1151,13 @@ exports.getCommandV2 = async function (action, instance) {
 			{
 				data.parameters = {
 					tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
+				}
+			}
+			break
+		case 'ActivateApplication':
+			{
+				data.parameters = {
+					application: action.options.Application,
 				}
 			}
 			break
