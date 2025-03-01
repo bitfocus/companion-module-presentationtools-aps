@@ -700,7 +700,8 @@ exports.getActions = function (instance) {
 					id: 'Tab',
 					default: "Tab1",
 					tooltip: 'Tab',
-					choices: choices.getChoicesForTabs(instance.browserState.tabsList),
+					choices: choices.getNextPrevDeltaValues()
+								.concat(choices.getChoicesForTabs(instance.browserState.tabsList)),
 				},
 			],
 			callback: action_callback,
@@ -1142,8 +1143,22 @@ exports.getCommandV2 = async function (action, instance) {
 			break
 		case 'SwitchTab':
 			{
-				data.parameters = {
-					tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
+				if(action.options.Tab == '-1' || action.options.Tab == '1'){
+					let activeTabIndex = instance.browserState.tabsList.findIndex(item => item.id === instance.browserState.activeTabId)
+					let tabIndex = activeTabIndex + parseInt(action.options.Tab)
+
+					if(tabIndex < 0 || tabIndex >= instance.browserState.tabsList.length){
+						data.command = ''
+						break
+					}
+
+					data.parameters = {
+						tabId: instance.browserState.tabsList[tabIndex].id,
+					}
+				}else{
+					data.parameters = {
+						tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
+					}
 				}
 			}
 			break
