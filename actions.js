@@ -681,12 +681,12 @@ exports.getActions = function (instance) {
 					id: 'fullscreen',
 					default: true,
 				},
-				{
-					type: 'checkbox',
-					label: 'New tab',
-					id: 'newTab',
-					default: true,
-				},
+				// {
+				// 	type: 'checkbox',
+				// 	label: 'New tab',
+				// 	id: 'newTab',
+				// 	default: true,
+				// },
 			],
 			callback: action_callback,
 		},
@@ -1136,7 +1136,7 @@ exports.getCommandV2 = async function (action, instance) {
 				data.parameters = {
 					url: await instance.parseVariablesInString(action.options.url),
 					fullscreen: action.options.fullscreen,
-					new_tab: action.options.newTab,
+					new_tab: true, //action.options.newTab,
 				}
 			}
 			break
