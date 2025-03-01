@@ -6,6 +6,7 @@ const {
 	numberOfPresentationFolders, 
 	numberOfImagesSlots,
 	minNumberOfMediaFolderFiles, numberOfMediaFolders,
+	minNumberOfTabs,
 	} = require('./constants')
 
 var actions = require('./actions')
@@ -479,7 +480,16 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
-		for (let i = 1; i <= self.browserState.tabsList.length; i++) {
+
+		variables.push({
+			name: `tab title current`,
+			variableId: `tab_title_current`,
+		})
+		variables.push({
+			name: `tab url current`,
+			variableId: `tab_url_current`,
+		})
+		for (let i = 1; i <= Math.max(self.browserState.tabsList.length, minNumberOfTabs); i++) {
 			variables.push({
 				name: `tab title ${i}`,
 				variableId: `tab_title${i}`,
@@ -722,10 +732,21 @@ class APSInstance extends InstanceBase {
 		var self = this
 		const values = {}
 		let tabsList = self.browserState.tabsList
+
+		let activeTab = tabsList.find(el => el.id === self.browserState.activeTabId)
+		values['tab_title_current'] = activeTab?.title
+		values['tab_url_current'] = activeTab?.url
+
 		try {
-			for (let i = tabsList.length; i > 0; i--) {
-				values[`tab_title${i}`] = tabsList[i - 1].title
-				values[`tab_url${i}`] = tabsList[i - 1].url
+			for (let i = Math.max(tabsList.length, minNumberOfTabs); i > 0; i--) {
+				let title = ''
+				let url = ''
+				if(i <= tabsList.length){
+					title = tabsList[i - 1].title
+					url = tabsList[i - 1].url
+				}
+				values[`tab_title${i}`] = title
+				values[`tab_url${i}`] = url
 			}
 		} catch (err) {
 			self.log('debug', err)
