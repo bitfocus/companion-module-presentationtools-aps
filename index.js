@@ -33,6 +33,7 @@ class APSInstance extends InstanceBase {
 		this.generalState = {
 			isAnyPresentationDisplayed: false,
 			isAnyPresentationDisplayedInEditMode: false,
+			activeApp: null
 		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
@@ -296,6 +297,10 @@ class APSInstance extends InstanceBase {
 									Presentation_current: jsonData.data.tabs.find(el => el.id === jsonData.data.active_tab_id)?.url
 								})
 							}
+						}
+						else if (jsonData.action === 'active_application') {
+							self.generalState.activeApp = jsonData.data.application
+							self.checkFeedbacks('active_app')
 						}
 					} catch (e) {
 						self.log('debug', message)

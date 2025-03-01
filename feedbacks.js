@@ -577,5 +577,32 @@ exports.getFeedbacks = function (instance) {
 				return (self.browserState.tabsList.findIndex(item => item.id === self.browserState.activeTabId) + 1) == parseInt(utils.extcractNumber(feedback.options.Tab))
 			},
 		},
+
+		active_app: {
+			type: 'boolean',
+			name: 'Application window is active',
+			description: 'If the application is active, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Application',
+					id: 'Application',
+					default: "PowerPoint",
+					tooltip: 'Application',
+					choices: [
+						{ id: 'PowerPoint', label: 'PowerPoint'},
+						{ id: 'PDF', label: 'PDF'},
+						{ id: 'Webpage', label: 'Webpage'},
+					],
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return (self.generalState.activeApp == feedback.options.Application)
+			},
+		},
 	}
 }
