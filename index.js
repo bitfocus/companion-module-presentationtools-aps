@@ -6,6 +6,7 @@ const {
 	numberOfPresentationFolders, 
 	numberOfImagesSlots,
 	minNumberOfMediaFolderFiles, numberOfMediaFolders,
+	minNumberOfTabs,
 	} = require('./constants')
 
 var actions = require('./actions')
@@ -33,6 +34,7 @@ class APSInstance extends InstanceBase {
 		this.generalState = {
 			isAnyPresentationDisplayed: false,
 			isAnyPresentationDisplayedInEditMode: false,
+			activeApp: null
 		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
@@ -58,7 +60,16 @@ class APSInstance extends InstanceBase {
 			paused: false,
 			loop_on: false,
 			fade_on: false,
+			hold_at_end_on: false,
 		}
+
+		this.browserState = {
+			activeTabId: null,
+			tabsList: [],
+			seamlessOpenWebpageInProgress: false,
+			seamlessFullScreenInProgress: false,
+		}
+
 		this.captureTimeoutObj = null
 		this.checkAPIsVersionsCompatibilityTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
@@ -264,7 +275,43 @@ class APSInstance extends InstanceBase {
 								'Media_playback_state_paused',
 								'Media_player_loop_on',
 								'Media_player_fade_on',
+								'Media_player_hold_at_end_on',
 							)
+						}
+						else if (jsonData.action === 'webpage_displayed') {
+							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
+							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
+							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
+						}
+						else if (jsonData.action === 'webpage_tabs') {
+							let reInit = JSON.stringify(jsonData.data.tabs) != JSON.stringify(self.browserState.tabsList)
+							self.browserState.tabsList = jsonData.data.tabs
+							self.browserState.activeTabId = jsonData.data.active_tab_id
+							if(reInit){
+								this.variables(true)
+								this.actions()
+								this.feedbacks()
+							}
+							self.setBrowserVariables()
+							self.checkFeedbacks('active_tab')
+
+							if(jsonData.data.is_foreground){
+								self.setVariableValues({
+									Presentation_current: jsonData.data.tabs.find(el => el.id === jsonData.data.active_tab_id)?.url
+								})
+							}
+						}
+						else if (jsonData.action === 'active_application') {
+							self.generalState.activeApp = jsonData.data.application
+							self.checkFeedbacks('active_app')
+						}
+						else if (jsonData.action === 'seamless_open_webpage_in_progress') {
+							self.browserState.seamlessOpenWebpageInProgress = jsonData.data.seamless_open_webpage_in_progress
+							self.checkFeedbacks('seamless_open_webpage_in_progress')
+						}
+						else if (jsonData.action === 'seamless_fs_in_progress') {
+							self.browserState.seamlessFullScreenInProgress = jsonData.data.seamless_fs_in_progress
+							self.checkFeedbacks('seamless_fs_in_progress')
 						}
 					} catch (e) {
 						self.log('debug', message)
@@ -440,6 +487,27 @@ class APSInstance extends InstanceBase {
 			variables.push({
 				name: `Media ${i}`,
 				variableId: `media_slot${i}`,
+			})
+		}
+
+
+		variables.push({
+			name: `tab title current`,
+			variableId: `tab_title_current`,
+		})
+		variables.push({
+			name: `tab url current`,
+			variableId: `tab_url_current`,
+		})
+		for (let i = 1; i <= Math.max(self.browserState.tabsList.length, minNumberOfTabs); i++) {
+			variables.push({
+				name: `tab title ${i}`,
+				variableId: `tab_title${i}`,
+			})
+
+			variables.push({
+				name: `tab url ${i}`,
+				variableId: `tab_url${i}`,
 			})
 		}
 
@@ -666,6 +734,33 @@ class APSInstance extends InstanceBase {
 		}
 
 		values['media_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('media_slot_selected_number')) - 1]
+
+		self.setVariableValues(values)
+	}
+
+	setBrowserVariables() {
+		var self = this
+		const values = {}
+		let tabsList = self.browserState.tabsList
+
+		let activeTab = tabsList.find(el => el.id === self.browserState.activeTabId)
+		values['tab_title_current'] = activeTab?.title
+		values['tab_url_current'] = activeTab?.url
+
+		try {
+			for (let i = Math.max(tabsList.length, minNumberOfTabs); i > 0; i--) {
+				let title = ''
+				let url = ''
+				if(i <= tabsList.length){
+					title = tabsList[i - 1].title
+					url = tabsList[i - 1].url
+				}
+				values[`tab_title${i}`] = title
+				values[`tab_url${i}`] = url
+			}
+		} catch (err) {
+			self.log('debug', err)
+		}
 
 		self.setVariableValues(values)
 	}

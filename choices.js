@@ -5,7 +5,9 @@ const {
 	numberOfPresentationFolders, 
 	minNumberOfPresentationFolderFiles,
 	numberOfMediaFolders, 
-	minNumberOfMediaFolderFiles } = require('./constants')
+	minNumberOfMediaFolderFiles,
+	minNumberOfTabs,
+} = require('./constants')
 var utils = require('./utils')
 
 
@@ -133,4 +135,16 @@ exports.getNextPrevDeltaValues = function() {
 
 exports.getItemForSelectedOption = function() {
 	return [{id: 'selected', label: 'Selected'}]
+}
+
+exports.getChoicesForTabs = function (tabsList) {
+	choicesList = []
+	for (let i = 1; i <= Math.max(minNumberOfTabs, tabsList.length); i++) {
+		let text = `${i} - `
+		if(i <= tabsList.length)
+			text += tabsList[i - 1]?.title
+		
+		choicesList.push({ id: `Tab${i}`, label: text})
+	}
+	return choicesList
 }
