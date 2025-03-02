@@ -578,6 +578,34 @@ exports.getFeedbacks = function (instance) {
 			},
 		},
 
+		seamless_open_webpage_in_progress: {
+			type: 'boolean',
+			name: 'WebPage seamless open webpage is in progress',
+			description: 'If seamless open webpage is in progress, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(200, 180, 0),
+			},
+			callback: function (feedback) {
+				return self.browserState.seamlessOpenWebpageInProgress
+			},
+		},
+
+		seamless_fs_in_progress: {
+			type: 'boolean',
+			name: 'WebPage seamless fullscreen is in progress',
+			description: 'If seamless fullscreen is in progress, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(200, 180, 0),
+			},
+			callback: function (feedback) {
+				return self.browserState.seamlessFullScreenInProgress
+			},
+		},
+
 		active_app: {
 			type: 'boolean',
 			name: 'Application window is active',

@@ -66,6 +66,8 @@ class APSInstance extends InstanceBase {
 		this.browserState = {
 			activeTabId: null,
 			tabsList: [],
+			seamlessOpenWebpageInProgress: false,
+			seamlessFullScreenInProgress: false,
 		}
 
 		this.captureTimeoutObj = null
@@ -302,6 +304,14 @@ class APSInstance extends InstanceBase {
 						else if (jsonData.action === 'active_application') {
 							self.generalState.activeApp = jsonData.data.application
 							self.checkFeedbacks('active_app')
+						}
+						else if (jsonData.action === 'seamless_open_webpage_in_progress') {
+							self.browserState.seamlessOpenWebpageInProgress = jsonData.data.seamless_open_webpage_in_progress
+							self.checkFeedbacks('seamless_open_webpage_in_progress')
+						}
+						else if (jsonData.action === 'seamless_fs_in_progress') {
+							self.browserState.seamlessFullScreenInProgress = jsonData.data.seamless_fs_in_progress
+							self.checkFeedbacks('seamless_fs_in_progress')
 						}
 					} catch (e) {
 						self.log('debug', message)
