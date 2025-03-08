@@ -691,6 +691,12 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		CloseWebBrowser: {
+			name: 'Webpage: Close window',
+			options: [],
+			callback: action_callback,
+		},
+
 		SwitchTab: {
 			name: 'WebPage: Switch tab',
 			options: [
