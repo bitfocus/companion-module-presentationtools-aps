@@ -5,7 +5,9 @@ const {
 	minNumberOfPresentationFolderFiles, 
 	numberOfPresentationFolders,
 	minNumberOfMediaFolderFiles, 
-	numberOfMediaFolders } = require('./constants')
+	numberOfMediaFolders,
+	minNumberOfTabs,
+	} = require('./constants')
 exports.getPresets = function (instance) {
 	var self = instance
 	var presets = {}
@@ -1802,8 +1804,213 @@ presets['StorePresentationSlot'] = {
 	)
 
 
+	// Webpage control
+	presets['OpenWebpage'] = {
+		type: 'button',
+		category: 'Webpage control',
+		name: 'Open Webpage',
+		style: {
+			bgcolor: 0,
+			text: 'Open',
+			png64: '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',
+			alignment: 'center:top',
+			pngalignment: 'center:center',
+			size: '18',
+			color: 16777215,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'OpenWebPage',
+						options: {
+							url: 'https://www.presentationtools.com',
+							fullscreen: false,
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'seamless_open_webpage_in_progress',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: 13153280,
+				},
+			},
+		],
+	}
+
+	presets['CloseBrowser'] = {
+		type: 'button',
+		category: 'Webpage control',
+		name: 'Close Browser',
+		style: {
+			bgcolor: 0,
+			text: 'Close',
+			png64: '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',
+			alignment: 'center:top',
+			pngalignment: 'center:center',
+			size: '18',
+			color: 16777215,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'CloseWebBrowser',
+						options: {},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [],
+	}
+
+
+	presets['DisplayWebpage'] = {
+		type: 'button',
+		category: 'Webpage control',
+		name: 'Display Webpage',
+		style: {
+			bgcolor: 0,
+			text: 'Display',
+			png64: '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',
+			alignment: 'center:top',
+			pngalignment: 'center:center',
+			size: '18',
+			color: 16777215,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'Navigation_CurrentFS',
+						options: {},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'active_app',
+				options: {
+					"Application": "Webpage"
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 26112,
+				},
+			},
+			{
+				feedbackId: 'presentation_displayed',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: 0,
+				},
+			},
+			{
+				feedbackId: 'seamless_fs_in_progress',
+				options: {
+					"Application": "Webpage"
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13153280,
+				},
+			},
+		],
+	}
+
+	presets['EscWebpage'] = {
+		type: 'button',
+		category: 'Webpage control',
+		name: 'ESC Webpage',
+		style: {
+			bgcolor: 0,
+			text: 'Escape',
+			alignment: 'center:center',
+			size: '18',
+			color: 16777215,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'PresentationExit',
+						options: {
+							Key: "Key_Esc"
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'presentation_displayed',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: 6697728,
+				},
+			},
+		],
+	}
+
+	for (let i = 1; i <= minNumberOfTabs; i++) {
+		presets[`WebpageTab${i}`] = getWebpageControlTabsPresets(self.label, i)
+	}
+
+
 
 	return presets
+}
+
+function getWebpageControlTabsPresets(instanceLabel, tabNumber){
+	return {
+		type: 'button',
+		category: 'Webpage control',
+		name: `Webpage Tab ${tabNumber}`,
+		style: {
+			bgcolor: 0,
+			text: `$(${instanceLabel}:tab_title${tabNumber})`,
+			alignment: 'center:center',
+			size: 'auto',
+			color: 16777215,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'SwitchTab',
+						options: {
+							Tab: `Tab${tabNumber}`
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'active_tab',
+				options: {
+					Tab: `Tab${tabNumber}`
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 102,
+				},
+			},
+		],
+	}
 }
 
 function getActivateApplicationPresets(app, png, txt){
