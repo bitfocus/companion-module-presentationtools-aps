@@ -2048,7 +2048,7 @@ function getActivateApplicationPresets(app, png, txt){
 				},
 				style: {
 					color: 16777215,
-					bgcolor: 6684672,
+					bgcolor: 16711680,
 				},
 			},
 		],
