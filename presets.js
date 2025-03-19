@@ -1987,7 +1987,8 @@ function getWebpageControlTabsPresets(instanceLabel, tabNumber){
 		},
 		steps: [
 			{
-				down: [
+				down: [],
+				up: [
 					{
 						actionId: 'SwitchTab',
 						options: {
@@ -1995,7 +1996,19 @@ function getWebpageControlTabsPresets(instanceLabel, tabNumber){
 						},
 					},
 				],
-				up: [],
+				1000: {
+					options: {
+						runWhileHeld: true,
+					},
+					actions:[
+						{
+							actionId: 'DeleteTab',
+							options: {
+								Tab: `Tab${tabNumber}`
+							},
+						},
+					]
+				},
 			},
 		],
 		feedbacks: [
