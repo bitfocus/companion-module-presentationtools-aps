@@ -2422,7 +2422,7 @@ function getPresetforWatchedPresentationFolderFilesOpen(lbl, txt, cr, FileNumber
 				},
 				style: {
 					color: 16777215,
-					bgcolor: '#999900',
+					bgcolor: 0,
 				},
 			},
 			{
