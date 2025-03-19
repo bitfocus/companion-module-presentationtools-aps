@@ -219,12 +219,16 @@ class APSInstance extends InstanceBase {
 								Presentation_next: jsonData.data.next,
 							}
 							// For not raising exception while using old verions of APS
-							if (jsonData.data.slide_number) {
-								update_obj['slide_number'] = jsonData.data.slide_number
-								update_obj['slides_count'] = jsonData.data.slides_count
-								update_obj['Slides_current_build'] = jsonData.data.current_build
-								update_obj['Slides_builds_count'] = jsonData.data.builds_count
-							}
+							update_obj['slide_number'] = jsonData.data.slide_number
+							update_obj['slides_count'] = jsonData.data.slides_count
+							update_obj['Slides_current_build'] = jsonData.data.current_build
+							update_obj['Slides_builds_count'] = jsonData.data.builds_count
+
+							update_obj['Powerpoint_slide_number'] = jsonData.data.powerpoint_slide_number
+							update_obj['Powerpoint_slides_count'] = jsonData.data.powerpoint_slides_count
+							update_obj['Powerpoint_Slides_current_build'] = jsonData.data.powerpoint_current_build
+							update_obj['Powerpoint_Slides_builds_count'] = jsonData.data.powerpoint_builds_count
+							
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
 							self.setSlotVariables(jsonData.data)
@@ -417,6 +421,10 @@ class APSInstance extends InstanceBase {
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
 			{ name: 'Slide: Current build', variableId: 'Slides_current_build' },
 			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
+			{ name: 'Slide: Current (Powerpoint)', variableId: 'Powerpoint_slide_number' },
+			{ name: 'Slide: Total number (Powerpoint)', variableId: 'Powerpoint_slides_count' },
+			{ name: 'Slide: Current build (Powerpoint)', variableId: 'Powerpoint_Slides_current_build' },
+			{ name: 'Slide: Builds count (Powerpoint)', variableId: 'Powerpoint_Slides_builds_count' },
 			{ name: 'Media player: Playing media', variableId: 'Media_playing' },
 			{ name: 'Media player: Loaded media', variableId: 'Media_loaded' },
 			{ name: 'Media player: Playing media filename', variableId: 'Media_playing_filename' },
@@ -524,6 +532,10 @@ class APSInstance extends InstanceBase {
 			slides_count: '',
 			Slides_current_build: '',
 			Slides_builds_count: '',
+			Powerpoint_slide_number: '',
+			Powerpoint_slides_count: '',
+			Powerpoint_Slides_current_build: '',
+			Powerpoint_Slides_builds_count: '',
 			Media_playing: '',
 			Media_loaded: '',
 			Media_playing_filename: '',
