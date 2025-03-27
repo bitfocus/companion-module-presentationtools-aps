@@ -454,6 +454,12 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		HoldAtEnd_MediaPlayer: {
+			name: 'Media Player: hold at end',
+			options: [],
+			callback: action_callback,
+		},
+
 		Load_MediaPlayer: {
 			name: 'Media Player: Load',
 			options: [
@@ -542,11 +548,12 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'Source',
 					id: 'StillImages',
-					tooltip: 'Set <<All>> to clear all slots',
+					tooltip: 'Set <<All>> to clear all slots\nSet <<Selected>> to clear selected slot',
 					default: 'All',
 					choices: [
 						{ id: `All`, label: `All` },
-					].concat(choices.getChoicesForImage()),
+					].concat(choices.getItemForSelectedOption())
+					.concat(choices.getChoicesForImage()),
 					isVisible: (opt, _d) => opt.Key == 'StillImages',
 				},
 				{
@@ -655,6 +662,87 @@ exports.getActions = function (instance) {
 					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForImage()),
 				},
 				
+			],
+			callback: action_callback,
+		},
+
+		OpenWebPage: {
+			name: 'WebPage: Open',
+			options: [
+				{
+					type: 'textinput',
+					label: 'Web address',
+					id: 'url',
+					useVariables: true,
+				},
+				{
+					type: 'checkbox',
+					label: 'Run in fullscreen',
+					id: 'fullscreen',
+					default: true,
+				},
+				// {
+				// 	type: 'checkbox',
+				// 	label: 'New tab',
+				// 	id: 'newTab',
+				// 	default: true,
+				// },
+			],
+			callback: action_callback,
+		},
+
+		CloseWebBrowser: {
+			name: 'Webpage: Close window',
+			options: [],
+			callback: action_callback,
+		},
+
+		SwitchTab: {
+			name: 'WebPage: Switch tab',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Tab',
+					id: 'Tab',
+					default: "Tab1",
+					tooltip: 'Tab',
+					choices: choices.getNextPrevDeltaValues()
+								.concat(choices.getChoicesForTabs(instance.browserState.tabsList)),
+				},
+			],
+			callback: action_callback,
+		},
+
+		DeleteTab: {
+			name: 'WebPage: Delete tab',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Tab',
+					id: 'Tab',
+					default: "Tab1",
+					tooltip: 'Tab',
+					choices: choices.getChoicesForTabs(instance.browserState.tabsList),
+				},
+			],
+			callback: action_callback,
+		},
+
+		ActivateApplication: {
+			name: 'Activate application',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Application',
+					id: 'Application',
+					default: "PowerPoint",
+					tooltip: 'Application',
+					choices: [
+						{ id: 'PowerPoint', label: 'PowerPoint'},
+						{ id: 'PDF', label: 'PDF'},
+						{ id: 'Webpage', label: 'Webpage'},
+					],
+				},
 			],
 			callback: action_callback,
 		},
@@ -985,6 +1073,9 @@ exports.getCommandV2 = async function (action, instance) {
 				else if(clear_type_key == 'Media'){
 					source = instance.getVariableValue('media_slot_selected_number')
 				}
+				else if(clear_type_key == 'StillImages'){
+					source = instance.getVariableValue('image_slot_selected_number')
+				}
 			}
 			else{
 				source = utils.extcractNumber(clearType)
@@ -1044,6 +1135,50 @@ exports.getCommandV2 = async function (action, instance) {
 				if(!data.parameters.file_path){
 					// Don't send the command
 					data.command = ''
+				}
+			}
+			break
+		case 'OpenWebPage':
+			{
+				data.parameters = {
+					url: await instance.parseVariablesInString(action.options.url),
+					fullscreen: action.options.fullscreen,
+					new_tab: true, //action.options.newTab,
+				}
+			}
+			break
+		case 'SwitchTab':
+			{
+				if(action.options.Tab == '-1' || action.options.Tab == '1'){
+					let activeTabIndex = instance.browserState.tabsList.findIndex(item => item.id === instance.browserState.activeTabId)
+					let tabIndex = activeTabIndex + parseInt(action.options.Tab)
+
+					if(tabIndex < 0 || tabIndex >= instance.browserState.tabsList.length){
+						data.command = ''
+						break
+					}
+
+					data.parameters = {
+						tabId: instance.browserState.tabsList[tabIndex].id,
+					}
+				}else{
+					data.parameters = {
+						tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
+					}
+				}
+			}
+			break
+		case 'DeleteTab':
+			{
+				data.parameters = {
+					tabId: instance.browserState.tabsList[parseInt(utils.extcractNumber(action.options.Tab)) - 1].id,
+				}
+			}
+			break
+		case 'ActivateApplication':
+			{
+				data.parameters = {
+					application: action.options.Application,
 				}
 			}
 			break

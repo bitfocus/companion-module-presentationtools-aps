@@ -5,3 +5,4 @@ exports.numberOfPresentationFolders = 20
 exports.minNumberOfMediaFolderFiles = 40
 exports.numberOfMediaFolders = 20
 exports.numberOfMediaPlayerSlots = 40
+exports.minNumberOfTabs = 10

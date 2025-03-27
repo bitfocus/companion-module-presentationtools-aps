@@ -13,7 +13,7 @@
 		"url": "git+https://github.com/bitfocus/companion-module-presentationtools-aps.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.5.1"
+		"@companion-module/base": "~1.7.0"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^1.4.2",

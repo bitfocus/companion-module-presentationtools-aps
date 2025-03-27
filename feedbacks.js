@@ -541,5 +541,96 @@ exports.getFeedbacks = function (instance) {
 				return self.mediaPlayerState.fade_on
 			},
 		},
+
+		Media_player_hold_at_end_on: {
+			type: 'boolean',
+			name: 'Media Player hold at end',
+			description: 'If Hold at end is on, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (_feedback) {
+				return self.mediaPlayerState.hold_at_end_on
+			},
+		},
+
+		active_tab: {
+			type: 'boolean',
+			name: 'WebPage tab is active',
+			description: 'If tab is active, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Tab',
+					id: 'Tab',
+					default: 'Tab1',
+					choices: choices.getChoicesForTabs(self.browserState.tabsList),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return (self.browserState.tabsList.findIndex(item => item.id === self.browserState.activeTabId) + 1) == parseInt(utils.extcractNumber(feedback.options.Tab))
+			},
+		},
+
+		seamless_open_webpage_in_progress: {
+			type: 'boolean',
+			name: 'WebPage seamless open webpage is in progress',
+			description: 'If seamless open webpage is in progress, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(200, 180, 0),
+			},
+			callback: function (feedback) {
+				return self.browserState.seamlessOpenWebpageInProgress
+			},
+		},
+
+		seamless_fs_in_progress: {
+			type: 'boolean',
+			name: 'WebPage seamless fullscreen is in progress',
+			description: 'If seamless fullscreen is in progress, change the style',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(200, 180, 0),
+			},
+			callback: function (feedback) {
+				return self.browserState.seamlessFullScreenInProgress
+			},
+		},
+
+		active_app: {
+			type: 'boolean',
+			name: 'Application window is active',
+			description: 'If the application is active, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Application',
+					id: 'Application',
+					default: "PowerPoint",
+					tooltip: 'Application',
+					choices: [
+						{ id: 'PowerPoint', label: 'PowerPoint'},
+						{ id: 'PDF', label: 'PDF'},
+						{ id: 'Webpage', label: 'Webpage'},
+					],
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return (self.generalState.activeApp == feedback.options.Application)
+			},
+		},
 	}
 }
