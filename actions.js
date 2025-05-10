@@ -728,6 +728,18 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 
+		RefreshCurrentTab: {
+			name: 'WebPage: Refresh current tab',
+			options: [],
+			callback: action_callback,
+		},
+
+		CloseBrowserAndClearAllData: {
+			name: 'WebPage: Close and clear all data',
+			options: [],
+			callback: action_callback,
+		},
+
 		ActivateApplication: {
 			name: 'Activate application',
 			options: [
