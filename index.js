@@ -250,7 +250,8 @@ class APSInstance extends InstanceBase {
 							self.setPresentationFolderFilesVariables()
 							self.checkFeedbacks('presentation_file_exist', 'presentation_folder_watched', 'presentation_file_selected')
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index, self.config.sort == 'numberedonly')
+							if(Object.keys(self.watchedPresentationFolderState.filesState).length > 0)
+								states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index, self.config.sort == 'numberedonly')
 							self.checkFeedbacks('presentation_file_displayed')
 						} 
 						
