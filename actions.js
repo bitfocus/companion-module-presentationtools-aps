@@ -42,14 +42,8 @@ exports.getActions = function (instance) {
 		if(!data.command)
 			return
 
-		if(instance.toBeUsedAPIversion == 1){
-			cmd = data.command
-			cmd += '$'
-			instance.socket.send(cmd)
-		}else{
-			cmd = JSON.stringify(data)
-			sendMessage(instance.socket, cmd)
-		}
+		cmd = JSON.stringify(data)
+		sendMessage(instance.socket, cmd)
 
 		instance.log('debug', `sending ${cmd}`)
 	}
@@ -759,125 +753,6 @@ exports.getActions = function (instance) {
 			callback: action_callback,
 		},
 	}
-}
-
-exports.getCommandV1 = async function (action, instance) {
-	var cmd = ''
-	var separatorChar = '^'
-	var mediaPlayerSeparatorChar = '#'
-	let slideNumber = 1
-	switch (action.actionId) {
-		case 'Navigation_NextFS':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
-			// case 'Navigation_NextNoFS':
-			if (slideNumber === 1) {
-				if (action.options.Fullscreen) {
-					cmd = 'Navigation_NextFS'
-				} else {
-					cmd = 'Navigation_NextNoFS'
-				}
-			} else {
-				cmd = 'Navigation_NextFS' + separatorChar
-				cmd += slideNumber + separatorChar
-				cmd += action.options.Fullscreen ? 1 : 0
-			}
-			break
-		case 'Navigation_PrevFS':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
-			if (slideNumber === 1 && action.options.Fullscreen) {
-				cmd = 'Navigation_PrevFS'
-			} else {
-				cmd = 'Navigation_PrevFS' + separatorChar
-				cmd += slideNumber + separatorChar
-				cmd += action.options.Fullscreen ? 1 : 0
-			}
-			break
-		case 'PresentationExit':
-		case 'SlideNext':
-		case 'SlidePrevious':
-			cmd = await instance.parseVariablesInString(action.options.Key)
-		case 'Capture_Image':
-			if(action.options.Key == 'selected'){
-				cmd = 'Capture' + instance.getVariableValue('image_slot_selected_number')
-			}else{
-				cmd = action.options.Key
-			}
-			break
-		case 'Display_Image':
-			if(action.options.Key == 'selected'){
-				cmd = 'Display' + instance.getVariableValue('image_slot_selected_number')
-			}else{
-				cmd = action.options.Key
-			}
-			break
-		case 'Load_MediaPlayer':
-			if(action.options.Key == 'selected'){
-				cmd = 'Load_MediaPlayer#' + instance.getVariableValue('media_slot_selected_number')
-			}else{
-				cmd = action.options.Key
-			}
-			break
-		case 'OpenStart_Presentation':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
-			let path = await instance.parseVariablesInString(action.options.Filename)
-			
-			if(!path)
-				return
-
-			cmd = action.actionId + separatorChar
-			cmd += slideNumber + separatorChar
-			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-			cmd += path
-			break
-		case 'OpenStart_Presentation_Slot':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
-			cmd = action.actionId + separatorChar
-			cmd += slideNumber + separatorChar
-			cmd += (action.options.Fullscreen ? 1 : 0) + separatorChar
-
-			let slot = action.options.Key
-			if(slot == 'selected'){
-				slot = instance.getVariableValue('presentation_slot_selected_number')
-			}
-			cmd += utils.extcractNumber(slot)
-			break
-		case 'GoToSlide':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
-			cmd = action.options.App + separatorChar + slideNumber
-			break
-		case 'MediaPlayer_Position':
-		case 'MediaPlayer_Forward':
-		case 'MediaPlayer_Rewind':
-			cmd = action.actionId + mediaPlayerSeparatorChar
-			cmd += action.options.Seconds
-			break
-
-		case 'select_presentation_slot':
-			selectPresentationSlot(
-				instance,
-				action.options.Slot,
-				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
-			instance.checkFeedbacks('presentation_slot_selected', 'slot_exist', 'slot_displayed')
-			break
-		case 'select_media_slot':
-			selectMediaSlot(
-				instance,
-				action.options.Slot,
-				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
-			instance.checkFeedbacks('media_slot_selected', 'Media_loaded', 'Media_playing')
-			break
-		case 'select_image_slot':
-			selectImageSlot(
-				instance,
-				action.options.Slot,
-				choices.getNextPrevDeltaValues().some(item => item.id === action.options.Slot))
-			instance.checkFeedbacks('image_slot_selected', 'loaded', 'displayed')
-			break
-		default:
-			cmd = action.actionId
-			break
-	}
-	return {command: cmd}
 }
 
 exports.getCommandV2 = async function (action, instance) {

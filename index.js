@@ -24,7 +24,7 @@ class APSInstance extends InstanceBase {
 		this.config = config
 
 		this.apiVersionMapping = {
-			1: {commandHandler: actions.getCommandV1, receiver: MessageBuffer},
+			// v1 deprecated and removed
 			2: {commandHandler: actions.getCommandV2, receiver: MessageBufferV2},
 		};
 		this.apiVersion = Math.max(...Object.keys(this.apiVersionMapping).map(Number));
@@ -71,7 +71,6 @@ class APSInstance extends InstanceBase {
 		}
 
 		this.captureTimeoutObj = null
-		this.checkAPIsVersionsCompatibilityTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
 		this.folderCaptureTimeoutObj = null
 
@@ -127,36 +126,15 @@ class APSInstance extends InstanceBase {
 			})
 
 			self.socket.on('connect', () => {
-				self.serverAPIVersion = 1
-				self.toBeUsedAPIversion = 1
+				self.serverAPIVersion = 2
+				self.toBeUsedAPIversion = 2
 				self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
-				let apiVersionMesage = JSON.stringify({command: "api_version", api_version: self.apiVersion}) + "$"
+				let apiVersionMesage = JSON.stringify({command: "api_version", api_version: self.apiVersion})
 				actions.send(self.socket, apiVersionMesage)
 				self.updateStatus(InstanceStatus.Ok)
-
-				if (self.checkAPIsVersionsCompatibilityTimeoutObj !== null) {
-					clearTimeout(self.checkAPIsVersionsCompatibilityTimeoutObj)
-				}
-
-				self.checkAPIsVersionsCompatibilityTimeoutObj = setTimeout(() => {
-					try {
-						self.CheckAPIsVersionsCompatibility()
-					} catch (err) {
-						this.log('debug', err)
-					}
-				}, 5000)
 			})
 
 			self.socket.on('data', (data) => {
-				if(data.toString().includes('"api_version"')){
-					const messageLength = data.readUInt32BE(0);
-					const message = data.slice(4, 4 + messageLength).toString('utf-8');
-					self.serverAPIVersion = JSON.parse(message).api_version
-					self.log('info', `Server API version: ${self.serverAPIVersion}`)
-					self.toBeUsedAPIversion = Math.min(self.apiVersion, self.serverAPIVersion)
-					self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
-					return
-				}
 				self.receiver.push(data)
 				let messages = self.receiver.getMessages()
 				if (messages == null) return
@@ -164,7 +142,14 @@ class APSInstance extends InstanceBase {
 					let message = messages[i]
 					try {
 						let jsonData = JSON.parse(message)
-						if (jsonData.action === 'imagesstates' || jsonData.action === 'states') { // states for backward compatibility untill dropping API v1 support
+						if(jsonData.action === 'api_version'){
+							self.serverAPIVersion = jsonData.api_version
+							self.log('info', `Server API version: ${self.serverAPIVersion}`)
+							self.toBeUsedAPIversion = Math.min(self.apiVersion, self.serverAPIVersion)
+							self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
+							self.CheckAPIsVersionsCompatibility()
+						}
+						else if (jsonData.action === 'imagesstates') {
 							states.updateStates(self.displayStates, jsonData.data)
 							self.setImagesVariables(jsonData.data)
 							self.checkFeedbacks('loaded', 'displayed')
@@ -855,7 +840,8 @@ class MessageBufferV2 {
 
 			// Extract the message based on the prefixed length
 			const message = this.buffer.slice(4, 4 + messageLength).toString('utf-8');
-			messages.push(message);
+			if(message.length > 1) // 1 not 0 to exclude $ api v1 backward compatibility (will cause an issue when parsing JSON)
+				messages.push(message);
 
 			// Remove the processed message and its length prefix from the buffer
 			this.buffer = this.buffer.slice(4 + messageLength);
