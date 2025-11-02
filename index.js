@@ -214,6 +214,11 @@ class APSInstance extends InstanceBase {
 							update_obj['Powerpoint_Slides_current_build'] = jsonData.data.powerpoint_current_build
 							update_obj['Powerpoint_Slides_builds_count'] = jsonData.data.powerpoint_builds_count
 							
+							// For not raising exception while using old verions of APS
+							update_obj['presentation_video_duration'] = jsonData.data.presentation_video_duration
+							update_obj['presentation_video_current_position'] = jsonData.data.presentation_video_current_position
+							update_obj['presentation_video_time_left'] = jsonData.data.presentation_video_time_left
+							
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
 							self.setSlotVariables(jsonData.data)
@@ -407,6 +412,9 @@ class APSInstance extends InstanceBase {
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
 			{ name: 'Slide: Current build', variableId: 'Slides_current_build' },
 			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
+			{ name: 'Video: Duration', variableId: 'presentation_video_duration' },
+			{ name: 'Video: Current position', variableId: 'presentation_video_current_position' },
+			{ name: 'Video: Time left', variableId: 'presentation_video_time_left' },
 			{ name: 'Slide: Current (Powerpoint)', variableId: 'Powerpoint_slide_number' },
 			{ name: 'Slide: Total number (Powerpoint)', variableId: 'Powerpoint_slides_count' },
 			{ name: 'Slide: Current build (Powerpoint)', variableId: 'Powerpoint_Slides_current_build' },
@@ -518,6 +526,9 @@ class APSInstance extends InstanceBase {
 			slides_count: '',
 			Slides_current_build: '',
 			Slides_builds_count: '',
+			presentation_video_duration: '',
+			presentation_video_current_position: '',
+			presentation_video_time_left: '',
 			Powerpoint_slide_number: '',
 			Powerpoint_slides_count: '',
 			Powerpoint_Slides_current_build: '',
