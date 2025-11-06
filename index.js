@@ -34,7 +34,8 @@ class APSInstance extends InstanceBase {
 		this.generalState = {
 			isAnyPresentationDisplayed: false,
 			isAnyPresentationDisplayedInEditMode: false,
-			activeApp: null
+			activeApp: null,
+			PowerPoint_media_state: null
 		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
@@ -218,6 +219,13 @@ class APSInstance extends InstanceBase {
 							update_obj['PowerPoint_media_duration'] = jsonData.data.PowerPoint_media_duration
 							update_obj['PowerPoint_media_current_position'] = jsonData.data.PowerPoint_media_current_position
 							update_obj['PowerPoint_media_time_left'] = jsonData.data.PowerPoint_media_time_left
+							update_obj['PowerPoint_media_state'] = jsonData.data.PowerPoint_media_state
+							
+							// Update PowerPoint media state
+							if (jsonData.data.PowerPoint_media_state !== undefined) {
+								self.generalState.PowerPoint_media_state = jsonData.data.PowerPoint_media_state
+								self.checkFeedbacks('PowerPoint_media_state')
+							}
 							
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
@@ -415,6 +423,7 @@ class APSInstance extends InstanceBase {
 			{ name: 'Video: Duration', variableId: 'PowerPoint_media_duration' },
 			{ name: 'Video: Current position', variableId: 'PowerPoint_media_current_position' },
 			{ name: 'Video: Time left', variableId: 'PowerPoint_media_time_left' },
+			{ name: 'Video: State', variableId: 'PowerPoint_media_state' },
 			{ name: 'Slide: Current (Powerpoint)', variableId: 'Powerpoint_slide_number' },
 			{ name: 'Slide: Total number (Powerpoint)', variableId: 'Powerpoint_slides_count' },
 			{ name: 'Slide: Current build (Powerpoint)', variableId: 'Powerpoint_Slides_current_build' },
@@ -529,6 +538,7 @@ class APSInstance extends InstanceBase {
 			PowerPoint_media_duration: '',
 			PowerPoint_media_current_position: '',
 			PowerPoint_media_time_left: '',
+			PowerPoint_media_state: '',
 			Powerpoint_slide_number: '',
 			Powerpoint_slides_count: '',
 			Powerpoint_Slides_current_build: '',
