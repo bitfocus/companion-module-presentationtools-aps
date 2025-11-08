@@ -216,9 +216,9 @@ class APSInstance extends InstanceBase {
 							update_obj['Powerpoint_Slides_builds_count'] = jsonData.data.powerpoint_builds_count
 							
 							// For not raising exception while using old verions of APS
-							update_obj['PowerPoint_media_duration'] = jsonData.data.PowerPoint_media_duration
-							update_obj['PowerPoint_media_current_position'] = jsonData.data.PowerPoint_media_current_position
-							update_obj['PowerPoint_media_time_left'] = jsonData.data.PowerPoint_media_time_left
+							update_obj['PowerPoint_media_duration'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_duration)
+							update_obj['PowerPoint_media_current_position'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_current_position)
+							update_obj['PowerPoint_media_time_left'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_time_left)
 							update_obj['PowerPoint_media_state'] = jsonData.data.PowerPoint_media_state
 							
 							// Update PowerPoint media state
