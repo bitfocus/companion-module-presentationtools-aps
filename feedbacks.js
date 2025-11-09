@@ -632,5 +632,33 @@ exports.getFeedbacks = function (instance) {
 				return (self.generalState.activeApp == feedback.options.Application)
 			},
 		},
+
+		PowerPoint_media_state: {
+			type: 'boolean',
+			name: 'PowerPoint media state',
+			description: 'If PowerPoint media matches the selected state, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'State',
+					id: 'State',
+					default: 'playing',
+					tooltip: 'PowerPoint media state',
+					choices: [
+						{ id: 'playing', label: 'Playing'},
+						{ id: 'paused', label: 'Paused'},
+						{ id: 'stopped', label: 'Stopped'},
+						{ id: 'ready', label: 'Ready'},
+					],
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return (self.generalState.PowerPoint_media_state == feedback.options.State)
+			},
+		},
 	}
 }

@@ -196,6 +196,203 @@ exports.getPresets = function (instance) {
 		],
 	}
 
+	// PowerPoint media control
+	presets['PowerPointMediaPlayPause'] = {
+		type: 'button',
+		category: 'PowerPoint media control',
+		name: 'Play and pause PowerPoint media',
+		style: {
+			text: 'PPT',
+			size: '18',
+			png64:
+				'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',
+			alignment: 'center:top',
+			pngalignment: 'center:bottom',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'Presentation_Media_Control',
+						options: {
+							action: 'toggle',
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'PowerPoint_media_state',
+				options: {
+					State: 'playing',
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 13369344,
+				},
+			},
+			{
+				feedbackId: 'PowerPoint_media_state',
+				options: {
+					State: 'paused',
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 102,
+				},
+			},
+			{
+				feedbackId: 'PowerPoint_media_state',
+				options: {
+					State: 'stopped',
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 2368548,
+				},
+			},
+			{
+				feedbackId: 'PowerPoint_media_state',
+				options: {
+					State: 'ready',
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 26112,
+				},
+			},
+		],
+	}
+
+	presets['PowerPointMediaStop'] = {
+		type: 'button',
+		category: 'PowerPoint media control',
+		name: 'Stop PowerPoint media',
+		style: {
+			text: 'PPT',
+			size: '18',
+			png64:
+				'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',
+			alignment: 'center:top',
+			pngalignment: 'center:bottom',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'Presentation_Media_Control',
+						options: {
+							action: 'stop',
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [
+			{
+				feedbackId: 'PowerPoint_media_state',
+				options: {
+					State: 'playing',
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 26112,
+				},
+			},
+		],
+	}
+
+	presets['PowerPointMediaBack'] = {
+		type: 'button',
+		category: 'PowerPoint media control',
+		name: 'Go back 10 seconds PowerPoint media',
+		style: {
+			text: 'PPT',
+			size: '18',
+			png64:
+				'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',
+			alignment: 'center:top',
+			pngalignment: 'center:center',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'Presentation_Media_Seek',
+						options: {
+							direction: 'backward',
+							Milliseconds: 10000,
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [],
+	}
+
+	presets['PowerPointMediaForward'] = {
+		type: 'button',
+		category: 'PowerPoint media control',
+		name: 'Advance 10 seconds PowerPoint media',
+		style: {
+			text: 'PPT',
+			size: '18',
+			png64:
+				'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',
+			alignment: 'center:top',
+			pngalignment: 'center:bottom',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		steps: [
+			{
+				down: [
+					{
+						actionId: 'Presentation_Media_Seek',
+						options: {
+							direction: 'forward',
+							Milliseconds: 10000,
+						},
+					},
+				],
+				up: [],
+			},
+		],
+		feedbacks: [],
+	}
+
+	presets['PowerPointMediaTimer'] = {
+		type: 'button',
+		category: 'PowerPoint media control',
+		name: 'Remaining time PowerPoint media',
+		style: {
+			text: `PPT\n$(${instance.label}:PowerPoint_media_time_left)`,
+			size: '24',
+			png64: null,
+			alignment: 'center:top',
+			pngalignment: 'center:center',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		steps: [
+			{
+				down: [],
+				up: [],
+			},
+		],
+		feedbacks: [],
+	}
+
 	// Still Images - Capture
 	for (let i = 1; i <= 10; i++) {
 		presets[`Capture${i}`] = getPresetForStillImageCapture(

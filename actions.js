@@ -752,6 +752,52 @@ exports.getActions = function (instance) {
 			],
 			callback: action_callback,
 		},
+
+		Presentation_Media_Control: {
+			name: 'Presentation: PowerPoint Media Control',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Action',
+					id: 'action',
+					default: 'play',
+					choices: [
+						{ id: 'play', label: 'Play'},
+						{ id: 'pause', label: 'Pause'},
+						{ id: 'stop', label: 'Stop'},
+						{ id: 'toggle', label: 'Toggle (Play/Pause)'},
+					],
+				},
+			],
+			callback: action_callback,
+		},
+
+		Presentation_Media_Seek: {
+			name: 'Presentation: PowerPoint Media Seek',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Direction',
+					id: 'direction',
+					default: 'forward',
+					choices: [
+						{ id: 'forward', label: 'Forward'},
+						{ id: 'backward', label: 'Backward'},
+					],
+				},
+				{
+					type: 'number',
+					label: 'Milliseconds',
+					id: 'Milliseconds',
+					default: 1000,
+					min: 1,
+					step: 100,
+					required: true,
+					range: false,
+				},
+			],
+			callback: action_callback,
+		},
 	}
 }
 
@@ -1066,6 +1112,21 @@ exports.getCommandV2 = async function (action, instance) {
 			{
 				data.parameters = {
 					application: action.options.Application,
+				}
+			}
+			break
+		case 'Presentation_Media_Control':
+			{
+				data.parameters = {
+					action: action.options.action,
+				}
+			}
+			break
+		case 'Presentation_Media_Seek':
+			{
+				data.parameters = {
+					direction: action.options.direction,
+					milliseconds: action.options.Milliseconds,
 				}
 			}
 			break

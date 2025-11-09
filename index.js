@@ -34,7 +34,8 @@ class APSInstance extends InstanceBase {
 		this.generalState = {
 			isAnyPresentationDisplayed: false,
 			isAnyPresentationDisplayedInEditMode: false,
-			activeApp: null
+			activeApp: null,
+			PowerPoint_media_state: null
 		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
@@ -213,6 +214,20 @@ class APSInstance extends InstanceBase {
 							update_obj['Powerpoint_slides_count'] = jsonData.data.powerpoint_slides_count
 							update_obj['Powerpoint_Slides_current_build'] = jsonData.data.powerpoint_current_build
 							update_obj['Powerpoint_Slides_builds_count'] = jsonData.data.powerpoint_builds_count
+							
+							// For not raising exception while using old verions of APS
+							update_obj['PowerPoint_media_duration'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_duration)
+							update_obj['PowerPoint_media_current_position'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_current_position)
+							update_obj['PowerPoint_media_time_left'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_time_left)
+							update_obj['PowerPoint_media_state'] = utils.normalizePowerPointMediaState(
+								jsonData.data.PowerPoint_media_state,
+								jsonData.data.PowerPoint_media_duration,
+								jsonData.data.PowerPoint_media_current_position,
+							)
+							if (jsonData.data.PowerPoint_media_state !== undefined) {
+								self.generalState.PowerPoint_media_state = update_obj['PowerPoint_media_state']
+								self.checkFeedbacks('PowerPoint_media_state')
+							}
 							
 							self.setVariableValues(update_obj)
 						} else if (jsonData.action === 'slots') {
@@ -407,6 +422,10 @@ class APSInstance extends InstanceBase {
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
 			{ name: 'Slide: Current build', variableId: 'Slides_current_build' },
 			{ name: 'Slide: Builds count', variableId: 'Slides_builds_count' },
+			{ name: 'Video: Duration', variableId: 'PowerPoint_media_duration' },
+			{ name: 'Video: Current position', variableId: 'PowerPoint_media_current_position' },
+			{ name: 'Video: Time left', variableId: 'PowerPoint_media_time_left' },
+			{ name: 'Video: State', variableId: 'PowerPoint_media_state' },
 			{ name: 'Slide: Current (Powerpoint)', variableId: 'Powerpoint_slide_number' },
 			{ name: 'Slide: Total number (Powerpoint)', variableId: 'Powerpoint_slides_count' },
 			{ name: 'Slide: Current build (Powerpoint)', variableId: 'Powerpoint_Slides_current_build' },
@@ -518,6 +537,10 @@ class APSInstance extends InstanceBase {
 			slides_count: '',
 			Slides_current_build: '',
 			Slides_builds_count: '',
+			PowerPoint_media_duration: '',
+			PowerPoint_media_current_position: '',
+			PowerPoint_media_time_left: '',
+			PowerPoint_media_state: '',
 			Powerpoint_slide_number: '',
 			Powerpoint_slides_count: '',
 			Powerpoint_Slides_current_build: '',
