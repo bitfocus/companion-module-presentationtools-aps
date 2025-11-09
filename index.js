@@ -219,11 +219,13 @@ class APSInstance extends InstanceBase {
 							update_obj['PowerPoint_media_duration'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_duration)
 							update_obj['PowerPoint_media_current_position'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_current_position)
 							update_obj['PowerPoint_media_time_left'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_time_left)
-							update_obj['PowerPoint_media_state'] = jsonData.data.PowerPoint_media_state
-							
-							// Update PowerPoint media state
+							update_obj['PowerPoint_media_state'] = utils.normalizePowerPointMediaState(
+								jsonData.data.PowerPoint_media_state,
+								jsonData.data.PowerPoint_media_duration,
+								jsonData.data.PowerPoint_media_current_position,
+							)
 							if (jsonData.data.PowerPoint_media_state !== undefined) {
-								self.generalState.PowerPoint_media_state = jsonData.data.PowerPoint_media_state
+								self.generalState.PowerPoint_media_state = update_obj['PowerPoint_media_state']
 								self.checkFeedbacks('PowerPoint_media_state')
 							}
 							

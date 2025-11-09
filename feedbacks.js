@@ -648,6 +648,7 @@ exports.getFeedbacks = function (instance) {
 						{ id: 'playing', label: 'Playing'},
 						{ id: 'paused', label: 'Paused'},
 						{ id: 'stopped', label: 'Stopped'},
+						{ id: 'ready', label: 'Ready'},
 					],
 				},
 			],

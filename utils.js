@@ -39,3 +39,24 @@ exports.formatPowerPointMediaTime = function(timeString) {
 
 	return `${totalMinutes}:${formattedSeconds}`
 }
+
+exports.normalizePowerPointMediaState = function(state, duration, currentPosition) {
+	if (state === undefined || state === null) {
+		return state
+	}
+
+	if (state === 'not_ready') {
+		return 'ready'
+	}
+
+	if (state === 'stopped') {
+		const hasDuration = typeof duration === 'string' && duration.trim() !== ''
+		const hasCurrentPosition = typeof currentPosition === 'string' && currentPosition.trim() !== ''
+
+		if (hasDuration && hasCurrentPosition && duration.trim() != currentPosition.trim()) {
+			return 'ready'
+		}
+	}
+
+	return state
+}
