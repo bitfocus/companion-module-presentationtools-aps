@@ -14,7 +14,7 @@ var utils = require('./utils')
 exports.getChoicesForImage = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfImagesSlots; i++) {
-		choicesList.push({ id: `Image${i}`, label: i })
+		choicesList.push({ id: `Image${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -22,7 +22,7 @@ exports.getChoicesForImage = function () {
 exports.getChoicesForMedia = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
-		choicesList.push({ id: `Media${i}`, label: i })
+		choicesList.push({ id: `Media${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -64,7 +64,7 @@ exports.getChoicesForDisplay = function () {
 exports.getChoicesForSlot = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfPresentationSlots; i++) {
-		choicesList.push({ id: `Slot${i}`, label: i })
+		choicesList.push({ id: `Slot${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -72,7 +72,7 @@ exports.getChoicesForSlot = function () {
 exports.getChoicesForPresentationFolder = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfPresentationFolders; i++) {
-		choicesList.push({ id: `Folder${i}`, label: i })
+		choicesList.push({ id: `Folder${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -93,7 +93,7 @@ exports.getChoicesForPresentationFolderFiles = function (filesList) {
 exports.getChoicesForMediaFolder = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfMediaFolders; i++) {
-		choicesList.push({ id: `Folder${i}`, label: i })
+		choicesList.push({ id: `Folder${i}`, label: String(i) })
 	}
 	return choicesList
 }
