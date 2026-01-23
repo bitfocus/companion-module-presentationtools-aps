@@ -1,4 +1,7 @@
 exports.getNameFromPath = function(fullPath){
+    if (fullPath == null || typeof fullPath !== 'string') {
+        return ''
+    }
     return fullPath.split(/(\\|\/)/g).pop()
 }
 
