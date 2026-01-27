@@ -14,7 +14,7 @@ var utils = require('./utils')
 exports.getChoicesForImage = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfImagesSlots; i++) {
-		choicesList.push({ id: `Image${i}`, label: i })
+		choicesList.push({ id: `Image${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -22,7 +22,7 @@ exports.getChoicesForImage = function () {
 exports.getChoicesForMedia = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfMediaPlayerSlots; i++) {
-		choicesList.push({ id: `Media${i}`, label: i })
+		choicesList.push({ id: `Media${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -64,7 +64,7 @@ exports.getChoicesForDisplay = function () {
 exports.getChoicesForSlot = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfPresentationSlots; i++) {
-		choicesList.push({ id: `Slot${i}`, label: i })
+		choicesList.push({ id: `Slot${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -72,7 +72,7 @@ exports.getChoicesForSlot = function () {
 exports.getChoicesForPresentationFolder = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfPresentationFolders; i++) {
-		choicesList.push({ id: `Folder${i}`, label: i })
+		choicesList.push({ id: `Folder${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -81,9 +81,10 @@ exports.getChoicesForPresentationFolderFiles = function (filesList) {
 	choicesList = []
 	for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, filesList.length); i++) {
 		let text = `${i} - `
-		if(i <= filesList.length)
+		if(i <= filesList.length && filesList[i - 1] != null) {
 			text += utils.getNameFromPath(filesList[i - 1])
-		
+		}
+
 		choicesList.push({ id: `File${i}`, label: text})
 	}
 	return choicesList
@@ -92,7 +93,7 @@ exports.getChoicesForPresentationFolderFiles = function (filesList) {
 exports.getChoicesForMediaFolder = function () {
 	choicesList = []
 	for (let i = 1; i <= numberOfMediaFolders; i++) {
-		choicesList.push({ id: `Folder${i}`, label: i })
+		choicesList.push({ id: `Folder${i}`, label: String(i) })
 	}
 	return choicesList
 }
@@ -101,9 +102,10 @@ exports.getChoicesForMediaFolderFiles = function (filesList) {
 	choicesList = []
 	for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, filesList.length); i++) {
 		let text = `${i} - `
-		if(i <= filesList.length)
+		if(i <= filesList.length && filesList[i - 1] != null) {
 			text += utils.getNameFromPath(filesList[i - 1])
-		
+		}
+
 		choicesList.push({ id: `File${i}`, label: text})
 	}
 	return choicesList
@@ -141,9 +143,10 @@ exports.getChoicesForTabs = function (tabsList) {
 	choicesList = []
 	for (let i = 1; i <= Math.max(minNumberOfTabs, tabsList.length); i++) {
 		let text = `${i} - `
-		if(i <= tabsList.length)
-			text += tabsList[i - 1]?.title
-		
+		if(i <= tabsList.length && tabsList[i - 1]?.title != null) {
+			text += tabsList[i - 1].title
+		}
+
 		choicesList.push({ id: `Tab${i}`, label: text})
 	}
 	return choicesList
