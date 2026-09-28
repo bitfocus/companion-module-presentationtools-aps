@@ -102,6 +102,8 @@ On confirmed APS-Mac connections, `Slides_builds_count` and `Powerpoint_Slides_b
 
 This is display smoothing: during the hold, the total can belong to the preceding slide and must not be treated as a confirmed count for automation. It requires APS to identify its platform as `macos` in `aps_info`. Windows, unknown platforms, and older versions without platform identification retain immediate updates. The APS network API is unchanged.
 
+`Powerpoint_slide_number` and `Powerpoint_slides_count` are hidden once APS reports that it runs on macOS, because APS-Mac does not report PowerPoint's own slide number and count; use `slide_number` and `slides_count` there. They reappear when APS on Windows connects. With APS versions that do not send these values, they show `-`.
+
 - Presentation_current: Currently opened presentation
 - Presentation_previous: Prevously opened presentation
 - Presentation_next: Next presentation to be opened

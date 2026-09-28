@@ -270,8 +270,8 @@ class APSInstance extends InstanceBase {
 							update_obj['slides_count'] = jsonData.data.slides_count
 							update_obj['Slides_current_build'] = jsonData.data.current_build
 
-							update_obj['Powerpoint_slide_number'] = jsonData.data.powerpoint_slide_number
-							update_obj['Powerpoint_slides_count'] = jsonData.data.powerpoint_slides_count
+							update_obj['Powerpoint_slide_number'] = jsonData.data.powerpoint_slide_number ?? '-'
+							update_obj['Powerpoint_slides_count'] = jsonData.data.powerpoint_slides_count ?? '-'
 							update_obj['Powerpoint_Slides_current_build'] = jsonData.data.powerpoint_current_build
 							Object.assign(update_obj, self.buildTotalSmoother.values(jsonData.data))
 
@@ -672,11 +672,11 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
-		self.setVariableDefinitions(
-			utils.supportsPowerPointMediaControl(self.apsPlatform)
-				? variables
-				: variables.filter((variable) => !variable.variableId.startsWith('PowerPoint_media_')),
-		)
+		const hiddenVariable = (variableId) =>
+			(!utils.supportsPowerPointMediaControl(self.apsPlatform) && variableId.startsWith('PowerPoint_media_')) ||
+			(!utils.supportsPowerPointSlideVariables(self.apsPlatform) &&
+				(variableId === 'Powerpoint_slide_number' || variableId === 'Powerpoint_slides_count'))
+		self.setVariableDefinitions(variables.filter((variable) => !hiddenVariable(variable.variableId)))
 
 		if (initOnly) return
 

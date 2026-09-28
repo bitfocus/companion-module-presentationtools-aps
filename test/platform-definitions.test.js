@@ -187,3 +187,23 @@ test('active application feedback matches Keynote', async () => {
 	assert.equal(feedback.callback({ options: { Application: 'Keynote' } }), true)
 	assert.equal(feedback.callback({ options: { Application: 'PowerPoint' } }), false)
 })
+
+test('PowerPoint slide variables are hidden on Mac and show - when APS omits them', async () => {
+	const { instance, send } = await companion()
+	const variableIds = () => instance.variableDefinitions.map((variable) => variable.variableId)
+	const values = {}
+	instance.setVariableValues = (update) => Object.assign(values, update)
+	assert.ok(variableIds().includes('Powerpoint_slide_number'))
+	send('files', { slide_number: '3', slides_count: '10' })
+	assert.equal(values.Powerpoint_slide_number, '-')
+	assert.equal(values.Powerpoint_slides_count, '-')
+	send('aps_info', { platform: 'macos' })
+	assert.ok(!variableIds().includes('Powerpoint_slide_number'))
+	assert.ok(!variableIds().includes('Powerpoint_slides_count'))
+	assert.ok(variableIds().includes('Powerpoint_Slides_builds_count'))
+	send('aps_info', { platform: 'windows' })
+	assert.ok(variableIds().includes('Powerpoint_slides_count'))
+	send('files', { powerpoint_slide_number: '4', powerpoint_slides_count: '12' })
+	assert.equal(values.Powerpoint_slide_number, '4')
+	assert.equal(values.Powerpoint_slides_count, '12')
+})

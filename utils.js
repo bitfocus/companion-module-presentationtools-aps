@@ -74,3 +74,8 @@ exports.supportsPowerPointMediaControl = function (platform) {
 exports.supportsKeynote = function (platform) {
 	return platform !== 'windows'
 }
+
+// APS-Mac does not report PowerPoint's own slide number and count. Hide them only once APS has confirmed a Mac.
+exports.supportsPowerPointSlideVariables = function (platform) {
+	return platform !== 'macos'
+}
