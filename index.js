@@ -104,6 +104,8 @@ class APSInstance extends InstanceBase {
 			seamlessOpenWebpageInProgress: false,
 			seamlessFullScreenInProgress: false,
 		}
+		this.apsCapabilities = []
+		this.preparationState = states.generatePreparationState()
 		this.settingsState = {
 			availableDisplays: [],
 			installedPresentationApps: null,
@@ -169,7 +171,10 @@ class APSInstance extends InstanceBase {
 
 			self.socket.on('status_change', (status, message) => {
 				if (socket !== self.socket) return
-				if (status !== InstanceStatus.Ok) self.buildTotalSmoother.resetConnection()
+				if (status !== InstanceStatus.Ok) {
+					self.buildTotalSmoother.resetConnection()
+					self.resetPreparationState()
+				}
 				//self.log('debug', `Status ${status}, message: ${message}`)
 				//self.updateStatus(status)
 			})
@@ -183,6 +188,9 @@ class APSInstance extends InstanceBase {
 			self.socket.on('connect', () => {
 				if (socket !== self.socket) return
 				self.buildTotalSmoother.resetConnection()
+				// APS re-sends capabilities and the current preparation state after connecting.
+				self.apsCapabilities = []
+				self.resetPreparationState()
 				self.serverAPIVersion = 2
 				self.toBeUsedAPIversion = 2
 				self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
@@ -208,6 +216,7 @@ class APSInstance extends InstanceBase {
 							self.CheckAPIsVersionsCompatibility()
 						} else if (jsonData.action === 'aps_info') {
 							self.buildTotalSmoother.setPlatform(jsonData.data?.platform)
+							self.apsCapabilities = Array.isArray(jsonData.data?.capabilities) ? jsonData.data.capabilities : []
 							self.setAPSPlatform(jsonData.data?.platform)
 						} else if (jsonData.action === 'imagesstates') {
 							states.updateStates(self.displayStates, jsonData.data)
@@ -326,7 +335,9 @@ class APSInstance extends InstanceBase {
 								'presentation_file_exist',
 								'presentation_folder_watched',
 								'presentation_file_selected',
+								'presentation_file_preparing',
 							)
+							self.setPreparationVariables()
 						} else if (jsonData.action === 'opened_folder_presentation') {
 							if (Object.keys(self.watchedPresentationFolderState.filesState).length > 0)
 								states.updatePresentationFileOpenStates(
@@ -401,9 +412,15 @@ class APSInstance extends InstanceBase {
 						} else if (jsonData.action === 'seamless_open_webpage_in_progress') {
 							self.browserState.seamlessOpenWebpageInProgress = jsonData.data.seamless_open_webpage_in_progress
 							self.checkFeedbacks('seamless_open_webpage_in_progress')
+							self.updateWebpagePreparation('open', jsonData.data)
 						} else if (jsonData.action === 'seamless_fs_in_progress') {
 							self.browserState.seamlessFullScreenInProgress = jsonData.data.seamless_fs_in_progress
 							self.checkFeedbacks('seamless_fs_in_progress')
+							self.updateWebpagePreparation('fullscreen', jsonData.data)
+						} else if (jsonData.action === 'presentation_preparing') {
+							if (!self.apsCapabilities.includes('presentation_preparation_feedback')) continue
+							if (!states.updatePresentationPreparationState(self.preparationState, jsonData.data)) continue
+							self.preparationChanged()
 						}
 					} catch (e) {
 						self.log('debug', message)
@@ -481,6 +498,41 @@ class APSInstance extends InstanceBase {
 		this.presets()
 	}
 
+	updateWebpagePreparation(part, data) {
+		if (!this.apsCapabilities.includes('webpage_preparation_feedback')) return
+		states.updateWebpagePreparationState(this.preparationState, part, data)
+		this.preparationChanged()
+	}
+
+	resetPreparationState() {
+		if (!this.preparationState) return
+		this.preparationState = states.generatePreparationState()
+		this.preparationChanged()
+	}
+
+	preparationChanged() {
+		this.setPreparationVariables()
+		this.checkFeedbacks('presentation_preparing', 'slot_preparing', 'presentation_file_preparing')
+	}
+
+	setPreparationVariables() {
+		const state = this.preparationState
+		const fileKey = states.getPreparingPresentationFileKey(this.watchedPresentationFolderState, state)
+		const googleSlides = states.isGoogleSlidesPreparing(state)
+		let name = '-'
+		if (state.presentation.isPreparing && state.presentation.targetPath) {
+			name = utils.getNameFromPath(state.presentation.targetPath)
+		} else if (googleSlides && state.webpage.targetUrl) {
+			name = state.webpage.targetUrl
+		}
+		this.setVariableValues({
+			presentation_preparing: states.isAnyPresentationPreparing(state),
+			presentation_preparing_name: name,
+			presentation_preparing_slot: states.getPreparingSlot(state) ?? '-',
+			presentation_preparing_folder_file_number: fileKey ? Number(utils.extcractNumber(fileKey)) : '-',
+		})
+	}
+
 	actions() {
 		let ats = actions.getActions(this)
 		this.setActionDefinitions(ats)
@@ -514,6 +566,14 @@ class APSInstance extends InstanceBase {
 			{
 				name: 'Presentation: Watched presentation folder total files count',
 				variableId: 'watched_presentation_folder_total_files_count',
+			},
+
+			{ name: 'Presentation: Preparing (opening)', variableId: 'presentation_preparing' },
+			{ name: 'Presentation: Preparing (Name)', variableId: 'presentation_preparing_name' },
+			{ name: 'Presentation: Preparing slot (Number)', variableId: 'presentation_preparing_slot' },
+			{
+				name: 'Presentation: Preparing in watched presentation folder (Number)',
+				variableId: 'presentation_preparing_folder_file_number',
 			},
 
 			{ name: 'Presentation: Selected slot (Number)', variableId: 'presentation_slot_selected_number' },
@@ -712,6 +772,10 @@ class APSInstance extends InstanceBase {
 			Media_time_left: '',
 			Media_time_elapsed: '',
 			Media_time_duration: '',
+			presentation_preparing: false,
+			presentation_preparing_name: '-',
+			presentation_preparing_slot: '-',
+			presentation_preparing_folder_file_number: '-',
 		}
 		for (const definition of SETTINGS_VARIABLE_DEFINITIONS) {
 			values[definition.variableId] = ''

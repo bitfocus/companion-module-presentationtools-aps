@@ -314,3 +314,97 @@ exports.updateMediaPlayerState = function (mediaPlayerState, data) {
 		}
 	}
 }
+
+// Presentation preparation: `presentation_preparing` for native presentations, and the
+// webpage preparation actions for Google Slides, as documented in the APS API v2.
+exports.generatePreparationState = function () {
+	return {
+		presentation: {
+			isPreparing: false,
+			commandType: null,
+			slot: null,
+			targetPath: null,
+			watchedFolderNumber: null,
+			watchedFolderIndex: null,
+		},
+		webpage: {
+			openingGoogleSlides: false,
+			fullscreenGoogleSlides: false,
+			targetUrl: null,
+		},
+	}
+}
+
+// Every frame replaces the stored context. Returns false for a frame without the required Boolean.
+exports.updatePresentationPreparationState = function (state, data) {
+	if (typeof data?.is_preparing !== 'boolean') return false
+	const commandTypes = ['direct_path', 'slot', 'next', 'previous']
+	const commandType = commandTypes.includes(data.command_type) ? data.command_type : null
+	const slot =
+		commandType === 'slot' && Number.isInteger(data.slot) && data.slot >= 1 && data.slot <= numberOfPresentationSlots
+			? data.slot
+			: null
+	const targetPath = typeof data.to === 'string' && data.to.trim() !== '' && data.to.trim() !== '-' ? data.to.trim() : null
+	state.presentation = {
+		isPreparing: data.is_preparing,
+		commandType,
+		slot,
+		targetPath,
+		watchedFolderNumber: Number.isInteger(data.watched_folder_number) ? data.watched_folder_number : null,
+		watchedFolderIndex:
+			Number.isSafeInteger(data.to_watched_folder_index) && data.to_watched_folder_index >= 0
+				? data.to_watched_folder_index
+				: null,
+	}
+	return true
+}
+
+// part is 'open' (seamless_open_webpage_in_progress) or 'fullscreen' (seamless_fs_in_progress).
+exports.updateWebpagePreparationState = function (state, part, data) {
+	const action = part === 'open' ? 'seamless_open_webpage_in_progress' : 'seamless_fs_in_progress'
+	const googleSlides = data?.[action] === true && data?.is_google_slides === true
+	if (part === 'open') {
+		state.webpage.openingGoogleSlides = googleSlides
+	} else {
+		state.webpage.fullscreenGoogleSlides = googleSlides
+	}
+	if (googleSlides) {
+		state.webpage.targetUrl = typeof data.to_url === 'string' && data.to_url !== '' ? data.to_url : null
+	} else if (!state.webpage.openingGoogleSlides && !state.webpage.fullscreenGoogleSlides) {
+		state.webpage.targetUrl = null
+	}
+}
+
+exports.isGoogleSlidesPreparing = function (state) {
+	return state.webpage.openingGoogleSlides || state.webpage.fullscreenGoogleSlides
+}
+
+exports.isAnyPresentationPreparing = function (state) {
+	return state.presentation.isPreparing || exports.isGoogleSlidesPreparing(state)
+}
+
+exports.getPreparingSlot = function (state) {
+	const presentation = state.presentation
+	return presentation.isPreparing && presentation.commandType === 'slot' ? presentation.slot : null
+}
+
+// Returns the 'File<n>' key of the watched-folder file being prepared, or null. The API index refers
+// to APS's own file list; the key follows this module's list, which differs with numbered-only sorting.
+exports.getPreparingPresentationFileKey = function (watchedState, state) {
+	const presentation = state.presentation
+	if (!presentation.isPreparing) return null
+	const apsFiles = Array.isArray(watchedState.originalFilesList) ? watchedState.originalFilesList : []
+	let targetPath = presentation.targetPath
+	const index = presentation.watchedFolderIndex
+	if (
+		index !== null &&
+		index < apsFiles.length &&
+		presentation.watchedFolderNumber === watchedState.number &&
+		(!targetPath || apsFiles[index] === targetPath)
+	) {
+		targetPath = apsFiles[index]
+	}
+	if (!targetPath) return null
+	const position = watchedState.filesList.indexOf(targetPath)
+	return position >= 0 ? 'File' + (position + 1) : null
+}

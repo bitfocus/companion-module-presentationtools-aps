@@ -112,6 +112,14 @@ exports.getPresets = function (instance) {
 					bgcolor: 26112,
 				},
 			},
+			{
+				feedbackId: 'presentation_preparing',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: 15104000,
+				},
+			},
 		],
 	}
 	presets['Navigation_NextFS'] = {
@@ -149,6 +157,14 @@ exports.getPresets = function (instance) {
 				style: {
 					color: 16777215,
 					bgcolor: 26112,
+				},
+			},
+			{
+				feedbackId: 'presentation_preparing',
+				options: {},
+				style: {
+					color: 16777215,
+					bgcolor: 15104000,
 				},
 			},
 		],
@@ -2669,6 +2685,16 @@ function getPresetforSlotPresentation(instanceLabel, lbl, txt, i, cr, SlotNumber
 					bgcolor: 13369344,
 				},
 			},
+			{
+				feedbackId: 'slot_preparing',
+				options: {
+					Key: SlotNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 15104000,
+				},
+			},
 		],
 	}
 }
@@ -2783,6 +2809,16 @@ function getPresetforWatchedPresentationFolderFilesOpen(lbl, txt, cr, FileNumber
 				style: {
 					color: 16777215,
 					bgcolor: 13369344,
+				},
+			},
+			{
+				feedbackId: 'presentation_file_preparing',
+				options: {
+					Key: FileNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 15104000,
 				},
 			},
 		],
@@ -2914,6 +2950,16 @@ function getPresetforWatchedPresentationFolderFilesSelect(lbl, txt, cr, FileNumb
 				style: {
 					color: 16777215,
 					bgcolor: 255,
+				},
+			},
+			{
+				feedbackId: 'presentation_file_preparing',
+				options: {
+					Key: FileNumber,
+				},
+				style: {
+					color: 16777215,
+					bgcolor: 15104000,
 				},
 			},
 		],

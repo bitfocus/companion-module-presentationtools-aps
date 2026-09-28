@@ -1,6 +1,7 @@
 const { combineRgb } = require('@companion-module/base')
 var choices = require('./choices')
 var utils = require('./utils')
+var states = require('./states')
 
 const BOOLEAN_SETTING_FEEDBACK_DEFINITIONS = [
 	{ id: 'settings_seamless_switching', name: 'Seamless switching' },
@@ -210,6 +211,34 @@ exports.getFeedbacks = function (instance) {
 				return self.slotStates[key].opened
 			},
 		},
+		slot_preparing: {
+			type: 'boolean',
+			name: 'Presentation slot is preparing',
+			description:
+				'While APS prepares the presentation from the slot and it is not yet visible on the output, change the style (APS 4.3 Mac, 4.4.0.1 Windows)',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Key',
+					default: 'Slot1',
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(230, 120, 0),
+			},
+			callback: function (feedback) {
+				const slot = states.getPreparingSlot(self.preparationState)
+				if (slot === null) return false
+				let number = utils.extcractNumber(feedback.options.Key)
+				if (feedback.options.Key == 'selected') {
+					number = self.getVariableValue('presentation_slot_selected_number')
+				}
+				return Number(number) === slot
+			},
+		},
 		presentation_slot_selected: {
 			type: 'boolean',
 			name: 'Presentation slot is selected',
@@ -298,6 +327,50 @@ exports.getFeedbacks = function (instance) {
 					key = 'File' + self.getVariableValue('watched_presentation_folder_selected_presentation_number')
 				}
 				return self.watchedPresentationFolderState.filesState[key]?.opened
+			},
+		},
+		presentation_file_preparing: {
+			type: 'boolean',
+			name: 'Presentation folder file is preparing',
+			description:
+				'While APS prepares the presentation from the watched folder file and it is not yet visible on the output, change the style (APS 4.3 Mac, 4.4.0.1 Windows)',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices
+						.getItemForSelectedOption()
+						.concat(choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList)),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(230, 120, 0),
+			},
+			callback: function (feedback) {
+				let key = feedback.options.Key
+				if (key == 'selected') {
+					key = 'File' + self.getVariableValue('watched_presentation_folder_selected_presentation_number')
+				}
+				return (
+					states.getPreparingPresentationFileKey(self.watchedPresentationFolderState, self.preparationState) === key
+				)
+			},
+		},
+		presentation_preparing: {
+			type: 'boolean',
+			name: 'Presentation is preparing',
+			description:
+				'While APS prepares a presentation or Google Slides that is not yet visible on the output, change the style (APS 4.3 Mac, 4.4.0.1 Windows)',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(230, 120, 0),
+			},
+			callback: function (feedback) {
+				return states.isAnyPresentationPreparing(self.preparationState)
 			},
 		},
 		presentation_displayed: {

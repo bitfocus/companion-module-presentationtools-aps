@@ -135,6 +135,11 @@ When no media is playing or loaded, `Media_playing`, `Media_loaded`, `Media_play
 - settings_automatically_check_for_updates: Whether APS automatically checks for updates
 - settings_installed_presentation_apps: Detected presentation applications, separated by commas
 
+- presentation_preparing: `true` while APS is preparing a presentation or Google Slides that is not yet visible on the output
+- presentation_preparing_name: Filename of the presentation being prepared, or the Google Slides address; `-` when idle or not yet known
+- presentation_preparing_slot: Slot number being prepared when it was opened from a slot; otherwise `-`
+- presentation_preparing_folder_file_number: Watched presentation folder file number being prepared; otherwise `-`
+
 The `settings_` variables require APS 4.3 or later on macOS or Windows. They remain blank when the connected APS version or platform does not provide settings feedback.
 
 #### Feedbacks
@@ -152,3 +157,12 @@ The `settings_` variables require APS 4.3 or later on macOS or Windows. They rem
 - slot_exist: is enabled when a presentation exists for a slot.
 - PowerPoint_section_exists: is enabled when the active PowerPoint presentation contains the selected section number.
 - PowerPoint section is displayed: is enabled when the current slide is within the selected PowerPoint section.
+- slot_preparing: is enabled while the presentation from the slot is being prepared.
+- presentation_file_preparing: is enabled while the presentation from the watched presentation folder file is being prepared.
+- presentation_preparing: is enabled while any presentation, including Google Slides, is being prepared.
+
+#### Presentation preparing
+
+From the moment APS accepts a command to open or switch to a presentation until it is visible on the output, APS reports that it is preparing it. With Seamless Switching, this lasts until the screenshot cover is removed. This works for Companion buttons, other network clients, and the APS window. It requires APS 4.3 or later on macOS or APS 4.4.0.1 or later on Windows; with older versions these feedbacks stay off.
+
+The slot, watched-folder file, and next/previous presets show an orange background while preparing, before turning red when the presentation is displayed. For next/previous, the file number and name appear once APS has resolved the target. The end of preparation does not confirm that the presentation opened successfully.
