@@ -29,6 +29,38 @@ function getBooleanSettingFeedback(instance, name, variableId, platformLabel = '
 	}
 }
 
+function getPowerPointMediaFeedbacks(self) {
+	return {
+		PowerPoint_media_state: {
+			type: 'boolean',
+			name: 'PowerPoint media state (Windows)',
+			description: 'If PowerPoint media matches the selected state, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'State',
+					id: 'State',
+					default: 'playing',
+					tooltip: 'PowerPoint media state',
+					choices: [
+						{ id: 'playing', label: 'Playing' },
+						{ id: 'paused', label: 'Paused' },
+						{ id: 'stopped', label: 'Stopped' },
+						{ id: 'ready', label: 'Ready' },
+					],
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return self.generalState.PowerPoint_media_state == feedback.options.State
+			},
+		},
+	}
+}
+
 exports.getFeedbacks = function (instance) {
 	var self = instance
 	return {
@@ -738,32 +770,6 @@ exports.getFeedbacks = function (instance) {
 			},
 		},
 
-		PowerPoint_media_state: {
-			type: 'boolean',
-			name: 'PowerPoint media state',
-			description: 'If PowerPoint media matches the selected state, change the style',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'State',
-					id: 'State',
-					default: 'playing',
-					tooltip: 'PowerPoint media state',
-					choices: [
-						{ id: 'playing', label: 'Playing' },
-						{ id: 'paused', label: 'Paused' },
-						{ id: 'stopped', label: 'Stopped' },
-						{ id: 'ready', label: 'Ready' },
-					],
-				},
-			],
-			defaultStyle: {
-				color: combineRgb(255, 255, 255),
-				bgcolor: combineRgb(255, 0, 0),
-			},
-			callback: function (feedback) {
-				return self.generalState.PowerPoint_media_state == feedback.options.State
-			},
-		},
+		...(utils.supportsPowerPointMediaControl(self.apsPlatform) ? getPowerPointMediaFeedbacks(self) : {}),
 	}
 }

@@ -77,6 +77,13 @@ Mac only:
 - Keynote: Previous slide
 - Keynote: Next slide
 
+Windows only:
+
+- Presentation: PowerPoint Media Control
+- Presentation: PowerPoint Media Seek
+
+These actions, the PowerPoint media state feedback, the PowerPoint media control presets, and the `PowerPoint_media_*` variables are hidden once APS reports that it runs on macOS. They stay hidden after a Mac disconnects, and reappear when APS on Windows connects. Before any APS has connected, and with APS versions older than 4.3, all options are shown. Existing buttons keep these actions while they are hidden.
+
 #### Filenames on Companion buttons
 
 - Display the filenames of the presentation file currently displayed, and the files that will be used with the previous and next commands.

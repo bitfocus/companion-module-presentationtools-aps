@@ -50,6 +50,8 @@ class APSInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
 		this.buildTotalSmoother = new BuildTotalSmoother((values) => this.setVariableValues(values))
+		// Last platform reported by APS. Kept across disconnects so options do not flicker while reconnecting.
+		this.apsPlatform = null
 	}
 
 	async configUpdated(config) {
@@ -205,6 +207,7 @@ class APSInstance extends InstanceBase {
 							self.CheckAPIsVersionsCompatibility()
 						} else if (jsonData.action === 'aps_info') {
 							self.buildTotalSmoother.setPlatform(jsonData.data?.platform)
+							self.setAPSPlatform(jsonData.data?.platform)
 						} else if (jsonData.action === 'imagesstates') {
 							states.updateStates(self.displayStates, jsonData.data)
 							self.setImagesVariables(jsonData.data)
@@ -464,6 +467,16 @@ class APSInstance extends InstanceBase {
 		]
 	}
 
+	setAPSPlatform(platform) {
+		platform = typeof platform === 'string' ? platform : null
+		if (platform === this.apsPlatform) return
+		this.apsPlatform = platform
+		this.variables(true)
+		this.actions()
+		this.feedbacks()
+		this.presets()
+	}
+
 	actions() {
 		let ats = actions.getActions(this)
 		this.setActionDefinitions(ats)
@@ -656,7 +669,11 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
-		self.setVariableDefinitions(variables)
+		self.setVariableDefinitions(
+			utils.supportsPowerPointMediaControl(self.apsPlatform)
+				? variables
+				: variables.filter((variable) => !variable.variableId.startsWith('PowerPoint_media_')),
+		)
 
 		if (initOnly) return
 

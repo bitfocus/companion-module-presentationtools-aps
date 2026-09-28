@@ -62,6 +62,56 @@ function sendMessage(socket, message) {
 
 exports.send = sendMessage
 
+function getPowerPointMediaActions(action_callback) {
+	return {
+		Presentation_Media_Control: {
+			name: 'Presentation: PowerPoint Media Control (Windows)',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Action',
+					id: 'action',
+					default: 'play',
+					choices: [
+						{ id: 'play', label: 'Play' },
+						{ id: 'pause', label: 'Pause' },
+						{ id: 'stop', label: 'Stop' },
+						{ id: 'toggle', label: 'Toggle (Play/Pause)' },
+					],
+				},
+			],
+			callback: action_callback,
+		},
+
+		Presentation_Media_Seek: {
+			name: 'Presentation: PowerPoint Media Seek (Windows)',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Direction',
+					id: 'direction',
+					default: 'forward',
+					choices: [
+						{ id: 'forward', label: 'Forward' },
+						{ id: 'backward', label: 'Backward' },
+					],
+				},
+				{
+					type: 'number',
+					label: 'Milliseconds',
+					id: 'Milliseconds',
+					default: 1000,
+					min: 1,
+					step: 100,
+					required: true,
+					range: false,
+				},
+			],
+			callback: action_callback,
+		},
+	}
+}
+
 exports.getActions = function (instance) {
 	async function action_callback(action) {
 		let cmd = ''
@@ -848,51 +898,7 @@ exports.getActions = function (instance) {
 			action_callback,
 		),
 
-		Presentation_Media_Control: {
-			name: 'Presentation: PowerPoint Media Control',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Action',
-					id: 'action',
-					default: 'play',
-					choices: [
-						{ id: 'play', label: 'Play' },
-						{ id: 'pause', label: 'Pause' },
-						{ id: 'stop', label: 'Stop' },
-						{ id: 'toggle', label: 'Toggle (Play/Pause)' },
-					],
-				},
-			],
-			callback: action_callback,
-		},
-
-		Presentation_Media_Seek: {
-			name: 'Presentation: PowerPoint Media Seek',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Direction',
-					id: 'direction',
-					default: 'forward',
-					choices: [
-						{ id: 'forward', label: 'Forward' },
-						{ id: 'backward', label: 'Backward' },
-					],
-				},
-				{
-					type: 'number',
-					label: 'Milliseconds',
-					id: 'Milliseconds',
-					default: 1000,
-					min: 1,
-					step: 100,
-					required: true,
-					range: false,
-				},
-			],
-			callback: action_callback,
-		},
+		...(utils.supportsPowerPointMediaControl(instance.apsPlatform) ? getPowerPointMediaActions(action_callback) : {}),
 	}
 }
 

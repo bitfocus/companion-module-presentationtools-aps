@@ -63,3 +63,9 @@ exports.normalizePowerPointMediaState = function(state, duration, currentPositio
 
 	return state
 }
+
+// PowerPoint media control is Windows-only. Hide it only once APS has confirmed a Mac,
+// so unknown platforms and older APS versions keep every option.
+exports.supportsPowerPointMediaControl = function (platform) {
+	return platform !== 'macos'
+}
