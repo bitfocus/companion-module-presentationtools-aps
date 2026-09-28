@@ -22,5 +22,14 @@
 	},
 	"manufacturer": "PresentationTools",
 	"products": ["Auto Presentation Switcher"],
-	"keywords": ["Presentation", "Show Control", "Software"]
+	"keywords": ["Presentation", "Show Control", "Software"],
+	"bonjourQueries": {
+		"bonjourHost": {
+			"type": "aps-api",
+			"protocol": "tcp",
+			"txt": {
+				"txtvers": "1"
+			}
+		}
+	}
 }

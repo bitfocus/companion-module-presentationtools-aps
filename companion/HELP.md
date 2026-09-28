@@ -9,8 +9,16 @@ Controls APS by [PresentationTools](https://presentationtools.com/).
 
 ### Configuration
 
-- IP address of the computer running APS for local use 127.0.0.1.
-- Port, the default is 4777.
+- APS machine: Choose an APS machine discovered on the local network, or choose Manual. Discovered machines are listed by PC tag (or hostname) and IP address; older APS versions are listed as APS followed by an ID. Discovery requires APS with network discovery enabled on the same subnet; it does not work across subnets/VLANs or where multicast DNS is blocked.
+- Target IP and Port (Manual only): IP address of the computer running APS (for local use 127.0.0.1). The default port is 31600.
+- The selected machine's IP address is saved when you choose it. If that machine later gets a different IP address, choose it again from the list.
+
+After connecting, the connection status shows the connected machine's PC tag (or hostname), and these variables are available:
+
+- Connected machine: Name (PC tag, or hostname when no PC tag is set)
+- Connected machine: PC tag
+- Connected machine: Hostname
+- Connected machine: Instance ID
 
 ### Available actions:
 

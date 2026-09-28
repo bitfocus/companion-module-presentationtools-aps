@@ -165,8 +165,9 @@ class APSInstance extends InstanceBase {
 			delete self.socket
 		}
 
-		if (self.config.host && self.config.port) {
-			self.socket = new TCPHelper(self.config.host, self.config.port)
+		const target = self.getConnectionTarget()
+		if (target) {
+			self.socket = new TCPHelper(target.host, target.port)
 			const socket = self.socket
 
 			self.socket.on('status_change', (status, message) => {
@@ -174,6 +175,7 @@ class APSInstance extends InstanceBase {
 				if (status !== InstanceStatus.Ok) {
 					self.buildTotalSmoother.resetConnection()
 					self.resetPreparationState()
+					self.setConnectedMachine(null)
 				}
 				//self.log('debug', `Status ${status}, message: ${message}`)
 				//self.updateStatus(status)
@@ -218,6 +220,7 @@ class APSInstance extends InstanceBase {
 							self.buildTotalSmoother.setPlatform(jsonData.data?.platform)
 							self.apsCapabilities = Array.isArray(jsonData.data?.capabilities) ? jsonData.data.capabilities : []
 							self.setAPSPlatform(jsonData.data?.platform)
+							self.setConnectedMachine(jsonData.data)
 						} else if (jsonData.action === 'imagesstates') {
 							states.updateStates(self.displayStates, jsonData.data)
 							self.setImagesVariables(jsonData.data)
@@ -431,6 +434,33 @@ class APSInstance extends InstanceBase {
 		}
 	}
 
+	// A machine picked from Bonjour discovery wins over the manual IP and port.
+	getConnectionTarget() {
+		const discovered = utils.parseBonjourTarget(this.config.bonjourHost)
+		if (discovered) return discovered
+		if (this.config.host && this.config.port) return { host: this.config.host, port: this.config.port }
+		return null
+	}
+
+	setConnectedMachine(info) {
+		const name = info ? utils.getAPSMachineName(info) : null
+		const text = (value) => (typeof value === 'string' && value.trim() !== '' ? value.trim() : '-')
+		this.setVariableValues({
+			connected_machine_name: name ?? '-',
+			connected_machine_computer_tag: text(info?.computer_tag),
+			connected_machine_hostname: text(info?.hostname),
+			connected_machine_instance_id: text(info?.instanceId),
+		})
+		if (!info || !this.socket?.isConnected) return
+		if (name) {
+			const hostname = text(info.hostname)
+			const details = hostname !== '-' && hostname !== name ? ` (${hostname})` : ''
+			this.log('info', `Connected to APS on ${name}${details}`)
+		}
+		// Keep an API version warning visible rather than replacing it with the machine name.
+		if (this.serverAPIVersion === this.apiVersion) this.updateStatus(InstanceStatus.Ok, name)
+	}
+
 	getConfigFields() {
 		return [
 			{
@@ -441,12 +471,26 @@ class APSInstance extends InstanceBase {
 				value: 'This will establish a TCP connection to interact with the APS app',
 			},
 			{
+				type: 'bonjour-device',
+				id: 'bonjourHost',
+				label: 'APS machine',
+				width: 12,
+			},
+			{
+				type: 'static-text',
+				id: 'info-bonjour',
+				width: 12,
+				value:
+					'APS machines on the local network are listed by PC tag (or hostname) and IP address. Older APS versions are listed as APS followed by an ID. Choose Manual to enter an IP address and port instead, for example when the machine is on another subnet. The connected machine name is shown in the connection status and the Connected machine variables.',
+			},
+			{
 				type: 'textinput',
 				id: 'host',
 				label: 'Target IP (For local: 127.0.0.1)',
 				default: '127.0.0.1',
 				width: 6,
 				regex: Regex.IP,
+				isVisible: (options) => !options['bonjourHost'],
 			},
 			{
 				type: 'textinput',
@@ -455,11 +499,13 @@ class APSInstance extends InstanceBase {
 				default: '31600',
 				width: 6,
 				regex: Regex.PORT,
+				isVisible: (options) => !options['bonjourHost'],
 			},
 			{
 				type: 'static-text',
 				id: 'info-defaultport',
 				width: 12,
+				isVisible: (options) => !options['bonjourHost'],
 				value:
 					'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
 			},
@@ -632,6 +678,10 @@ class APSInstance extends InstanceBase {
 			{ name: 'Media player: Time elapsed', variableId: 'Media_time_elapsed' },
 			{ name: 'Media player: Time duration', variableId: 'Media_time_duration' },
 			...SETTINGS_VARIABLE_DEFINITIONS,
+			{ name: 'Connected machine: Name', variableId: 'connected_machine_name' },
+			{ name: 'Connected machine: PC tag', variableId: 'connected_machine_computer_tag' },
+			{ name: 'Connected machine: Hostname', variableId: 'connected_machine_hostname' },
+			{ name: 'Connected machine: Instance ID', variableId: 'connected_machine_instance_id' },
 		]
 		const numberOfPowerPointSectionVariables = Math.max(
 			minNumberOfPowerPointSectionPresets,
@@ -776,6 +826,10 @@ class APSInstance extends InstanceBase {
 			presentation_preparing_name: '-',
 			presentation_preparing_slot: '-',
 			presentation_preparing_folder_file_number: '-',
+			connected_machine_name: '-',
+			connected_machine_computer_tag: '-',
+			connected_machine_hostname: '-',
+			connected_machine_instance_id: '-',
 		}
 		for (const definition of SETTINGS_VARIABLE_DEFINITIONS) {
 			values[definition.variableId] = ''

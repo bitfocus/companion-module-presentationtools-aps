@@ -1,19 +1,19 @@
-exports.getNameFromPath = function(fullPath){
-    if (fullPath == null || typeof fullPath !== 'string') {
-        return ''
-    }
-    return fullPath.split(/(\\|\/)/g).pop()
+exports.getNameFromPath = function (fullPath) {
+	if (fullPath == null || typeof fullPath !== 'string') {
+		return ''
+	}
+	return fullPath.split(/(\\|\/)/g).pop()
 }
 
-exports.extcractNumber = function(str){
-	let numberMatches = str.toString().match(/\d+$/);
-		if (numberMatches) {
-			return numberMatches[0]
-		}
-		return null
+exports.extcractNumber = function (str) {
+	let numberMatches = str.toString().match(/\d+$/)
+	if (numberMatches) {
+		return numberMatches[0]
+	}
+	return null
 }
 
-exports.formatPowerPointMediaTime = function(timeString) {
+exports.formatPowerPointMediaTime = function (timeString) {
 	if (typeof timeString !== 'string') {
 		return timeString
 	}
@@ -43,7 +43,7 @@ exports.formatPowerPointMediaTime = function(timeString) {
 	return `${totalMinutes}:${formattedSeconds}`
 }
 
-exports.normalizePowerPointMediaState = function(state, duration, currentPosition) {
+exports.normalizePowerPointMediaState = function (state, duration, currentPosition) {
 	if (state === undefined || state === null) {
 		return state
 	}
@@ -78,4 +78,23 @@ exports.supportsKeynote = function (platform) {
 // APS-Mac does not report PowerPoint's own slide number and count. Hide them only once APS has confirmed a Mac.
 exports.supportsPowerPointSlideVariables = function (platform) {
 	return platform !== 'macos'
+}
+
+// Companion stores a discovered APS machine as "address:port"; null/empty means Manual.
+exports.parseBonjourTarget = function (value) {
+	if (typeof value !== 'string') return null
+	const separator = value.lastIndexOf(':')
+	if (separator <= 0) return null
+	const host = value.slice(0, separator).replace(/^\[(.*)\]$/, '$1')
+	const port = Number(value.slice(separator + 1))
+	if (!host || !Number.isInteger(port) || port < 1 || port > 65535) return null
+	return { host, port }
+}
+
+// Human-readable name of the connected APS machine from aps_info: PC tag, then hostname.
+exports.getAPSMachineName = function (info) {
+	for (const value of [info?.computer_tag, info?.hostname]) {
+		if (typeof value === 'string' && value.trim() !== '') return value.trim()
+	}
+	return null
 }
