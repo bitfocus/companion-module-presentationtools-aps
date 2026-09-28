@@ -1652,6 +1652,26 @@ exports.getPresets = function (instance) {
 		],
 	}
 
+	presets['SlideBuildNumber'] = {
+		type: 'button',
+		category: 'Presentation slide  control',
+		name: 'current build/builds count',
+		style: {
+			text: `$(${self.label}:Slides_current_build)/$(${self.label}:Slides_builds_count)`,
+			size: 'auto',
+			alignment: 'center:center',
+			color: 16777215,
+			bgcolor: 0,
+		},
+		feedbacks: [],
+		steps: [
+			{
+				down: [],
+				up: [],
+			},
+		],
+	}
+
 	// Media Player
 
 	presets['Play'] = {
