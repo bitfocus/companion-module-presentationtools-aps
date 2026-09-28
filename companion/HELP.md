@@ -4,10 +4,8 @@ Controls APS by [PresentationTools](https://presentationtools.com/).
 
 ### Requirements
 
-- PC: APS v. 1.0.0.5 and above
-- Mac: APS v.2 (0) and above
+- APS 4.0 or later on macOS or Windows. Some features, such as settings and PowerPoint sections, require APS 4.3 or later.
 - Download latest version of APS from this website: [www.presentationtools.com/aps](https://presentationtools.com/aps)
-- _Note: Still-images requires APS v.2 and above_
 
 ### Configuration
 
@@ -48,7 +46,7 @@ Controls APS by [PresentationTools](https://presentationtools.com/).
 
 #### Settings
 
-APS 4.2 or later on macOS can change these settings over LAN:
+APS 4.3 or later on macOS or Windows can change these settings over LAN:
 
 - Settings: Main presenter screen
 - Settings: Presentation file handling
@@ -102,6 +100,8 @@ On confirmed APS-Mac connections, `Slides_builds_count` and `Powerpoint_Slides_b
 
 This is display smoothing: during the hold, the total can belong to the preceding slide and must not be treated as a confirmed count for automation. It requires APS to identify its platform as `macos` in `aps_info`. Windows, unknown platforms, and older versions without platform identification retain immediate updates. The APS network API is unchanged.
 
+When no media is playing or loaded, `Media_playing`, `Media_loaded`, `Media_playing_filename`, and `Media_loaded_filename` show `-` on both macOS and Windows.
+
 `Powerpoint_slide_number` and `Powerpoint_slides_count` are hidden once APS reports that it runs on macOS, because APS-Mac does not report PowerPoint's own slide number and count; use `slide_number` and `slides_count` there. They reappear when APS on Windows connects. With APS versions that do not send these values, they show `-`.
 
 - Presentation_current: Currently opened presentation
@@ -127,7 +127,7 @@ This is display smoothing: during the hold, the total can belong to the precedin
 - settings_main_presenter_screen_effective_display_name: Display name currently resolved by APS
 - settings_presentation_file_handling: Presentation file handling mode
 - settings_seamless_switching: Whether Seamless Switching is enabled
-- settings_run_at_system_startup_enabled: Whether the macOS login item is enabled
+- settings_run_at_system_startup_enabled: Whether APS starts automatically when the user logs in
 - settings_toggle_images_on_off_with_one_button: Whether one still-image action toggles an image on and off
 - settings_powerpoint_hide_presenter: Whether APS suppresses PowerPoint Presenter View (mac)
 - settings_google_slides_use_presenter_view: Whether APS uses Google Slides Presenter View
@@ -135,7 +135,7 @@ This is display smoothing: during the hold, the total can belong to the precedin
 - settings_automatically_check_for_updates: Whether APS automatically checks for updates
 - settings_installed_presentation_apps: Detected presentation applications, separated by commas
 
-The `settings_` variables require APS 4.2 or later on macOS. They remain blank when the connected APS version or platform does not provide settings feedback.
+The `settings_` variables require APS 4.3 or later on macOS or Windows. They remain blank when the connected APS version or platform does not provide settings feedback.
 
 #### Feedbacks
 

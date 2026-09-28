@@ -207,3 +207,28 @@ test('PowerPoint slide variables are hidden on Mac and show - when APS omits the
 	assert.equal(values.Powerpoint_slide_number, '4')
 	assert.equal(values.Powerpoint_slides_count, '12')
 })
+
+test('idle Media Player values show - on Windows and Mac', async () => {
+	const { instance, send } = await companion()
+	const values = {}
+	instance.setVariableValues = (update) => Object.assign(values, update)
+	const idle = (value) => ({
+		filenames: [],
+		Media_playing: value,
+		Media_loaded: value,
+		Media_playing_filename: value,
+		Media_loaded_filename: value,
+		Media_playback_state: 'None',
+	})
+	for (const value of ['None', '-']) {
+		send('MediaPlayer', idle(value))
+		assert.equal(values.Media_playing, '-')
+		assert.equal(values.Media_loaded, '-')
+		assert.equal(values.Media_playing_filename, '-')
+		assert.equal(values.Media_loaded_filename, '-')
+		assert.equal(values.Media_playback_state, 'None')
+	}
+	send('MediaPlayer', { ...idle('None'), Media_playing: '2', Media_playing_filename: 'clip.mp4' })
+	assert.equal(values.Media_playing, '2')
+	assert.equal(values.Media_playing_filename, 'clip.mp4')
+})

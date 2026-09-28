@@ -990,11 +990,13 @@ class APSInstance extends InstanceBase {
 
 	setMediaPlayerVariables(data) {
 		var self = this
+		// APS-PC reports idle media as the legacy value None; APS-Mac uses -.
+		const idleAsDash = (value) => (value === 'None' ? '-' : value)
 		const values = {
-			Media_playing: data.Media_playing,
-			Media_loaded: data.Media_loaded,
-			Media_playing_filename: data.Media_playing_filename,
-			Media_loaded_filename: data.Media_loaded_filename,
+			Media_playing: idleAsDash(data.Media_playing),
+			Media_loaded: idleAsDash(data.Media_loaded),
+			Media_playing_filename: idleAsDash(data.Media_playing_filename),
+			Media_loaded_filename: idleAsDash(data.Media_loaded_filename),
 			Media_playback_state: data.Media_playback_state,
 			Media_time_left: data.Media_time_left,
 			Media_time_elapsed: data.Media_time_elapsed,
