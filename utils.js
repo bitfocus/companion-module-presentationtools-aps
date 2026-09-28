@@ -13,6 +13,30 @@ exports.extcractNumber = function (str) {
 	return null
 }
 
+// APS-Mac reports "macos" and APS-PC reports "windows" (APS 4.3 and later).
+exports.getAPSPlatformLabel = function (platform) {
+	if (platform === 'macos') return 'Mac'
+	if (platform === 'windows') return 'PC'
+	return typeof platform === 'string' && platform.trim() !== '' ? platform.trim() : null
+}
+
+exports.getAPSVersion = function (info) {
+	const version = info?.app_version
+	return typeof version === 'string' && version.trim() !== '' ? version.trim() : null
+}
+
+// For example "Macbook #1 · Mac · APS 4.5 (52)"; parts APS did not report are left out.
+exports.describeAPSMachine = function (info) {
+	const version = exports.getAPSVersion(info)
+	return [
+		exports.getAPSMachineName(info),
+		exports.getAPSPlatformLabel(info?.platform),
+		version ? `APS ${version}` : null,
+	]
+		.filter(Boolean)
+		.join(' · ')
+}
+
 exports.formatPowerPointMediaTime = function (timeString) {
 	if (typeof timeString !== 'string') {
 		return timeString
@@ -97,4 +121,32 @@ exports.getAPSMachineName = function (info) {
 		if (typeof value === 'string' && value.trim() !== '') return value.trim()
 	}
 	return null
+}
+
+exports.getLicenceStateLabel = function (status) {
+	if (!status) return null
+	if (status.state === 'licensed') return 'Licensed'
+	if (status.state === 'trial') return 'Trial'
+	return 'Unknown'
+}
+
+// Matches APS Hub: "3d 4h", "2h 5m", "12m", or "expired". Null when there is no usable deadline.
+exports.getTrialTimeLeft = function (expiresAt, now = Date.now()) {
+	const deadline = typeof expiresAt === 'string' ? Date.parse(expiresAt) : Number.NaN
+	if (!Number.isFinite(deadline)) return null
+	const remaining = deadline - now
+	if (remaining <= 0) return 'expired'
+	const totalMinutes = Math.ceil(remaining / 60000)
+	const days = Math.floor(totalMinutes / 1440)
+	const hours = Math.floor((totalMinutes % 1440) / 60)
+	const minutes = totalMinutes % 60
+	if (days > 0) return `${days}d ${hours}h`
+	if (hours > 0) return `${hours}h ${minutes}m`
+	return `${minutes}m`
+}
+
+exports.getLicenceReasonText = function (reason) {
+	if (reason === 'license_invalidated') return 'APS reported that its licence became invalid.'
+	if (reason === 'trial_expired') return 'APS reported that its trial expired.'
+	return typeof reason === 'string' && reason !== '' ? `APS reported: ${reason.replaceAll('_', ' ')}.` : null
 }

@@ -105,6 +105,8 @@ class APSInstance extends InstanceBase {
 			seamlessFullScreenInProgress: false,
 		}
 		this.apsCapabilities = []
+		this.licenceStatus = null
+		this.trialTimer = null
 		this.preparationState = states.generatePreparationState()
 		this.settingsState = {
 			availableDisplays: [],
@@ -176,6 +178,7 @@ class APSInstance extends InstanceBase {
 					self.buildTotalSmoother.resetConnection()
 					self.resetPreparationState()
 					self.setConnectedMachine(null)
+					self.setLicenceStatus(null)
 				}
 				//self.log('debug', `Status ${status}, message: ${message}`)
 				//self.updateStatus(status)
@@ -192,6 +195,7 @@ class APSInstance extends InstanceBase {
 				self.buildTotalSmoother.resetConnection()
 				// APS re-sends capabilities and the current preparation state after connecting.
 				self.apsCapabilities = []
+				self.setLicenceStatus(null)
 				self.resetPreparationState()
 				self.serverAPIVersion = 2
 				self.toBeUsedAPIversion = 2
@@ -420,6 +424,9 @@ class APSInstance extends InstanceBase {
 							self.browserState.seamlessFullScreenInProgress = jsonData.data.seamless_fs_in_progress
 							self.checkFeedbacks('seamless_fs_in_progress')
 							self.updateWebpagePreparation('fullscreen', jsonData.data)
+						} else if (jsonData.action === 'license_status') {
+							if (!self.apsCapabilities.includes('license_status')) continue
+							self.setLicenceStatus(jsonData.data)
 						} else if (jsonData.action === 'presentation_preparing') {
 							if (!self.apsCapabilities.includes('presentation_preparation_feedback')) continue
 							if (!states.updatePresentationPreparationState(self.preparationState, jsonData.data)) continue
@@ -443,6 +450,7 @@ class APSInstance extends InstanceBase {
 	}
 
 	setConnectedMachine(info) {
+		this.connectedMachine = info ?? null
 		const name = info ? utils.getAPSMachineName(info) : null
 		const text = (value) => (typeof value === 'string' && value.trim() !== '' ? value.trim() : '-')
 		this.setVariableValues({
@@ -450,15 +458,89 @@ class APSInstance extends InstanceBase {
 			connected_machine_computer_tag: text(info?.computer_tag),
 			connected_machine_hostname: text(info?.hostname),
 			connected_machine_instance_id: text(info?.instanceId),
+			connected_machine_platform: utils.getAPSPlatformLabel(info?.platform) ?? '-',
+			connected_machine_aps_version: utils.getAPSVersion(info) ?? '-',
 		})
 		if (!info || !this.socket?.isConnected) return
-		if (name) {
+		const description = utils.describeAPSMachine(info)
+		if (description) {
 			const hostname = text(info.hostname)
 			const details = hostname !== '-' && hostname !== name ? ` (${hostname})` : ''
-			this.log('info', `Connected to APS on ${name}${details}`)
+			this.log('info', `Connected to APS on ${description}${details}`)
 		}
+		this.updateConnectedStatus()
+	}
+
+	updateConnectedStatus() {
+		if (!this.connectedMachine || !this.socket?.isConnected) return
 		// Keep an API version warning visible rather than replacing it with the machine name.
-		if (this.serverAPIVersion === this.apiVersion) this.updateStatus(InstanceStatus.Ok, name)
+		if (this.serverAPIVersion !== this.apiVersion) return
+		const parts = [utils.describeAPSMachine(this.connectedMachine)]
+		if (this.licenceStatus?.state === 'trial') parts.push('Trial')
+		this.updateStatus(InstanceStatus.Ok, parts.filter(Boolean).join(' · ') || null)
+	}
+
+	setLicenceStatus(status) {
+		const previous = this.licenceStatus
+		this.licenceStatus = status && typeof status === 'object' ? status : null
+		if (this.licenceStatus?.state === 'trial') {
+			if (!this.trialTimer) {
+				this.trialTimer = setInterval(() => this.updateLicenceVariables(), 30000)
+				this.trialTimer.unref?.()
+			}
+		} else if (this.trialTimer) {
+			clearInterval(this.trialTimer)
+			this.trialTimer = null
+		}
+		this.updateLicenceVariables()
+		if (!this.licenceStatus) return
+		const reason = utils.getLicenceReasonText(this.licenceStatus.reason)
+		if (reason && reason !== utils.getLicenceReasonText(previous?.reason)) this.log('warn', reason)
+		if (this.licenceStatus.state !== previous?.state) this.updateConnectedStatus()
+	}
+
+	updateLicenceVariables() {
+		const status = this.licenceStatus
+		this.setVariableValues({
+			connected_machine_licence: utils.getLicenceStateLabel(status) ?? '-',
+			connected_machine_trial_time_left:
+				status?.state === 'trial' ? (utils.getTrialTimeLeft(status.trial_expires_at) ?? '-') : '-',
+		})
+	}
+
+	getLicenceSummary() {
+		const status = this.licenceStatus
+		if (!status) return this.apsCapabilities.includes('license_status') ? null : 'Not reported by this APS version'
+		// No trial countdown here: the panel is not refreshed while open, so it would not move.
+		const text = utils.getLicenceStateLabel(status)
+		const reason = utils.getLicenceReasonText(status.reason)
+		return reason ? `${text} (${reason})` : text
+	}
+
+	// Companion asks for the config fields each time the connection panel is opened.
+	getConnectedMachineSummary() {
+		const info = this.connectedMachine
+		// Saving the settings reconnects, and Companion re-reads this panel before APS has sent its details.
+		if (!info || !this.socket?.isConnected)
+			return 'Machine details appear here once APS has connected. Reopen this panel to refresh.'
+		const escape = (value) =>
+			String(value).replace(
+				/[&<>"']/g,
+				(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+			)
+		const target = this.getConnectionTarget()
+		const rows = [
+			['Name', utils.getAPSMachineName(info)],
+			['Platform', utils.getAPSPlatformLabel(info.platform)],
+			['APS version', utils.getAPSVersion(info)],
+			['Licence', this.getLicenceSummary()],
+			['Hostname', typeof info.hostname === 'string' ? info.hostname.trim() : null],
+			['Address', target ? `${target.host}:${target.port}` : null],
+		]
+		return rows
+			.filter(([, value]) => value)
+			.map(([label, value]) => `<b>${label}:</b> ${escape(value)}`)
+			.join('<br/>')
 	}
 
 	getConfigFields() {
@@ -481,7 +563,14 @@ class APSInstance extends InstanceBase {
 				id: 'info-bonjour',
 				width: 12,
 				value:
-					'APS machines on the local network are listed by PC tag (or hostname) and IP address. Older APS versions are listed as APS followed by an ID. Choose Manual to enter an IP address and port instead, for example when the machine is on another subnet. The connected machine name is shown in the connection status and the Connected machine variables.',
+					'APS machines on the local network are listed by PC tag (or hostname) and IP address. Older APS versions are listed as APS followed by an ID. Choose Manual to enter an IP address and port instead, for example when the machine is on another subnet. The connected machine name, platform, APS version and licence are shown in the connection status and the Connected machine variables.',
+			},
+			{
+				type: 'static-text',
+				id: 'info-connected-machine',
+				width: 12,
+				label: 'Connected machine',
+				value: this.getConnectedMachineSummary(),
 			},
 			{
 				type: 'textinput',
@@ -682,6 +771,10 @@ class APSInstance extends InstanceBase {
 			{ name: 'Connected machine: PC tag', variableId: 'connected_machine_computer_tag' },
 			{ name: 'Connected machine: Hostname', variableId: 'connected_machine_hostname' },
 			{ name: 'Connected machine: Instance ID', variableId: 'connected_machine_instance_id' },
+			{ name: 'Connected machine: Platform (Mac or PC)', variableId: 'connected_machine_platform' },
+			{ name: 'Connected machine: APS version', variableId: 'connected_machine_aps_version' },
+			{ name: 'Connected machine: Licence (Licensed, Trial or Unknown)', variableId: 'connected_machine_licence' },
+			{ name: 'Connected machine: Trial time left', variableId: 'connected_machine_trial_time_left' },
 		]
 		const numberOfPowerPointSectionVariables = Math.max(
 			minNumberOfPowerPointSectionPresets,
@@ -830,6 +923,10 @@ class APSInstance extends InstanceBase {
 			connected_machine_computer_tag: '-',
 			connected_machine_hostname: '-',
 			connected_machine_instance_id: '-',
+			connected_machine_platform: '-',
+			connected_machine_aps_version: '-',
+			connected_machine_licence: '-',
+			connected_machine_trial_time_left: '-',
 		}
 		for (const definition of SETTINGS_VARIABLE_DEFINITIONS) {
 			values[definition.variableId] = ''
@@ -1175,6 +1272,8 @@ class APSInstance extends InstanceBase {
 	async destroy() {
 		var self = this
 		self.buildTotalSmoother.resetConnection()
+		if (self.trialTimer) clearInterval(self.trialTimer)
+		self.trialTimer = null
 
 		if (self.socket !== undefined) {
 			self.socket.destroy()

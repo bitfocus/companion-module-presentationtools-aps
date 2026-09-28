@@ -13,12 +13,16 @@ Controls APS by [PresentationTools](https://presentationtools.com/).
 - Target IP and Port (Manual only): IP address of the computer running APS (for local use 127.0.0.1). The default port is 31600.
 - The selected machine's IP address is saved when you choose it. If that machine later gets a different IP address, choose it again from the list.
 
-After connecting, the connection status shows the connected machine's PC tag (or hostname), and these variables are available:
+After connecting, the connection status and the Connected machine section of the connection settings show the connected machine's PC tag (or hostname), platform, APS version and licence (Trial is added to the status while APS runs in trial mode), and these variables are available:
 
 - Connected machine: Name (PC tag, or hostname when no PC tag is set)
 - Connected machine: PC tag
 - Connected machine: Hostname
 - Connected machine: Instance ID
+- Connected machine: Platform (Mac or PC; - for APS versions before 4.3)
+- Connected machine: APS version
+- Connected machine: Licence (Licensed, Trial or Unknown; - when not connected or not reported by older APS versions)
+- Connected machine: Trial time left (for example 3d 4h, 2h 5m or expired; - when not in trial mode)
 
 ### Available actions:
 
