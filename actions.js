@@ -62,6 +62,33 @@ function sendMessage(socket, message) {
 
 exports.send = sendMessage
 
+const PDF_CONTROLLED_PROGRAM_CHOICES = {
+	macos: [
+		{ id: 'skim', label: 'Skim' },
+		{ id: 'adobe_acrobat', label: 'Adobe Acrobat' },
+	],
+	windows: [
+		{ id: 'adobe_acrobat', label: 'Adobe Acrobat' },
+		{ id: 'adobe_reader', label: 'Adobe Reader' },
+		{ id: 'okular', label: 'Okular' },
+		{ id: 'speedf', label: 'Speedf' },
+	],
+}
+
+// Until APS reports its platform, offer every program and label the platform-specific ones.
+// Once APS reports its installed apps, offer only those, unless none of them is a PDF program.
+function getPdfControlledProgramChoices(platform, installedApps) {
+	const choices = PDF_CONTROLLED_PROGRAM_CHOICES[platform] ?? [
+		{ id: 'adobe_acrobat', label: 'Adobe Acrobat' },
+		{ id: 'skim', label: 'Skim (Mac)' },
+		{ id: 'adobe_reader', label: 'Adobe Reader (Windows)' },
+		{ id: 'okular', label: 'Okular (Windows)' },
+		{ id: 'speedf', label: 'Speedf (Windows)' },
+	]
+	const installed = Array.isArray(installedApps) ? choices.filter((choice) => installedApps.includes(choice.id)) : []
+	return installed.length > 0 ? installed : choices
+}
+
 function getPowerPointMediaActions(action_callback) {
 	return {
 		Presentation_Media_Control: {
@@ -127,6 +154,11 @@ exports.getActions = function (instance) {
 
 		instance.log('debug', `sending ${cmd}`)
 	}
+
+	const pdfControlledProgramChoices = getPdfControlledProgramChoices(
+		instance.apsPlatform,
+		instance.settingsState?.installedPresentationApps,
+	)
 
 	return {
 		Navigation_NextFS: {
@@ -883,11 +915,10 @@ exports.getActions = function (instance) {
 					type: 'dropdown',
 					label: 'PDF application',
 					id: 'Value',
-					default: 'skim',
-					choices: [
-						{ id: 'skim', label: 'Skim' },
-						{ id: 'adobe_acrobat', label: 'Adobe Acrobat' },
-					],
+					default: pdfControlledProgramChoices.some((choice) => choice.id === 'adobe_acrobat')
+						? 'adobe_acrobat'
+						: pdfControlledProgramChoices[0].id,
+					choices: pdfControlledProgramChoices,
 				},
 			],
 			callback: action_callback,

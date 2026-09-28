@@ -106,6 +106,7 @@ class APSInstance extends InstanceBase {
 		}
 		this.settingsState = {
 			availableDisplays: [],
+			installedPresentationApps: null,
 		}
 
 		this.powerPointSectionsState = {
@@ -471,6 +472,8 @@ class APSInstance extends InstanceBase {
 		platform = typeof platform === 'string' ? platform : null
 		if (platform === this.apsPlatform) return
 		this.apsPlatform = platform
+		// The installed apps belonged to the previous computer; wait for its settings.
+		this.settingsState.installedPresentationApps = null
 		this.variables(true)
 		this.actions()
 		this.feedbacks()
@@ -776,7 +779,13 @@ class APSInstance extends InstanceBase {
 		const availableDisplaysChanged =
 			JSON.stringify(availableDisplays) !== JSON.stringify(this.settingsState.availableDisplays)
 		this.settingsState.availableDisplays = availableDisplays
-		if (availableDisplaysChanged) {
+		const installedPresentationApps = Array.isArray(settings.installed_presentation_apps)
+			? settings.installed_presentation_apps
+			: null
+		const installedPresentationAppsChanged =
+			JSON.stringify(installedPresentationApps) !== JSON.stringify(this.settingsState.installedPresentationApps)
+		this.settingsState.installedPresentationApps = installedPresentationApps
+		if (availableDisplaysChanged || installedPresentationAppsChanged) {
 			this.actions()
 		}
 

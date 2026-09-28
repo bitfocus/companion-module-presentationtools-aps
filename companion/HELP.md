@@ -59,6 +59,8 @@ APS 4.2 or later on macOS can change these settings over LAN:
 - Settings: PDF controlled program
 - Settings: Automatically check for updates
 
+The PDF controlled program choices follow the platform APS reports: Skim or Adobe Acrobat on macOS; Adobe Acrobat, Adobe Reader, Okular, or Speedf on Windows. Before APS has identified its platform, all programs are listed with a platform label. Once APS reports which applications are installed, only the installed PDF programs are listed; if none is detected, all programs for the platform are listed.
+
 Boolean settings can be enabled, disabled, or toggled. Presenter-screen choices are populated from the displays reported by APS. Network port, run at system startup, detected applications, and effective-display information remain read-only over LAN.
 
 #### Commands to control specific presentation software:

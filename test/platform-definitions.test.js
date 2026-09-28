@@ -125,3 +125,32 @@ test('repeated aps_info from the same platform does not re-register definitions'
 	send('aps_info', { platform: 'macos' })
 	assert.equal(instance.registrations, registrations)
 })
+
+function pdfProgramChoices(instance) {
+	const action = instance.actionDefinitions.Settings_pdf_controlled_program
+	assert.ok(action.options[0].choices.some((choice) => choice.id === action.options[0].default))
+	return action.options[0].choices.map((choice) => choice.id)
+}
+
+test('PDF controlled program choices follow the reported platform', async () => {
+	const { instance, send } = await companion()
+	assert.deepEqual(pdfProgramChoices(instance), ['adobe_acrobat', 'skim', 'adobe_reader', 'okular', 'speedf'])
+	send('aps_info', { platform: 'macos' })
+	assert.deepEqual(pdfProgramChoices(instance), ['skim', 'adobe_acrobat'])
+	send('aps_info', { platform: 'windows' })
+	assert.deepEqual(pdfProgramChoices(instance), ['adobe_acrobat', 'adobe_reader', 'okular', 'speedf'])
+})
+
+test('PDF controlled program choices only list installed programs', async () => {
+	const { instance, send } = await companion()
+	send('aps_info', { platform: 'windows' })
+	send('settings', { installed_presentation_apps: ['powerpoint', 'okular', 'speedf'] })
+	assert.deepEqual(pdfProgramChoices(instance), ['okular', 'speedf'])
+	send('settings', { installed_presentation_apps: ['powerpoint'] })
+	assert.deepEqual(pdfProgramChoices(instance), ['adobe_acrobat', 'adobe_reader', 'okular', 'speedf'])
+	send('settings', { installed_presentation_apps: ['powerpoint', 'okular'] })
+	send('aps_info', { platform: 'macos' })
+	assert.deepEqual(pdfProgramChoices(instance), ['skim', 'adobe_acrobat'])
+	send('settings', { installed_presentation_apps: ['powerpoint', 'keynote', 'skim'] })
+	assert.deepEqual(pdfProgramChoices(instance), ['skim'])
+})
