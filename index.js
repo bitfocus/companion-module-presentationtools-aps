@@ -250,7 +250,8 @@ class APSInstance extends InstanceBase {
 								self.checkFeedbacks('folder_captured')
 								self.folderCaptureTimeoutObj = null
 							}, 1000)
-						} else if (jsonData.action === 'delete') {
+						} else if (jsonData.action === 'delete' || jsonData.action === 'deleteimage') {
+							// APS-PC sends deleteimage; APS-Mac sends delete.
 							states.updateUnloadStates(self.displayStates, jsonData.index)
 							self.checkFeedbacks('loaded')
 						} else if (jsonData.action === 'any_presentation_displayed') {

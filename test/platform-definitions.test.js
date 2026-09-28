@@ -232,3 +232,15 @@ test('idle Media Player values show - on Windows and Mac', async () => {
 	assert.equal(values.Media_playing, '2')
 	assert.equal(values.Media_playing_filename, 'clip.mp4')
 })
+
+test('still-image delete is handled for both delete and deleteimage', async () => {
+	const { instance } = await companion()
+	for (const action of ['delete', 'deleteimage']) {
+		instance.displayStates.Display4.loaded = true
+		const body = Buffer.from(JSON.stringify({ action, index: 3 }))
+		const header = Buffer.alloc(4)
+		header.writeUInt32BE(body.length)
+		instance.socket.emit('data', Buffer.concat([header, body]))
+		assert.equal(instance.displayStates.Display4.loaded, false, action)
+	}
+})
