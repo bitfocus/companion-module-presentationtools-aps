@@ -87,6 +87,10 @@ Mac only:
 
 #### Variables
 
+On confirmed APS-Mac connections, `Slides_builds_count` and `Powerpoint_Slides_builds_count` keep the previous numeric total for up to one second if a slide change temporarily reports an unavailable total. A new count, including zero, appears immediately. Current build position and slide number are never delayed. If the total remains unavailable, the hold expires; repeated messages do not extend it. Presentation changes and connection resets cancel pending holds.
+
+This is display smoothing: during the hold, the total can belong to the preceding slide and must not be treated as a confirmed count for automation. It requires APS to identify its platform as `macos` in `aps_info`. Windows, unknown platforms, and older versions without platform identification retain immediate updates. The APS network API is unchanged.
+
 - Presentation_current: Currently opened presentation
 - Presentation_previous: Prevously opened presentation
 - Presentation_next: Next presentation to be opened

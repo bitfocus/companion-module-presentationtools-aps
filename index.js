@@ -1,4 +1,5 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
+const { BuildTotalSmoother } = require('./build-total-smoother')
 const {
 	numberOfPresentationSlots,
 	numberOfMediaPlayerSlots,
@@ -48,9 +49,11 @@ const SETTINGS_VARIABLE_DEFINITIONS = [
 class APSInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
+		this.buildTotalSmoother = new BuildTotalSmoother((values) => this.setVariableValues(values))
 	}
 
 	async configUpdated(config) {
+		this.buildTotalSmoother.resetConnection()
 		this.config = config
 
 		this.apiVersionMapping = {
@@ -150,6 +153,7 @@ class APSInstance extends InstanceBase {
 
 	initTCP() {
 		var self = this
+		self.buildTotalSmoother.resetConnection()
 
 		if (self.socket !== undefined) {
 			self.socket.destroy()
@@ -158,17 +162,24 @@ class APSInstance extends InstanceBase {
 
 		if (self.config.host && self.config.port) {
 			self.socket = new TCPHelper(self.config.host, self.config.port)
+			const socket = self.socket
 
 			self.socket.on('status_change', (status, message) => {
+				if (socket !== self.socket) return
+				if (status !== InstanceStatus.Ok) self.buildTotalSmoother.resetConnection()
 				//self.log('debug', `Status ${status}, message: ${message}`)
 				//self.updateStatus(status)
 			})
 
 			self.socket.on('error', (_err) => {
+				if (socket !== self.socket) return
+				self.buildTotalSmoother.resetConnection()
 				self.updateStatus(InstanceStatus.UnknownError)
 			})
 
 			self.socket.on('connect', () => {
+				if (socket !== self.socket) return
+				self.buildTotalSmoother.resetConnection()
 				self.serverAPIVersion = 2
 				self.toBeUsedAPIversion = 2
 				self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
@@ -178,6 +189,7 @@ class APSInstance extends InstanceBase {
 			})
 
 			self.socket.on('data', (data) => {
+				if (socket !== self.socket) return
 				self.receiver.push(data)
 				let messages = self.receiver.getMessages()
 				if (messages == null) return
@@ -191,6 +203,8 @@ class APSInstance extends InstanceBase {
 							self.toBeUsedAPIversion = Math.min(self.apiVersion, self.serverAPIVersion)
 							self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
 							self.CheckAPIsVersionsCompatibility()
+						} else if (jsonData.action === 'aps_info') {
+							self.buildTotalSmoother.setPlatform(jsonData.data?.platform)
 						} else if (jsonData.action === 'imagesstates') {
 							states.updateStates(self.displayStates, jsonData.data)
 							self.setImagesVariables(jsonData.data)
@@ -236,6 +250,7 @@ class APSInstance extends InstanceBase {
 							states.updateUnloadStates(self.displayStates, jsonData.index)
 							self.checkFeedbacks('loaded')
 						} else if (jsonData.action === 'any_presentation_displayed') {
+							if (jsonData.data.is_any_presentation_displayed === false) self.buildTotalSmoother.reset()
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
 							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
 							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
@@ -250,12 +265,11 @@ class APSInstance extends InstanceBase {
 							update_obj['slide_number'] = jsonData.data.slide_number
 							update_obj['slides_count'] = jsonData.data.slides_count
 							update_obj['Slides_current_build'] = jsonData.data.current_build
-							update_obj['Slides_builds_count'] = jsonData.data.builds_count
 
 							update_obj['Powerpoint_slide_number'] = jsonData.data.powerpoint_slide_number
 							update_obj['Powerpoint_slides_count'] = jsonData.data.powerpoint_slides_count
 							update_obj['Powerpoint_Slides_current_build'] = jsonData.data.powerpoint_current_build
-							update_obj['Powerpoint_Slides_builds_count'] = jsonData.data.powerpoint_builds_count
+							Object.assign(update_obj, self.buildTotalSmoother.values(jsonData.data))
 
 							// For not raising exception while using old verions of APS
 							update_obj['PowerPoint_media_duration'] = utils.formatPowerPointMediaTime(
@@ -365,6 +379,7 @@ class APSInstance extends InstanceBase {
 								})
 							}
 						} else if (jsonData.action === 'active_application') {
+							if (self.generalState.activeApp !== jsonData.data.application) self.buildTotalSmoother.reset()
 							self.generalState.activeApp = jsonData.data.application
 							self.checkFeedbacks('active_app')
 						} else if (jsonData.action === 'settings') {
@@ -1012,6 +1027,7 @@ class APSInstance extends InstanceBase {
 
 	async destroy() {
 		var self = this
+		self.buildTotalSmoother.resetConnection()
 
 		if (self.socket !== undefined) {
 			self.socket.destroy()
