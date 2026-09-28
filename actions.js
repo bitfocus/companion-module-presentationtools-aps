@@ -226,7 +226,7 @@ exports.getActions = function (instance) {
 						{ id: 'Key_Right', label: 'All' },
 						{ id: 'Powerpoint_Next', label: 'Powerpoint' },
 						{ id: 'Acrobat_Next', label: 'Acrobat' },
-						{ id: 'Keynote_Next', label: 'Keynote' },
+						...(utils.supportsKeynote(instance.apsPlatform) ? [{ id: 'Keynote_Next', label: 'Keynote (Mac)' }] : []),
 					],
 				},
 			],
@@ -246,7 +246,9 @@ exports.getActions = function (instance) {
 						{ id: 'Key_Left', label: 'All' },
 						{ id: 'Powerpoint_Previous', label: 'Powerpoint' },
 						{ id: 'Acrobat_Previous', label: 'Acrobat' },
-						{ id: 'Keynote_Previous', label: 'Keynote' },
+						...(utils.supportsKeynote(instance.apsPlatform)
+							? [{ id: 'Keynote_Previous', label: 'Keynote (Mac)' }]
+							: []),
 					],
 				},
 			],
@@ -452,7 +454,7 @@ exports.getActions = function (instance) {
 						{ id: 'Generic', label: 'All' },
 						{ id: 'Powerpoint_Go', label: 'Powerpoint' },
 						{ id: 'Acrobat_Go', label: 'Acrobat' },
-						{ id: 'Keynote_Go', label: 'Keynote' },
+						...(utils.supportsKeynote(instance.apsPlatform) ? [{ id: 'Keynote_Go', label: 'Keynote (Mac)' }] : []),
 					],
 				},
 				getSlideNumber('Slide Nr.'),

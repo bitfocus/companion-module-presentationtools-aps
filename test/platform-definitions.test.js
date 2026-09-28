@@ -154,3 +154,36 @@ test('PDF controlled program choices only list installed programs', async () => 
 	send('settings', { installed_presentation_apps: ['powerpoint', 'keynote', 'skim'] })
 	assert.deepEqual(pdfProgramChoices(instance), ['skim'])
 })
+
+function dropdownIds(definition, optionId) {
+	return definition.options.find((option) => option.id === optionId).choices.map((choice) => choice.id)
+}
+
+function assertKeynoteShown(instance, shown) {
+	assert.equal(dropdownIds(instance.actionDefinitions.SlideNext, 'Key').includes('Keynote_Next'), shown)
+	assert.equal(dropdownIds(instance.actionDefinitions.SlidePrevious, 'Key').includes('Keynote_Previous'), shown)
+	assert.equal(dropdownIds(instance.actionDefinitions.GoToSlide, 'App').includes('Keynote_Go'), shown)
+	assert.equal(dropdownIds(instance.feedbackDefinitions.active_app, 'Application').includes('Keynote'), shown)
+	for (const id of ['KeynotePrevious', 'KeynoteNext', 'KeynoteGoTo'])
+		assert.equal(id in instance.presetDefinitions, shown, id)
+}
+
+test('Keynote options are hidden only once Windows is confirmed', async () => {
+	const { instance, send } = await companion()
+	assertKeynoteShown(instance, true)
+	send('aps_info', { platform: 'windows' })
+	assertKeynoteShown(instance, false)
+	instance.socket.emit('connect')
+	assertKeynoteShown(instance, false)
+	send('aps_info', { platform: 'macos' })
+	assertKeynoteShown(instance, true)
+})
+
+test('active application feedback matches Keynote', async () => {
+	const { instance, send } = await companion()
+	send('aps_info', { platform: 'macos' })
+	send('active_application', { application: 'Keynote' })
+	const feedback = instance.feedbackDefinitions.active_app
+	assert.equal(feedback.callback({ options: { Application: 'Keynote' } }), true)
+	assert.equal(feedback.callback({ options: { Application: 'PowerPoint' } }), false)
+})

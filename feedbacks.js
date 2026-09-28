@@ -696,6 +696,7 @@ exports.getFeedbacks = function (instance) {
 					tooltip: 'Application',
 					choices: [
 						{ id: 'PowerPoint', label: 'PowerPoint' },
+						...(utils.supportsKeynote(self.apsPlatform) ? [{ id: 'Keynote', label: 'Keynote (Mac)' }] : []),
 						{ id: 'PDF', label: 'PDF' },
 						{ id: 'Webpage', label: 'Webpage' },
 					],

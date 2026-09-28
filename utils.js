@@ -69,3 +69,8 @@ exports.normalizePowerPointMediaState = function(state, duration, currentPositio
 exports.supportsPowerPointMediaControl = function (platform) {
 	return platform !== 'macos'
 }
+
+// Keynote is macOS-only. Hide it only once APS has confirmed Windows.
+exports.supportsKeynote = function (platform) {
+	return platform !== 'windows'
+}

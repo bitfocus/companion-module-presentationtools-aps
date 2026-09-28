@@ -79,6 +79,8 @@ Mac only:
 - Keynote: Previous slide
 - Keynote: Next slide
 
+The Keynote choices in the slide actions, the Keynote presets, and the Keynote choice in the active application feedback are labelled (Mac). They are hidden once APS reports that it runs on Windows, and reappear when APS on macOS connects. Existing buttons keep their Keynote settings while hidden.
+
 Windows only:
 
 - Presentation: PowerPoint Media Control
