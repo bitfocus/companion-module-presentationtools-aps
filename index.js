@@ -1,13 +1,16 @@
 const { InstanceBase, Regex, runEntrypoint, TCPHelper, InstanceStatus } = require('@companion-module/base')
-const { 
-	numberOfPresentationSlots, 
-	numberOfMediaPlayerSlots, 
-	minNumberOfPresentationFolderFiles, 
-	numberOfPresentationFolders, 
+const { BuildTotalSmoother } = require('./build-total-smoother')
+const {
+	numberOfPresentationSlots,
+	numberOfMediaPlayerSlots,
+	minNumberOfPresentationFolderFiles,
+	numberOfPresentationFolders,
 	numberOfImagesSlots,
-	minNumberOfMediaFolderFiles, numberOfMediaFolders,
+	minNumberOfMediaFolderFiles,
+	numberOfMediaFolders,
 	minNumberOfTabs,
-	} = require('./constants')
+	minNumberOfPowerPointSectionPresets,
+} = require('./constants')
 
 var actions = require('./actions')
 var feedbacks = require('./feedbacks')
@@ -15,27 +18,58 @@ var states = require('./states')
 var presets = require('./presets')
 var utils = require('./utils')
 
+const SETTINGS_VARIABLE_DEFINITIONS = [
+	{ name: 'settings: Main presenter screen selection', variableId: 'settings_main_presenter_screen_selection' },
+	{
+		name: 'settings: Main presenter screen configured display ID',
+		variableId: 'settings_main_presenter_screen_configured_display_id',
+	},
+	{
+		name: 'settings: Main presenter screen effective display ID',
+		variableId: 'settings_main_presenter_screen_effective_display_id',
+	},
+	{
+		name: 'settings: Main presenter screen effective display name',
+		variableId: 'settings_main_presenter_screen_effective_display_name',
+	},
+	{ name: 'settings: Presentation file handling', variableId: 'settings_presentation_file_handling' },
+	{ name: 'settings: Seamless switching', variableId: 'settings_seamless_switching' },
+	{ name: 'settings: Run at system startup enabled', variableId: 'settings_run_at_system_startup_enabled' },
+	{
+		name: 'settings: Toggle images on/off with one button',
+		variableId: 'settings_toggle_images_on_off_with_one_button',
+	},
+	{ name: 'settings: PowerPoint hide presenter (mac)', variableId: 'settings_powerpoint_hide_presenter' },
+	{ name: 'settings: Google Slides use presenter view', variableId: 'settings_google_slides_use_presenter_view' },
+	{ name: 'settings: PDF controlled program', variableId: 'settings_pdf_controlled_program' },
+	{ name: 'settings: Automatically check for updates', variableId: 'settings_automatically_check_for_updates' },
+	{ name: 'settings: Installed presentation apps', variableId: 'settings_installed_presentation_apps' },
+]
+
 class APSInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
+		this.buildTotalSmoother = new BuildTotalSmoother((values) => this.setVariableValues(values))
+		// Last platform reported by APS. Kept across disconnects so options do not flicker while reconnecting.
+		this.apsPlatform = null
 	}
 
 	async configUpdated(config) {
+		this.buildTotalSmoother.resetConnection()
 		this.config = config
 
 		this.apiVersionMapping = {
 			// v1 deprecated and removed
-			2: {commandHandler: actions.getCommandV2, receiver: MessageBufferV2},
-		};
-		this.apiVersion = Math.max(...Object.keys(this.apiVersionMapping).map(Number));
+			2: { commandHandler: actions.getCommandV2, receiver: MessageBufferV2 },
+		}
+		this.apiVersion = Math.max(...Object.keys(this.apiVersionMapping).map(Number))
 		this.log('info', `API version: ${this.apiVersion}`)
-		
 
 		this.generalState = {
 			isAnyPresentationDisplayed: false,
 			isAnyPresentationDisplayedInEditMode: false,
 			activeApp: null,
-			PowerPoint_media_state: null
+			PowerPoint_media_state: null,
 		}
 		this.captureStates = states.generateCaptureStates()
 		this.displayStates = states.generateDisplayStates()
@@ -47,13 +81,13 @@ class APSInstance extends InstanceBase {
 		this.watchedPresentationFolderState = {
 			name: null,
 			filesList: [],
-			filesState: {}
+			filesState: {},
 		}
 		this.watchedMediaFolderState = {
 			name: null,
 			originalFilesList: [], // Will save the original here (in case numbered-only sorting used)
 			filesList: [], // This will be modified if numbered-only sorting used
-			filesState: {}
+			filesState: {},
 		}
 		this.mediaPlayerState = {
 			slots: states.generateMediaSlotStates(),
@@ -70,6 +104,24 @@ class APSInstance extends InstanceBase {
 			seamlessOpenWebpageInProgress: false,
 			seamlessFullScreenInProgress: false,
 		}
+		this.apsCapabilities = []
+		this.licenceStatus = null
+		this.trialTimer = null
+		this.preparationState = states.generatePreparationState()
+		this.settingsState = {
+			availableDisplays: [],
+			installedPresentationApps: null,
+		}
+
+		this.powerPointSectionsState = {
+			available: false,
+			currentSectionIndex: -1,
+			currentSectionId: '-',
+			currentSectionName: '-',
+			currentSlideInSection: -1,
+			sectionsCount: 0,
+			sections: [],
+		}
 
 		this.captureTimeoutObj = null
 		this.slotCaptureTimeoutObj = null
@@ -83,59 +135,78 @@ class APSInstance extends InstanceBase {
 	}
 
 	async init(config) {
-
-		if(!config.sort){
+		if (!config.sort) {
 			config.sort = 'normal'
 		}
 
 		this.configUpdated(config)
 	}
 
-	CheckAPIsVersionsCompatibility(){
-		
-		if(!this.socket.isConnected)
-			return
+	CheckAPIsVersionsCompatibility() {
+		if (!this.socket.isConnected) return
 
-		if(this.serverAPIVersion > this.apiVersion){
-			this.updateStatus(InstanceStatus.UnknownWarning, 
-				"APS is more recent than Companion module.\nPlease upgrade Companion to ensure maximum compatibility.")
-		}
-		else if(this.serverAPIVersion < this.apiVersion){
-			this.updateStatus(InstanceStatus.UnknownWarning, 
-				"The Connected Companion module is more recent than APS.\nPlease upgrade APS to ensure maximum compatibility.")
+		if (this.serverAPIVersion > this.apiVersion) {
+			this.updateStatus(
+				InstanceStatus.UnknownWarning,
+				'APS is more recent than Companion module.\nPlease upgrade Companion to ensure maximum compatibility.',
+			)
+		} else if (this.serverAPIVersion < this.apiVersion) {
+			this.updateStatus(
+				InstanceStatus.UnknownWarning,
+				'The Connected Companion module is more recent than APS.\nPlease upgrade APS to ensure maximum compatibility.',
+			)
 		}
 	}
 
 	initTCP() {
 		var self = this
+		self.buildTotalSmoother.resetConnection()
 
 		if (self.socket !== undefined) {
 			self.socket.destroy()
 			delete self.socket
 		}
 
-		if (self.config.host && self.config.port) {
-			self.socket = new TCPHelper(self.config.host, self.config.port)
+		const target = self.getConnectionTarget()
+		if (target) {
+			self.socket = new TCPHelper(target.host, target.port)
+			const socket = self.socket
 
 			self.socket.on('status_change', (status, message) => {
+				if (socket !== self.socket) return
+				if (status !== InstanceStatus.Ok) {
+					self.buildTotalSmoother.resetConnection()
+					self.resetPreparationState()
+					self.setConnectedMachine(null)
+					self.setLicenceStatus(null)
+				}
 				//self.log('debug', `Status ${status}, message: ${message}`)
 				//self.updateStatus(status)
 			})
 
 			self.socket.on('error', (_err) => {
+				if (socket !== self.socket) return
+				self.buildTotalSmoother.resetConnection()
 				self.updateStatus(InstanceStatus.UnknownError)
 			})
 
 			self.socket.on('connect', () => {
+				if (socket !== self.socket) return
+				self.buildTotalSmoother.resetConnection()
+				// APS re-sends capabilities and the current preparation state after connecting.
+				self.apsCapabilities = []
+				self.setLicenceStatus(null)
+				self.resetPreparationState()
 				self.serverAPIVersion = 2
 				self.toBeUsedAPIversion = 2
 				self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
-				let apiVersionMesage = JSON.stringify({command: "api_version", api_version: self.apiVersion})
+				let apiVersionMesage = JSON.stringify({ command: 'api_version', api_version: self.apiVersion })
 				actions.send(self.socket, apiVersionMesage)
 				self.updateStatus(InstanceStatus.Ok)
 			})
 
 			self.socket.on('data', (data) => {
+				if (socket !== self.socket) return
 				self.receiver.push(data)
 				let messages = self.receiver.getMessages()
 				if (messages == null) return
@@ -143,14 +214,18 @@ class APSInstance extends InstanceBase {
 					let message = messages[i]
 					try {
 						let jsonData = JSON.parse(message)
-						if(jsonData.action === 'api_version'){
+						if (jsonData.action === 'api_version') {
 							self.serverAPIVersion = jsonData.api_version
 							self.log('info', `Server API version: ${self.serverAPIVersion}`)
 							self.toBeUsedAPIversion = Math.min(self.apiVersion, self.serverAPIVersion)
 							self.receiver = new self.apiVersionMapping[self.toBeUsedAPIversion].receiver()
 							self.CheckAPIsVersionsCompatibility()
-						}
-						else if (jsonData.action === 'imagesstates') {
+						} else if (jsonData.action === 'aps_info') {
+							self.buildTotalSmoother.setPlatform(jsonData.data?.platform)
+							self.apsCapabilities = Array.isArray(jsonData.data?.capabilities) ? jsonData.data.capabilities : []
+							self.setAPSPlatform(jsonData.data?.platform)
+							self.setConnectedMachine(jsonData.data)
+						} else if (jsonData.action === 'imagesstates') {
 							states.updateStates(self.displayStates, jsonData.data)
 							self.setImagesVariables(jsonData.data)
 							self.checkFeedbacks('loaded', 'displayed')
@@ -191,10 +266,12 @@ class APSInstance extends InstanceBase {
 								self.checkFeedbacks('folder_captured')
 								self.folderCaptureTimeoutObj = null
 							}, 1000)
-						} else if (jsonData.action === 'delete') {
+						} else if (jsonData.action === 'delete' || jsonData.action === 'deleteimage') {
+							// APS-PC sends deleteimage; APS-Mac sends delete.
 							states.updateUnloadStates(self.displayStates, jsonData.index)
 							self.checkFeedbacks('loaded')
 						} else if (jsonData.action === 'any_presentation_displayed') {
+							if (jsonData.data.is_any_presentation_displayed === false) self.buildTotalSmoother.reset()
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
 							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
 							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
@@ -203,22 +280,28 @@ class APSInstance extends InstanceBase {
 								Presentation_previous: jsonData.data.prev,
 								Presentation_current: jsonData.data.curr,
 								Presentation_next: jsonData.data.next,
+								Presentation_notes: jsonData.data.presenter_notes ?? '',
 							}
 							// For not raising exception while using old verions of APS
 							update_obj['slide_number'] = jsonData.data.slide_number
 							update_obj['slides_count'] = jsonData.data.slides_count
 							update_obj['Slides_current_build'] = jsonData.data.current_build
-							update_obj['Slides_builds_count'] = jsonData.data.builds_count
 
-							update_obj['Powerpoint_slide_number'] = jsonData.data.powerpoint_slide_number
-							update_obj['Powerpoint_slides_count'] = jsonData.data.powerpoint_slides_count
+							update_obj['Powerpoint_slide_number'] = jsonData.data.powerpoint_slide_number ?? '-'
+							update_obj['Powerpoint_slides_count'] = jsonData.data.powerpoint_slides_count ?? '-'
 							update_obj['Powerpoint_Slides_current_build'] = jsonData.data.powerpoint_current_build
-							update_obj['Powerpoint_Slides_builds_count'] = jsonData.data.powerpoint_builds_count
-							
+							Object.assign(update_obj, self.buildTotalSmoother.values(jsonData.data))
+
 							// For not raising exception while using old verions of APS
-							update_obj['PowerPoint_media_duration'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_duration)
-							update_obj['PowerPoint_media_current_position'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_current_position)
-							update_obj['PowerPoint_media_time_left'] = utils.formatPowerPointMediaTime(jsonData.data.PowerPoint_media_time_left)
+							update_obj['PowerPoint_media_duration'] = utils.formatPowerPointMediaTime(
+								jsonData.data.PowerPoint_media_duration,
+							)
+							update_obj['PowerPoint_media_current_position'] = utils.formatPowerPointMediaTime(
+								jsonData.data.PowerPoint_media_current_position,
+							)
+							update_obj['PowerPoint_media_time_left'] = utils.formatPowerPointMediaTime(
+								jsonData.data.PowerPoint_media_time_left,
+							)
 							update_obj['PowerPoint_media_state'] = utils.normalizePowerPointMediaState(
 								jsonData.data.PowerPoint_media_state,
 								jsonData.data.PowerPoint_media_duration,
@@ -228,33 +311,50 @@ class APSInstance extends InstanceBase {
 								self.generalState.PowerPoint_media_state = update_obj['PowerPoint_media_state']
 								self.checkFeedbacks('PowerPoint_media_state')
 							}
-							
+
 							self.setVariableValues(update_obj)
+						} else if (jsonData.action === 'powerpoint_sections') {
+							self.setPowerPointSectionsVariables(jsonData.data)
+							self.checkFeedbacks('PowerPoint_section_exists', 'PowerPoint_section_is_current')
 						} else if (jsonData.action === 'slots') {
 							self.setSlotVariables(jsonData.data)
 							states.updateSlotStates(self.slotStates, jsonData.data)
 							self.checkFeedbacks('slot_exist', 'slot_displayed')
-						} 
-						
+						}
+
 						// Presentation Folders
 						else if (jsonData.action === 'presentation_folders') {
 							self.setPresentationFolderVariables(jsonData.data)
 							states.updatePresentationFolderStates(self.presentationFolderStates, jsonData.data)
 							self.checkFeedbacks('presentation_folder_exist')
 						} else if (jsonData.action === 'watched_presentation_folder') {
-							states.updateWatchedPresentationFolderState(self.watchedPresentationFolderState, jsonData.data, self.config.sort == 'numberedonly')
+							states.updateWatchedPresentationFolderState(
+								self.watchedPresentationFolderState,
+								jsonData.data,
+								self.config.sort == 'numberedonly',
+							)
 							self.variables(true)
 							self.actions()
 							self.feedbacks()
 							self.presets()
 							self.setPresentationFolderFilesVariables()
-							self.checkFeedbacks('presentation_file_exist', 'presentation_folder_watched', 'presentation_file_selected')
+							self.checkFeedbacks(
+								'presentation_file_exist',
+								'presentation_folder_watched',
+								'presentation_file_selected',
+								'presentation_file_preparing',
+							)
+							self.setPreparationVariables()
 						} else if (jsonData.action === 'opened_folder_presentation') {
-							if(Object.keys(self.watchedPresentationFolderState.filesState).length > 0)
-								states.updatePresentationFileOpenStates(self.watchedPresentationFolderState, jsonData.data.current_opened_file_index, self.config.sort == 'numberedonly')
+							if (Object.keys(self.watchedPresentationFolderState.filesState).length > 0)
+								states.updatePresentationFileOpenStates(
+									self.watchedPresentationFolderState,
+									jsonData.data.current_opened_file_index,
+									self.config.sort == 'numberedonly',
+								)
 							self.checkFeedbacks('presentation_file_displayed')
-						} 
-						
+						}
+
 						// Media Folders
 						else if (jsonData.action === 'media_folders') {
 							self.setMediaFolderVariables(jsonData.data)
@@ -268,9 +368,7 @@ class APSInstance extends InstanceBase {
 							self.presets()
 							self.setMediaFolderFilesVariables()
 							self.checkFeedbacks('media_folder_watched', 'media_file_selected')
-						} 
-
-						else if (jsonData.action === 'MediaPlayer') {
+						} else if (jsonData.action === 'MediaPlayer') {
 							self.setMediaPlayerVariables(jsonData.data)
 							states.updateMediaPlayerState(self.mediaPlayerState, jsonData.data)
 							self.checkFeedbacks(
@@ -282,17 +380,15 @@ class APSInstance extends InstanceBase {
 								'Media_player_fade_on',
 								'Media_player_hold_at_end_on',
 							)
-						}
-						else if (jsonData.action === 'webpage_displayed') {
+						} else if (jsonData.action === 'webpage_displayed') {
 							self.generalState.isAnyPresentationDisplayed = jsonData.data.is_any_presentation_displayed
 							self.generalState.isAnyPresentationDisplayedInEditMode = jsonData.data.in_edit_mode
 							self.checkFeedbacks('presentation_displayed', 'presentation_displayed_in_edit_mode')
-						}
-						else if (jsonData.action === 'webpage_tabs') {
+						} else if (jsonData.action === 'webpage_tabs') {
 							let reInit = JSON.stringify(jsonData.data.tabs) != JSON.stringify(self.browserState.tabsList)
 							self.browserState.tabsList = jsonData.data.tabs
 							self.browserState.activeTabId = jsonData.data.active_tab_id
-							if(reInit){
+							if (reInit) {
 								this.variables(true)
 								this.actions()
 								this.feedbacks()
@@ -300,23 +396,41 @@ class APSInstance extends InstanceBase {
 							self.setBrowserVariables()
 							self.checkFeedbacks('active_tab')
 
-							if(jsonData.data.is_foreground){
+							if (jsonData.data.is_foreground) {
 								self.setVariableValues({
-									Presentation_current: jsonData.data.tabs.find(el => el.id === jsonData.data.active_tab_id)?.url
+									Presentation_current: jsonData.data.tabs.find((el) => el.id === jsonData.data.active_tab_id)?.url,
 								})
 							}
-						}
-						else if (jsonData.action === 'active_application') {
+						} else if (jsonData.action === 'active_application') {
+							if (self.generalState.activeApp !== jsonData.data.application) self.buildTotalSmoother.reset()
 							self.generalState.activeApp = jsonData.data.application
 							self.checkFeedbacks('active_app')
-						}
-						else if (jsonData.action === 'seamless_open_webpage_in_progress') {
+						} else if (jsonData.action === 'settings') {
+							self.setSettingsVariables(jsonData.data)
+						} else if (jsonData.action === 'settings_update_result') {
+							const result = jsonData.data ?? {}
+							if (!result.success) {
+								const error = result.error?.message ?? result.error?.code ?? 'Unknown error'
+								self.log('warn', `Settings update failed for ${result.setting ?? 'unknown setting'}: ${error}`)
+							}
+							if (Array.isArray(result.warnings) && result.warnings.length > 0) {
+								self.log('warn', `Settings update warning for ${result.setting}: ${result.warnings.join(', ')}`)
+							}
+						} else if (jsonData.action === 'seamless_open_webpage_in_progress') {
 							self.browserState.seamlessOpenWebpageInProgress = jsonData.data.seamless_open_webpage_in_progress
 							self.checkFeedbacks('seamless_open_webpage_in_progress')
-						}
-						else if (jsonData.action === 'seamless_fs_in_progress') {
+							self.updateWebpagePreparation('open', jsonData.data)
+						} else if (jsonData.action === 'seamless_fs_in_progress') {
 							self.browserState.seamlessFullScreenInProgress = jsonData.data.seamless_fs_in_progress
 							self.checkFeedbacks('seamless_fs_in_progress')
+							self.updateWebpagePreparation('fullscreen', jsonData.data)
+						} else if (jsonData.action === 'license_status') {
+							if (!self.apsCapabilities.includes('license_status')) continue
+							self.setLicenceStatus(jsonData.data)
+						} else if (jsonData.action === 'presentation_preparing') {
+							if (!self.apsCapabilities.includes('presentation_preparation_feedback')) continue
+							if (!states.updatePresentationPreparationState(self.preparationState, jsonData.data)) continue
+							self.preparationChanged()
 						}
 					} catch (e) {
 						self.log('debug', message)
@@ -325,6 +439,108 @@ class APSInstance extends InstanceBase {
 				}
 			})
 		}
+	}
+
+	// A machine picked from Bonjour discovery wins over the manual IP and port.
+	getConnectionTarget() {
+		const discovered = utils.parseBonjourTarget(this.config.bonjourHost)
+		if (discovered) return discovered
+		if (this.config.host && this.config.port) return { host: this.config.host, port: this.config.port }
+		return null
+	}
+
+	setConnectedMachine(info) {
+		this.connectedMachine = info ?? null
+		const name = info ? utils.getAPSMachineName(info) : null
+		const text = (value) => (typeof value === 'string' && value.trim() !== '' ? value.trim() : '-')
+		this.setVariableValues({
+			connected_machine_name: name ?? '-',
+			connected_machine_computer_tag: text(info?.computer_tag),
+			connected_machine_hostname: text(info?.hostname),
+			connected_machine_instance_id: text(info?.instanceId),
+			connected_machine_platform: utils.getAPSPlatformLabel(info?.platform) ?? '-',
+			connected_machine_aps_version: utils.getAPSVersion(info) ?? '-',
+		})
+		if (!info || !this.socket?.isConnected) return
+		const description = utils.describeAPSMachine(info)
+		if (description) {
+			const hostname = text(info.hostname)
+			const details = hostname !== '-' && hostname !== name ? ` (${hostname})` : ''
+			this.log('info', `Connected to APS on ${description}${details}`)
+		}
+		this.updateConnectedStatus()
+	}
+
+	updateConnectedStatus() {
+		if (!this.connectedMachine || !this.socket?.isConnected) return
+		// Keep an API version warning visible rather than replacing it with the machine name.
+		if (this.serverAPIVersion !== this.apiVersion) return
+		const parts = [utils.describeAPSMachine(this.connectedMachine)]
+		if (this.licenceStatus?.state === 'trial') parts.push('Trial')
+		this.updateStatus(InstanceStatus.Ok, parts.filter(Boolean).join(' · ') || null)
+	}
+
+	setLicenceStatus(status) {
+		const previous = this.licenceStatus
+		this.licenceStatus = status && typeof status === 'object' ? status : null
+		if (this.licenceStatus?.state === 'trial') {
+			if (!this.trialTimer) {
+				this.trialTimer = setInterval(() => this.updateLicenceVariables(), 30000)
+				this.trialTimer.unref?.()
+			}
+		} else if (this.trialTimer) {
+			clearInterval(this.trialTimer)
+			this.trialTimer = null
+		}
+		this.updateLicenceVariables()
+		if (!this.licenceStatus) return
+		const reason = utils.getLicenceReasonText(this.licenceStatus.reason)
+		if (reason && reason !== utils.getLicenceReasonText(previous?.reason)) this.log('warn', reason)
+		if (this.licenceStatus.state !== previous?.state) this.updateConnectedStatus()
+	}
+
+	updateLicenceVariables() {
+		const status = this.licenceStatus
+		this.setVariableValues({
+			connected_machine_licence: utils.getLicenceStateLabel(status) ?? '-',
+			connected_machine_trial_time_left:
+				status?.state === 'trial' ? (utils.getTrialTimeLeft(status.trial_expires_at) ?? '-') : '-',
+		})
+	}
+
+	getLicenceSummary() {
+		const status = this.licenceStatus
+		if (!status) return this.apsCapabilities.includes('license_status') ? null : 'Not reported by this APS version'
+		// No trial countdown here: the panel is not refreshed while open, so it would not move.
+		const text = utils.getLicenceStateLabel(status)
+		const reason = utils.getLicenceReasonText(status.reason)
+		return reason ? `${text} (${reason})` : text
+	}
+
+	// Companion asks for the config fields each time the connection panel is opened.
+	getConnectedMachineSummary() {
+		const info = this.connectedMachine
+		// Saving the settings reconnects, and Companion re-reads this panel before APS has sent its details.
+		if (!info || !this.socket?.isConnected)
+			return 'Machine details appear here once APS has connected. Reopen this panel to refresh.'
+		const escape = (value) =>
+			String(value).replace(
+				/[&<>"']/g,
+				(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+			)
+		const target = this.getConnectionTarget()
+		const rows = [
+			['Name', utils.getAPSMachineName(info)],
+			['Platform', utils.getAPSPlatformLabel(info.platform)],
+			['APS version', utils.getAPSVersion(info)],
+			['Licence', this.getLicenceSummary()],
+			['Hostname', typeof info.hostname === 'string' ? info.hostname.trim() : null],
+			['Address', target ? `${target.host}:${target.port}` : null],
+		]
+		return rows
+			.filter(([, value]) => value)
+			.map(([label, value]) => `<b>${label}:</b> ${escape(value)}`)
+			.join('<br/>')
 	}
 
 	getConfigFields() {
@@ -337,12 +553,33 @@ class APSInstance extends InstanceBase {
 				value: 'This will establish a TCP connection to interact with the APS app',
 			},
 			{
+				type: 'bonjour-device',
+				id: 'bonjourHost',
+				label: 'APS machine',
+				width: 12,
+			},
+			{
+				type: 'static-text',
+				id: 'info-bonjour',
+				width: 12,
+				value:
+					'APS machines on the local network are listed by PC tag (or hostname) and IP address. Older APS versions are listed as APS followed by an ID. Choose Manual to enter an IP address and port instead, for example when the machine is on another subnet. The connected machine name, platform, APS version and licence are shown in the connection status and the Connected machine variables.',
+			},
+			{
+				type: 'static-text',
+				id: 'info-connected-machine',
+				width: 12,
+				label: 'Connected machine',
+				value: this.getConnectedMachineSummary(),
+			},
+			{
 				type: 'textinput',
 				id: 'host',
 				label: 'Target IP (For local: 127.0.0.1)',
 				default: '127.0.0.1',
 				width: 6,
 				regex: Regex.IP,
+				isVisible: (options) => !options['bonjourHost'],
 			},
 			{
 				type: 'textinput',
@@ -351,11 +588,13 @@ class APSInstance extends InstanceBase {
 				default: '31600',
 				width: 6,
 				regex: Regex.PORT,
+				isVisible: (options) => !options['bonjourHost'],
 			},
 			{
 				type: 'static-text',
 				id: 'info-defaultport',
 				width: 12,
+				isVisible: (options) => !options['bonjourHost'],
 				value:
 					'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
 			},
@@ -366,9 +605,9 @@ class APSInstance extends InstanceBase {
 				default: 'normal',
 				width: 8,
 				choices: [
-					{id: "normal", label: "Normal"},
-					{id: "numberedonly", label: "Numbered only"},
-				]
+					{ id: 'normal', label: 'Normal' },
+					{ id: 'numberedonly', label: 'Numbered only' },
+				],
 			},
 			{
 				type: 'static-text',
@@ -380,6 +619,53 @@ class APSInstance extends InstanceBase {
 					'Please note: You need to restart the Companion-module after making changes to these settings.',
 			},
 		]
+	}
+
+	setAPSPlatform(platform) {
+		platform = typeof platform === 'string' ? platform : null
+		if (platform === this.apsPlatform) return
+		this.apsPlatform = platform
+		// The installed apps belonged to the previous computer; wait for its settings.
+		this.settingsState.installedPresentationApps = null
+		this.variables(true)
+		this.actions()
+		this.feedbacks()
+		this.presets()
+	}
+
+	updateWebpagePreparation(part, data) {
+		if (!this.apsCapabilities.includes('webpage_preparation_feedback')) return
+		states.updateWebpagePreparationState(this.preparationState, part, data)
+		this.preparationChanged()
+	}
+
+	resetPreparationState() {
+		if (!this.preparationState) return
+		this.preparationState = states.generatePreparationState()
+		this.preparationChanged()
+	}
+
+	preparationChanged() {
+		this.setPreparationVariables()
+		this.checkFeedbacks('presentation_preparing', 'slot_preparing', 'presentation_file_preparing')
+	}
+
+	setPreparationVariables() {
+		const state = this.preparationState
+		const fileKey = states.getPreparingPresentationFileKey(this.watchedPresentationFolderState, state)
+		const googleSlides = states.isGoogleSlidesPreparing(state)
+		let name = '-'
+		if (state.presentation.isPreparing && state.presentation.targetPath) {
+			name = utils.getNameFromPath(state.presentation.targetPath)
+		} else if (googleSlides && state.webpage.targetUrl) {
+			name = state.webpage.targetUrl
+		}
+		this.setVariableValues({
+			presentation_preparing: states.isAnyPresentationPreparing(state),
+			presentation_preparing_name: name,
+			presentation_preparing_slot: states.getPreparingSlot(state) ?? '-',
+			presentation_preparing_folder_file_number: fileKey ? Number(utils.extcractNumber(fileKey)) : '-',
+		})
 	}
 
 	actions() {
@@ -399,10 +685,31 @@ class APSInstance extends InstanceBase {
 			{ name: 'Presentation: Previous in folder', variableId: 'Presentation_previous' },
 			{ name: 'Presentation: Current', variableId: 'Presentation_current' },
 			{ name: 'Presentation: Next in folder', variableId: 'Presentation_next' },
-			{ name: 'Presentation: Selected in watched presentation folder (Name)', variableId: 'watched_presentation_folder_selected_presentation_name' },
-			{ name: 'Presentation: Selected in watched presentation folder (Path)', variableId: 'watched_presentation_folder_selected_presentation_path' },
-			{ name: 'Presentation: Selected in watched presentation folder (Number)', variableId: 'watched_presentation_folder_selected_presentation_number' },
-			{ name: 'Presentation: Watched presentation folder total files count', variableId: 'watched_presentation_folder_total_files_count' },
+			{ name: 'Presentation: Notes', variableId: 'Presentation_notes' },
+			{
+				name: 'Presentation: Selected in watched presentation folder (Name)',
+				variableId: 'watched_presentation_folder_selected_presentation_name',
+			},
+			{
+				name: 'Presentation: Selected in watched presentation folder (Path)',
+				variableId: 'watched_presentation_folder_selected_presentation_path',
+			},
+			{
+				name: 'Presentation: Selected in watched presentation folder (Number)',
+				variableId: 'watched_presentation_folder_selected_presentation_number',
+			},
+			{
+				name: 'Presentation: Watched presentation folder total files count',
+				variableId: 'watched_presentation_folder_total_files_count',
+			},
+
+			{ name: 'Presentation: Preparing (opening)', variableId: 'presentation_preparing' },
+			{ name: 'Presentation: Preparing (Name)', variableId: 'presentation_preparing_name' },
+			{ name: 'Presentation: Preparing slot (Number)', variableId: 'presentation_preparing_slot' },
+			{
+				name: 'Presentation: Preparing in watched presentation folder (Number)',
+				variableId: 'presentation_preparing_folder_file_number',
+			},
 
 			{ name: 'Presentation: Selected slot (Number)', variableId: 'presentation_slot_selected_number' },
 			{ name: 'Presentation: Selected slot (Name)', variableId: 'presentation_slot_selected_filename' },
@@ -413,10 +720,22 @@ class APSInstance extends InstanceBase {
 			{ name: 'Still image: Selected slot (Number)', variableId: 'image_slot_selected_number' },
 			{ name: 'Still image: Selected slot (Name)', variableId: 'image_slot_selected_filename' },
 
-			{ name: 'Media Player: Selected in watched media folder (Name)', variableId: 'watched_media_folder_selected_media_name' },
-			{ name: 'Media Player: Selected in watched media folder (Path)', variableId: 'watched_media_folder_selected_media_path' },
-			{ name: 'Media Player: Selected in watched media folder (Number)', variableId: 'watched_media_folder_selected_media_number' },
-			{ name: 'Media Player: Watched media folder total files count', variableId: 'watched_media_folder_total_files_count' },
+			{
+				name: 'Media Player: Selected in watched media folder (Name)',
+				variableId: 'watched_media_folder_selected_media_name',
+			},
+			{
+				name: 'Media Player: Selected in watched media folder (Path)',
+				variableId: 'watched_media_folder_selected_media_path',
+			},
+			{
+				name: 'Media Player: Selected in watched media folder (Number)',
+				variableId: 'watched_media_folder_selected_media_number',
+			},
+			{
+				name: 'Media Player: Watched media folder total files count',
+				variableId: 'watched_media_folder_total_files_count',
+			},
 
 			{ name: 'Slide: Current', variableId: 'slide_number' },
 			{ name: 'Slide: Total number', variableId: 'slides_count' },
@@ -430,6 +749,15 @@ class APSInstance extends InstanceBase {
 			{ name: 'Slide: Total number (Powerpoint)', variableId: 'Powerpoint_slides_count' },
 			{ name: 'Slide: Current build (Powerpoint)', variableId: 'Powerpoint_Slides_current_build' },
 			{ name: 'Slide: Builds count (Powerpoint)', variableId: 'Powerpoint_Slides_builds_count' },
+			{ name: 'PowerPoint section: Available', variableId: 'Powerpoint_sections_available' },
+			{ name: 'PowerPoint section: Current section index', variableId: 'Powerpoint_sections_current_index' },
+			{ name: 'PowerPoint section: Current section ID', variableId: 'Powerpoint_sections_current_id' },
+			{ name: 'PowerPoint section: Current section name', variableId: 'Powerpoint_sections_current_name' },
+			{
+				name: 'PowerPoint section: Current slide in section',
+				variableId: 'Powerpoint_sections_current_slide_in_section',
+			},
+			{ name: 'PowerPoint section: Sections count', variableId: 'Powerpoint_sections_count' },
 			{ name: 'Media player: Playing media', variableId: 'Media_playing' },
 			{ name: 'Media player: Loaded media', variableId: 'Media_loaded' },
 			{ name: 'Media player: Playing media filename', variableId: 'Media_playing_filename' },
@@ -438,7 +766,28 @@ class APSInstance extends InstanceBase {
 			{ name: 'Media player: Time left', variableId: 'Media_time_left' },
 			{ name: 'Media player: Time elapsed', variableId: 'Media_time_elapsed' },
 			{ name: 'Media player: Time duration', variableId: 'Media_time_duration' },
+			...SETTINGS_VARIABLE_DEFINITIONS,
+			{ name: 'Connected machine: Name', variableId: 'connected_machine_name' },
+			{ name: 'Connected machine: PC tag', variableId: 'connected_machine_computer_tag' },
+			{ name: 'Connected machine: Hostname', variableId: 'connected_machine_hostname' },
+			{ name: 'Connected machine: Instance ID', variableId: 'connected_machine_instance_id' },
+			{ name: 'Connected machine: Platform (Mac or PC)', variableId: 'connected_machine_platform' },
+			{ name: 'Connected machine: APS version', variableId: 'connected_machine_aps_version' },
+			{ name: 'Connected machine: Licence (Licensed, Trial or Unknown)', variableId: 'connected_machine_licence' },
+			{ name: 'Connected machine: Trial time left', variableId: 'connected_machine_trial_time_left' },
 		]
+		const numberOfPowerPointSectionVariables = Math.max(
+			minNumberOfPowerPointSectionPresets,
+			self.powerPointSectionsState.sections.length,
+		)
+		for (let i = 1; i <= numberOfPowerPointSectionVariables; i++) {
+			variables.push(
+				{ name: `PowerPoint section ${i}: ID`, variableId: `Powerpoint_section${i}_id` },
+				{ name: `PowerPoint section ${i}: Name`, variableId: `Powerpoint_section${i}_name` },
+				{ name: `PowerPoint section ${i}: First slide index`, variableId: `Powerpoint_section${i}_first_slide_index` },
+				{ name: `PowerPoint section ${i}: Slides count`, variableId: `Powerpoint_section${i}_slides_count` },
+			)
+		}
 		for (let i = 1; i <= numberOfPresentationSlots; i++) {
 			variables.push({
 				name: `Presentation Slot ${i}`,
@@ -473,7 +822,11 @@ class APSInstance extends InstanceBase {
 			variableId: `watched_presentation_folder_number`,
 		})
 
-		for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, self.watchedPresentationFolderState.filesList.length); i++) {
+		for (
+			let i = 1;
+			i <= Math.max(minNumberOfPresentationFolderFiles, self.watchedPresentationFolderState.filesList.length);
+			i++
+		) {
 			variables.push({
 				name: `Presentation Folder File ${i}`,
 				variableId: `presentation_folder_file${i}`,
@@ -503,7 +856,6 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
-
 		variables.push({
 			name: `tab title current`,
 			variableId: `tab_title_current`,
@@ -524,15 +876,19 @@ class APSInstance extends InstanceBase {
 			})
 		}
 
-		self.setVariableDefinitions(variables)
+		const hiddenVariable = (variableId) =>
+			(!utils.supportsPowerPointMediaControl(self.apsPlatform) && variableId.startsWith('PowerPoint_media_')) ||
+			(!utils.supportsPowerPointSlideVariables(self.apsPlatform) &&
+				(variableId === 'Powerpoint_slide_number' || variableId === 'Powerpoint_slides_count'))
+		self.setVariableDefinitions(variables.filter((variable) => !hiddenVariable(variable.variableId)))
 
-		if(initOnly)
-			return
+		if (initOnly) return
 
 		const values = {
 			Presentation_previous: '',
 			Presentation_current: '',
 			Presentation_next: '',
+			Presentation_notes: '',
 			slide_number: '',
 			slides_count: '',
 			Slides_current_build: '',
@@ -545,6 +901,12 @@ class APSInstance extends InstanceBase {
 			Powerpoint_slides_count: '',
 			Powerpoint_Slides_current_build: '',
 			Powerpoint_Slides_builds_count: '',
+			Powerpoint_sections_available: false,
+			Powerpoint_sections_current_index: -1,
+			Powerpoint_sections_current_id: '-',
+			Powerpoint_sections_current_name: '-',
+			Powerpoint_sections_current_slide_in_section: -1,
+			Powerpoint_sections_count: 0,
 			Media_playing: '',
 			Media_loaded: '',
 			Media_playing_filename: '',
@@ -553,6 +915,27 @@ class APSInstance extends InstanceBase {
 			Media_time_left: '',
 			Media_time_elapsed: '',
 			Media_time_duration: '',
+			presentation_preparing: false,
+			presentation_preparing_name: '-',
+			presentation_preparing_slot: '-',
+			presentation_preparing_folder_file_number: '-',
+			connected_machine_name: '-',
+			connected_machine_computer_tag: '-',
+			connected_machine_hostname: '-',
+			connected_machine_instance_id: '-',
+			connected_machine_platform: '-',
+			connected_machine_aps_version: '-',
+			connected_machine_licence: '-',
+			connected_machine_trial_time_left: '-',
+		}
+		for (const definition of SETTINGS_VARIABLE_DEFINITIONS) {
+			values[definition.variableId] = ''
+		}
+		for (let i = 1; i <= numberOfPowerPointSectionVariables; i++) {
+			values[`Powerpoint_section${i}_id`] = '-'
+			values[`Powerpoint_section${i}_name`] = '-'
+			values[`Powerpoint_section${i}_first_slide_index`] = -1
+			values[`Powerpoint_section${i}_slides_count`] = 0
 		}
 		try {
 			for (let i = numberOfPresentationSlots; i > 0; i--) {
@@ -600,6 +983,99 @@ class APSInstance extends InstanceBase {
 		self.setVariableValues(values)
 	}
 
+	setSettingsVariables(data) {
+		const settings = data ?? {}
+		const mainPresenterScreen = settings.main_presenter_screen ?? {}
+		const runAtSystemStartup = settings.run_at_system_startup ?? {}
+		const availableDisplays = Array.isArray(mainPresenterScreen.available_displays)
+			? mainPresenterScreen.available_displays.filter(
+					(display) => Number.isInteger(display?.display_id) && typeof display?.display_name === 'string',
+				)
+			: []
+		const availableDisplaysChanged =
+			JSON.stringify(availableDisplays) !== JSON.stringify(this.settingsState.availableDisplays)
+		this.settingsState.availableDisplays = availableDisplays
+		const installedPresentationApps = Array.isArray(settings.installed_presentation_apps)
+			? settings.installed_presentation_apps
+			: null
+		const installedPresentationAppsChanged =
+			JSON.stringify(installedPresentationApps) !== JSON.stringify(this.settingsState.installedPresentationApps)
+		this.settingsState.installedPresentationApps = installedPresentationApps
+		if (availableDisplaysChanged || installedPresentationAppsChanged) {
+			this.actions()
+		}
+
+		this.setVariableValues({
+			settings_main_presenter_screen_selection: mainPresenterScreen.selection ?? '',
+			settings_main_presenter_screen_configured_display_id:
+				mainPresenterScreen.selection === 'automatic' ||
+				mainPresenterScreen.configured_display_id === 0 ||
+				mainPresenterScreen.configured_display_id === null
+					? 'Auto'
+					: (mainPresenterScreen.configured_display_id ?? ''),
+			settings_main_presenter_screen_effective_display_id: mainPresenterScreen.effective_display_id ?? '',
+			settings_main_presenter_screen_effective_display_name: mainPresenterScreen.effective_display_name ?? '',
+			settings_presentation_file_handling: settings.presentation_file_handling ?? '',
+			settings_seamless_switching: settings.seamless_switching ?? '',
+			settings_run_at_system_startup_enabled: runAtSystemStartup.enabled ?? '',
+			settings_toggle_images_on_off_with_one_button: settings.toggle_images_on_off_with_one_button ?? '',
+			settings_powerpoint_hide_presenter: settings.powerpoint_hide_presenter ?? '',
+			settings_google_slides_use_presenter_view: settings.google_slides_use_presenter_view ?? '',
+			settings_pdf_controlled_program: settings.pdf_controlled_program ?? '',
+			settings_automatically_check_for_updates: settings.automatically_check_for_updates ?? '',
+			settings_installed_presentation_apps: Array.isArray(settings.installed_presentation_apps)
+				? settings.installed_presentation_apps.join(', ')
+				: '',
+		})
+		this.checkFeedbacks(...feedbacks.booleanSettingFeedbackIds)
+	}
+
+	setPowerPointSectionsVariables(data) {
+		var self = this
+		const sections = Array.isArray(data?.sections) ? data.sections : []
+		const previousSectionsCount = self.powerPointSectionsState.sections.length
+		const previousPresetCount = Math.max(minNumberOfPowerPointSectionPresets, previousSectionsCount)
+		const nextPresetCount = Math.max(minNumberOfPowerPointSectionPresets, sections.length)
+
+		self.powerPointSectionsState = {
+			available: data?.available ?? false,
+			currentSectionIndex: data?.current_section_index ?? -1,
+			currentSectionId: data?.current_section_id ?? '-',
+			currentSectionName: data?.current_section_name ?? '-',
+			currentSlideInSection: data?.current_slide_in_section ?? -1,
+			sectionsCount: data?.sections_count ?? sections.length,
+			sections,
+		}
+
+		if (previousSectionsCount !== sections.length) {
+			self.variables(true)
+			self.actions()
+		}
+		if (previousPresetCount !== nextPresetCount) {
+			self.presets()
+		}
+
+		const values = {
+			Powerpoint_sections_available: self.powerPointSectionsState.available,
+			Powerpoint_sections_current_index: self.powerPointSectionsState.currentSectionIndex,
+			Powerpoint_sections_current_id: self.powerPointSectionsState.currentSectionId,
+			Powerpoint_sections_current_name: self.powerPointSectionsState.currentSectionName,
+			Powerpoint_sections_current_slide_in_section: self.powerPointSectionsState.currentSlideInSection,
+			Powerpoint_sections_count: self.powerPointSectionsState.sectionsCount,
+		}
+
+		for (let i = 0; i < nextPresetCount; i++) {
+			const sectionNumber = i + 1
+			const section = sections[i]
+			values[`Powerpoint_section${sectionNumber}_id`] = section?.id ?? '-'
+			values[`Powerpoint_section${sectionNumber}_name`] = section?.name ?? '-'
+			values[`Powerpoint_section${sectionNumber}_first_slide_index`] = section?.first_slide_index ?? -1
+			values[`Powerpoint_section${sectionNumber}_slides_count`] = section?.slides_count ?? 0
+		}
+
+		self.setVariableValues(values)
+	}
+
 	setSlotVariables(data) {
 		var self = this
 		const values = {}
@@ -612,7 +1088,8 @@ class APSInstance extends InstanceBase {
 			self.log('debug', err)
 		}
 
-		values['presentation_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('presentation_slot_selected_number')) - 1]
+		values['presentation_slot_selected_filename'] =
+			data.filenames[parseInt(self.getVariableValue('presentation_slot_selected_number')) - 1]
 
 		self.setVariableValues(values)
 	}
@@ -628,7 +1105,8 @@ class APSInstance extends InstanceBase {
 		} catch (err) {
 			self.log('debug', err)
 		}
-		values['image_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('image_slot_selected_number')) - 1]
+		values['image_slot_selected_filename'] =
+			data.filenames[parseInt(self.getVariableValue('image_slot_selected_number')) - 1]
 		self.setVariableValues(values)
 	}
 
@@ -656,24 +1134,21 @@ class APSInstance extends InstanceBase {
 		try {
 			for (let i = Math.max(minNumberOfPresentationFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''
-				if(i <= filesList.length)
-					text = utils.getNameFromPath(filesList[i - 1])
+				if (i <= filesList.length) text = utils.getNameFromPath(filesList[i - 1])
 				values[`presentation_folder_file${i}`] = text
 			}
 		} catch (err) {
 			self.log('debug', err)
 		}
 
-		
-		if(filesList.length > 0){
-			if(!filesList.includes(self.getVariableValue('watched_presentation_folder_selected_presentation_path'))){
+		if (filesList.length > 0) {
+			if (!filesList.includes(self.getVariableValue('watched_presentation_folder_selected_presentation_path'))) {
 				values['watched_presentation_folder_selected_presentation_number'] = 1
 				values['watched_presentation_folder_total_files_count'] = filesList.length
 				values['watched_presentation_folder_selected_presentation_path'] = filesList[0]
 				values['watched_presentation_folder_selected_presentation_name'] = utils.getNameFromPath(filesList[0])
 			}
-		}
-		else{
+		} else {
 			values['watched_presentation_folder_selected_presentation_number'] = null
 			values['watched_presentation_folder_total_files_count'] = null
 			values['watched_presentation_folder_selected_presentation_path'] = null
@@ -681,7 +1156,6 @@ class APSInstance extends InstanceBase {
 		}
 		self.setVariableValues(values)
 	}
-
 
 	setMediaFolderVariables(data) {
 		var self = this
@@ -707,24 +1181,21 @@ class APSInstance extends InstanceBase {
 		try {
 			for (let i = Math.max(minNumberOfMediaFolderFiles, filesList.length); i > 0; i--) {
 				let text = ''
-				if(i <= filesList.length)
-					text = utils.getNameFromPath(filesList[i - 1])
+				if (i <= filesList.length) text = utils.getNameFromPath(filesList[i - 1])
 				values[`media_folder_file${i}`] = text
 			}
 		} catch (err) {
 			self.log('debug', err)
 		}
 
-		
-		if(filesList.length > 0){
-			if(!filesList.includes(self.getVariableValue('watched_media_folder_selected_media_path'))){
+		if (filesList.length > 0) {
+			if (!filesList.includes(self.getVariableValue('watched_media_folder_selected_media_path'))) {
 				values['watched_media_folder_selected_media_number'] = 1
 				values['watched_media_folder_total_files_count'] = filesList.length
 				values['watched_media_folder_selected_media_path'] = filesList[0]
 				values['watched_media_folder_selected_media_name'] = utils.getNameFromPath(filesList[0])
 			}
-		}
-		else{
+		} else {
 			values['watched_media_folder_selected_media_number'] = null
 			values['watched_media_folder_total_files_count'] = null
 			values['watched_media_folder_selected_media_path'] = null
@@ -735,11 +1206,13 @@ class APSInstance extends InstanceBase {
 
 	setMediaPlayerVariables(data) {
 		var self = this
+		// APS-PC reports idle media as the legacy value None; APS-Mac uses -.
+		const idleAsDash = (value) => (value === 'None' ? '-' : value)
 		const values = {
-			Media_playing: data.Media_playing,
-			Media_loaded: data.Media_loaded,
-			Media_playing_filename: data.Media_playing_filename,
-			Media_loaded_filename: data.Media_loaded_filename,
+			Media_playing: idleAsDash(data.Media_playing),
+			Media_loaded: idleAsDash(data.Media_loaded),
+			Media_playing_filename: idleAsDash(data.Media_playing_filename),
+			Media_loaded_filename: idleAsDash(data.Media_loaded_filename),
 			Media_playback_state: data.Media_playback_state,
 			Media_time_left: data.Media_time_left,
 			Media_time_elapsed: data.Media_time_elapsed,
@@ -754,7 +1227,8 @@ class APSInstance extends InstanceBase {
 			self.log('debug', err)
 		}
 
-		values['media_slot_selected_filename'] = data.filenames[parseInt(self.getVariableValue('media_slot_selected_number')) - 1]
+		values['media_slot_selected_filename'] =
+			data.filenames[parseInt(self.getVariableValue('media_slot_selected_number')) - 1]
 
 		self.setVariableValues(values)
 	}
@@ -764,7 +1238,7 @@ class APSInstance extends InstanceBase {
 		const values = {}
 		let tabsList = self.browserState.tabsList
 
-		let activeTab = tabsList.find(el => el.id === self.browserState.activeTabId)
+		let activeTab = tabsList.find((el) => el.id === self.browserState.activeTabId)
 		values['tab_title_current'] = activeTab?.title
 		values['tab_url_current'] = activeTab?.url
 
@@ -772,7 +1246,7 @@ class APSInstance extends InstanceBase {
 			for (let i = Math.max(tabsList.length, minNumberOfTabs); i > 0; i--) {
 				let title = ''
 				let url = ''
-				if(i <= tabsList.length){
+				if (i <= tabsList.length) {
 					title = tabsList[i - 1].title
 					url = tabsList[i - 1].url
 				}
@@ -797,6 +1271,9 @@ class APSInstance extends InstanceBase {
 
 	async destroy() {
 		var self = this
+		self.buildTotalSmoother.resetConnection()
+		if (self.trialTimer) clearInterval(self.trialTimer)
+		self.trialTimer = null
 
 		if (self.socket !== undefined) {
 			self.socket.destroy()
@@ -837,40 +1314,41 @@ class MessageBuffer {
 
 class MessageBufferV2 {
 	constructor() {
-		this.buffer = Buffer.alloc(0); // Use a Buffer instead of string for binary data
+		this.buffer = Buffer.alloc(0) // Use a Buffer instead of string for binary data
 	}
 
 	// Check if there is enough data to parse a full message
 	isFinished() {
-		if (this.buffer.length < 4) return true; // Less than 4 bytes means no length prefix yet
+		if (this.buffer.length < 4) return true // Less than 4 bytes means no length prefix yet
 
-		const messageLength = this.buffer.readUInt32BE(0); // Read the length prefix
-		return this.buffer.length < 4 + messageLength; // Check if the buffer has the full message
+		const messageLength = this.buffer.readUInt32BE(0) // Read the length prefix
+		return this.buffer.length < 4 + messageLength // Check if the buffer has the full message
 	}
 
 	// Append new data to the buffer
 	push(data) {
-		this.buffer = Buffer.concat([this.buffer, Buffer.from(data)]);
+		this.buffer = Buffer.concat([this.buffer, Buffer.from(data)])
 	}
 
 	// Extract complete messages based on length prefix
 	getMessages() {
-		const messages = [];
+		const messages = []
 
 		while (!this.isFinished()) {
 			// Read the length prefix (4 bytes) to get message length
-			const messageLength = this.buffer.readUInt32BE(0);
+			const messageLength = this.buffer.readUInt32BE(0)
 
 			// Extract the message based on the prefixed length
-			const message = this.buffer.slice(4, 4 + messageLength).toString('utf-8');
-			if(message.length > 1) // 1 not 0 to exclude $ api v1 backward compatibility (will cause an issue when parsing JSON)
-				messages.push(message);
+			const message = this.buffer.slice(4, 4 + messageLength).toString('utf-8')
+			if (message.length > 1)
+				// 1 not 0 to exclude $ api v1 backward compatibility (will cause an issue when parsing JSON)
+				messages.push(message)
 
 			// Remove the processed message and its length prefix from the buffer
-			this.buffer = this.buffer.slice(4 + messageLength);
+			this.buffer = this.buffer.slice(4 + messageLength)
 		}
 
-		return messages.length > 0 ? messages : null;
+		return messages.length > 0 ? messages : null
 	}
 }
 

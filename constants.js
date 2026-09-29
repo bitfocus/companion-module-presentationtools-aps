@@ -6,3 +6,5 @@ exports.minNumberOfMediaFolderFiles = 40
 exports.numberOfMediaFolders = 20
 exports.numberOfMediaPlayerSlots = 40
 exports.minNumberOfTabs = 10
+exports.minNumberOfPowerPointSectionPresets = 20
+exports.numberOfPowerPointSectionDropdownChoices = 40

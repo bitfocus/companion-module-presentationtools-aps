@@ -1,15 +1,15 @@
-const { 
+const {
 	numberOfImagesSlots,
-	numberOfPresentationSlots, 
-	numberOfMediaPlayerSlots, 
-	numberOfPresentationFolders, 
+	numberOfPresentationSlots,
+	numberOfMediaPlayerSlots,
+	numberOfPresentationFolders,
 	minNumberOfPresentationFolderFiles,
-	numberOfMediaFolders, 
+	numberOfMediaFolders,
 	minNumberOfMediaFolderFiles,
 	minNumberOfTabs,
+	numberOfPowerPointSectionDropdownChoices,
 } = require('./constants')
 var utils = require('./utils')
-
 
 exports.getChoicesForImage = function () {
 	choicesList = []
@@ -81,11 +81,11 @@ exports.getChoicesForPresentationFolderFiles = function (filesList) {
 	choicesList = []
 	for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, filesList.length); i++) {
 		let text = `${i} - `
-		if(i <= filesList.length && filesList[i - 1] != null) {
+		if (i <= filesList.length && filesList[i - 1] != null) {
 			text += utils.getNameFromPath(filesList[i - 1])
 		}
 
-		choicesList.push({ id: `File${i}`, label: text})
+		choicesList.push({ id: `File${i}`, label: text })
 	}
 	return choicesList
 }
@@ -102,11 +102,11 @@ exports.getChoicesForMediaFolderFiles = function (filesList) {
 	choicesList = []
 	for (let i = 1; i <= Math.max(minNumberOfMediaFolderFiles, filesList.length); i++) {
 		let text = `${i} - `
-		if(i <= filesList.length && filesList[i - 1] != null) {
+		if (i <= filesList.length && filesList[i - 1] != null) {
 			text += utils.getNameFromPath(filesList[i - 1])
 		}
 
-		choicesList.push({ id: `File${i}`, label: text})
+		choicesList.push({ id: `File${i}`, label: text })
 	}
 	return choicesList
 }
@@ -119,35 +119,44 @@ exports.getChoicesForMediaPlayer = function () {
 	return choicesList
 }
 
-exports.getDeltaValues = function() {
+exports.getDeltaValues = function () {
 	return [
-			{id: "-10", label: "-10"},
-			{id: "-1", label: "-1"},
-			{id: "1", label: "+1"},
-			{id: "10", label: "+10"},
+		{ id: '-10', label: '-10' },
+		{ id: '-1', label: '-1' },
+		{ id: '1', label: '+1' },
+		{ id: '10', label: '+10' },
 	]
 }
 
-exports.getNextPrevDeltaValues = function() {
+exports.getNextPrevDeltaValues = function () {
 	return [
-			{id: "-1", label: "Previous"},
-			{id: "1", label: "Next"},
+		{ id: '-1', label: 'Previous' },
+		{ id: '1', label: 'Next' },
 	]
 }
 
-exports.getItemForSelectedOption = function() {
-	return [{id: 'selected', label: 'Selected'}]
+exports.getItemForSelectedOption = function () {
+	return [{ id: 'selected', label: 'Selected' }]
 }
 
 exports.getChoicesForTabs = function (tabsList) {
 	choicesList = []
 	for (let i = 1; i <= Math.max(minNumberOfTabs, tabsList.length); i++) {
 		let text = `${i} - `
-		if(i <= tabsList.length && tabsList[i - 1]?.title != null) {
+		if (i <= tabsList.length && tabsList[i - 1]?.title != null) {
 			text += tabsList[i - 1].title
 		}
 
-		choicesList.push({ id: `Tab${i}`, label: text})
+		choicesList.push({ id: `Tab${i}`, label: text })
+	}
+	return choicesList
+}
+
+exports.getChoicesForPowerPointSections = function (numberOfSections = 0) {
+	const choicesList = []
+	const numberOfChoices = Math.max(numberOfPowerPointSectionDropdownChoices, numberOfSections)
+	for (let i = 1; i <= numberOfChoices; i++) {
+		choicesList.push({ id: String(i), label: String(i) })
 	}
 	return choicesList
 }

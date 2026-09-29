@@ -1,9 +1,76 @@
 const { combineRgb } = require('@companion-module/base')
 var choices = require('./choices')
 var utils = require('./utils')
+var states = require('./states')
+
+const BOOLEAN_SETTING_FEEDBACK_DEFINITIONS = [
+	{ id: 'settings_seamless_switching', name: 'Seamless switching' },
+	{ id: 'settings_run_at_system_startup_enabled', name: 'Run at system startup' },
+	{ id: 'settings_toggle_images_on_off_with_one_button', name: 'Toggle images on/off with one button' },
+	{ id: 'settings_powerpoint_hide_presenter', name: 'PowerPoint hide presenter', platformLabel: ' (mac)' },
+	{ id: 'settings_google_slides_use_presenter_view', name: 'Google Slides use presenter view' },
+	{ id: 'settings_automatically_check_for_updates', name: 'Automatically check for updates' },
+]
+
+exports.booleanSettingFeedbackIds = BOOLEAN_SETTING_FEEDBACK_DEFINITIONS.map((definition) => definition.id)
+
+function getBooleanSettingFeedback(instance, name, variableId, platformLabel = '') {
+	return {
+		type: 'boolean',
+		name: `Settings: ${name} is on${platformLabel}`,
+		description: `When ${name} is on, change the style${platformLabel}`,
+		options: [],
+		defaultStyle: {
+			color: combineRgb(255, 255, 255),
+			bgcolor: combineRgb(0, 90, 0),
+		},
+		callback: function (_feedback) {
+			return instance.getVariableValue(variableId) === true
+		},
+	}
+}
+
+function getPowerPointMediaFeedbacks(self) {
+	return {
+		PowerPoint_media_state: {
+			type: 'boolean',
+			name: 'PowerPoint media state (Windows)',
+			description: 'If PowerPoint media matches the selected state, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'State',
+					id: 'State',
+					default: 'playing',
+					tooltip: 'PowerPoint media state',
+					choices: [
+						{ id: 'playing', label: 'Playing' },
+						{ id: 'paused', label: 'Paused' },
+						{ id: 'stopped', label: 'Stopped' },
+						{ id: 'ready', label: 'Ready' },
+					],
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(255, 0, 0),
+			},
+			callback: function (feedback) {
+				return self.generalState.PowerPoint_media_state == feedback.options.State
+			},
+		},
+	}
+}
+
 exports.getFeedbacks = function (instance) {
 	var self = instance
 	return {
+		...Object.fromEntries(
+			BOOLEAN_SETTING_FEEDBACK_DEFINITIONS.map((definition) => [
+				definition.id,
+				getBooleanSettingFeedback(self, definition.name, definition.id, definition.platformLabel),
+			]),
+		),
 		loaded: {
 			type: 'boolean',
 			name: 'Still Image exists',
@@ -23,11 +90,11 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				let key = feedback.options.Key
-				if(key == 'selected'){
+				if (key == 'selected') {
 					key = 'Display' + self.getVariableValue('image_slot_selected_number')
 					self.log('debug', key)
 				}
-				
+
 				return self.displayStates[key].loaded
 			},
 		},
@@ -50,7 +117,7 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				let key = feedback.options.Key
-				if(key == 'selected'){
+				if (key == 'selected') {
 					key = 'Display' + self.getVariableValue('image_slot_selected_number')
 				}
 				return self.displayStates[key].displayed
@@ -138,10 +205,38 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				let key = feedback.options.Key
-				if(key == 'selected'){
+				if (key == 'selected') {
 					key = 'Slot' + self.getVariableValue('presentation_slot_selected_number')
 				}
 				return self.slotStates[key].opened
+			},
+		},
+		slot_preparing: {
+			type: 'boolean',
+			name: 'Presentation slot is preparing',
+			description:
+				'While APS prepares the presentation from the slot and it is not yet visible on the output, change the style (APS 4.3 Mac, 4.4.0.1 Windows)',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Slot',
+					id: 'Key',
+					default: 'Slot1',
+					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(230, 120, 0),
+			},
+			callback: function (feedback) {
+				const slot = states.getPreparingSlot(self.preparationState)
+				if (slot === null) return false
+				let number = utils.extcractNumber(feedback.options.Key)
+				if (feedback.options.Key == 'selected') {
+					number = self.getVariableValue('presentation_slot_selected_number')
+				}
+				return Number(number) === slot
 			},
 		},
 		presentation_slot_selected: {
@@ -217,7 +312,9 @@ exports.getFeedbacks = function (instance) {
 					label: 'File',
 					id: 'Key',
 					default: 'File1',
-					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList)),
+					choices: choices
+						.getItemForSelectedOption()
+						.concat(choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList)),
 				},
 			],
 			defaultStyle: {
@@ -226,10 +323,54 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				let key = feedback.options.Key
-				if(key == 'selected'){
+				if (key == 'selected') {
 					key = 'File' + self.getVariableValue('watched_presentation_folder_selected_presentation_number')
 				}
 				return self.watchedPresentationFolderState.filesState[key]?.opened
+			},
+		},
+		presentation_file_preparing: {
+			type: 'boolean',
+			name: 'Presentation folder file is preparing',
+			description:
+				'While APS prepares the presentation from the watched folder file and it is not yet visible on the output, change the style (APS 4.3 Mac, 4.4.0.1 Windows)',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'File',
+					id: 'Key',
+					default: 'File1',
+					choices: choices
+						.getItemForSelectedOption()
+						.concat(choices.getChoicesForPresentationFolderFiles(self.watchedPresentationFolderState.filesList)),
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(230, 120, 0),
+			},
+			callback: function (feedback) {
+				let key = feedback.options.Key
+				if (key == 'selected') {
+					key = 'File' + self.getVariableValue('watched_presentation_folder_selected_presentation_number')
+				}
+				return (
+					states.getPreparingPresentationFileKey(self.watchedPresentationFolderState, self.preparationState) === key
+				)
+			},
+		},
+		presentation_preparing: {
+			type: 'boolean',
+			name: 'Presentation is preparing',
+			description:
+				'While APS prepares a presentation or Google Slides that is not yet visible on the output, change the style (APS 4.3 Mac, 4.4.0.1 Windows)',
+			options: [],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(230, 120, 0),
+			},
+			callback: function (feedback) {
+				return states.isAnyPresentationPreparing(self.preparationState)
 			},
 		},
 		presentation_displayed: {
@@ -277,7 +418,7 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				let key = feedback.options.Key
-				if(key == 'selected'){
+				if (key == 'selected') {
 					key = 'Slot' + self.getVariableValue('presentation_slot_selected_number')
 				}
 				return self.slotStates[key].exists
@@ -364,7 +505,10 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.getVariableValue('watched_presentation_folder_selected_presentation_number') == utils.extcractNumber(feedback.options.Key)
+				return (
+					self.getVariableValue('watched_presentation_folder_selected_presentation_number') ==
+					utils.extcractNumber(feedback.options.Key)
+				)
 			},
 		},
 
@@ -428,7 +572,10 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(204, 204, 0),
 			},
 			callback: function (feedback) {
-				return self.getVariableValue('watched_media_folder_selected_media_number') == utils.extcractNumber(feedback.options.Key)
+				return (
+					self.getVariableValue('watched_media_folder_selected_media_number') ==
+					utils.extcractNumber(feedback.options.Key)
+				)
 			},
 		},
 
@@ -451,7 +598,7 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				let key = feedback.options.Key
-				if(key == 'selected'){
+				if (key == 'selected') {
 					key = 'Load_MediaPlayer#' + self.getVariableValue('media_slot_selected_number')
 				}
 				return self.mediaPlayerState.slots[key].playing
@@ -469,8 +616,8 @@ exports.getFeedbacks = function (instance) {
 					id: 'Key',
 					default: 'Load_MediaPlayer#1',
 					choices: [{ id: `any_media_loaded`, label: `Any media loaded` }]
-								.concat(choices.getItemForSelectedOption())
-								.concat(choices.getChoicesForMediaPlayer()),
+						.concat(choices.getItemForSelectedOption())
+						.concat(choices.getChoicesForMediaPlayer()),
 				},
 			],
 			defaultStyle: {
@@ -479,7 +626,7 @@ exports.getFeedbacks = function (instance) {
 			},
 			callback: function (feedback) {
 				let key = feedback.options.Key
-				if(key == 'selected'){
+				if (key == 'selected') {
 					key = 'Load_MediaPlayer#' + self.getVariableValue('media_slot_selected_number')
 				}
 				return self.mediaPlayerState.slots[key].loaded
@@ -574,7 +721,10 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return (self.browserState.tabsList.findIndex(item => item.id === self.browserState.activeTabId) + 1) == parseInt(utils.extcractNumber(feedback.options.Tab))
+				return (
+					self.browserState.tabsList.findIndex((item) => item.id === self.browserState.activeTabId) + 1 ==
+					parseInt(utils.extcractNumber(feedback.options.Tab))
+				)
 			},
 		},
 
@@ -615,12 +765,13 @@ exports.getFeedbacks = function (instance) {
 					type: 'dropdown',
 					label: 'Application',
 					id: 'Application',
-					default: "PowerPoint",
+					default: 'PowerPoint',
 					tooltip: 'Application',
 					choices: [
-						{ id: 'PowerPoint', label: 'PowerPoint'},
-						{ id: 'PDF', label: 'PDF'},
-						{ id: 'Webpage', label: 'Webpage'},
+						{ id: 'PowerPoint', label: 'PowerPoint' },
+						...(utils.supportsKeynote(self.apsPlatform) ? [{ id: 'Keynote', label: 'Keynote (Mac)' }] : []),
+						{ id: 'PDF', label: 'PDF' },
+						{ id: 'Webpage', label: 'Webpage' },
 					],
 				},
 			],
@@ -629,27 +780,53 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return (self.generalState.activeApp == feedback.options.Application)
+				return self.generalState.activeApp == feedback.options.Application
 			},
 		},
 
-		PowerPoint_media_state: {
+		PowerPoint_section_exists: {
 			type: 'boolean',
-			name: 'PowerPoint media state',
-			description: 'If PowerPoint media matches the selected state, change the style',
+			name: 'PowerPoint section exists',
+			description: 'If the active PowerPoint presentation has the selected section number, change the style',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'State',
-					id: 'State',
-					default: 'playing',
-					tooltip: 'PowerPoint media state',
-					choices: [
-						{ id: 'playing', label: 'Playing'},
-						{ id: 'paused', label: 'Paused'},
-						{ id: 'stopped', label: 'Stopped'},
-						{ id: 'ready', label: 'Ready'},
-					],
+					label: 'Section',
+					id: 'Section',
+					default: '1',
+					choices: choices.getChoicesForPowerPointSections(),
+					allowCustom: true,
+					regex: '^[1-9]\\d*$',
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(204, 204, 0),
+			},
+			callback: function (feedback) {
+				const sectionNumber = Number(feedback.options.Section)
+				return (
+					self.powerPointSectionsState.available === true &&
+					Number.isInteger(sectionNumber) &&
+					sectionNumber > 0 &&
+					self.powerPointSectionsState.sections.length >= sectionNumber
+				)
+			},
+		},
+
+		PowerPoint_section_is_current: {
+			type: 'boolean',
+			name: 'PowerPoint section is displayed',
+			description: 'If the current slide is within the selected PowerPoint section, change the style',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Section',
+					id: 'Section',
+					default: '1',
+					choices: choices.getChoicesForPowerPointSections(),
+					allowCustom: true,
+					regex: '^[1-9]\\d*$',
 				},
 			],
 			defaultStyle: {
@@ -657,8 +834,16 @@ exports.getFeedbacks = function (instance) {
 				bgcolor: combineRgb(255, 0, 0),
 			},
 			callback: function (feedback) {
-				return (self.generalState.PowerPoint_media_state == feedback.options.State)
+				const sectionNumber = Number(feedback.options.Section)
+				return (
+					self.powerPointSectionsState.available === true &&
+					Number.isInteger(sectionNumber) &&
+					sectionNumber > 0 &&
+					self.powerPointSectionsState.currentSectionIndex === sectionNumber
+				)
 			},
 		},
+
+		...(utils.supportsPowerPointMediaControl(self.apsPlatform) ? getPowerPointMediaFeedbacks(self) : {}),
 	}
 }

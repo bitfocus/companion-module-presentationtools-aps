@@ -1,10 +1,10 @@
 {
 	"name": "presentationtools-aps",
-	"version": "2.9.1",
+	"version": "2.10.0",
 	"main": "index.js",
 	"prettier": "@companion-module/tools/.prettierrc.json",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "node --test",
 		"format": "prettier -w ."
 	},
 	"license": "MIT",
