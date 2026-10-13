@@ -48,7 +48,7 @@ async function companion(config = { host: '127.0.0.1', port: 31601 }) {
 		}
 		destroy() {}
 	}
-	const filename = path.resolve(__dirname, '../index.js')
+	const filename = path.resolve(__dirname, '../src/index.js')
 	const localRequire = createRequire(filename)
 	vm.runInNewContext(
 		readFileSync(filename, 'utf8'),

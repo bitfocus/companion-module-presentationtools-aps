@@ -5,7 +5,7 @@ const { readFileSync } = require('node:fs')
 const { createRequire } = require('node:module')
 const path = require('node:path')
 const vm = require('node:vm')
-const utils = require('../utils')
+const utils = require('../src/utils')
 
 // Run the real module with a fake Companion base that records the TCP target, variables and status.
 async function companion(config) {
@@ -72,7 +72,7 @@ async function companion(config) {
 			this.isConnected = false
 		}
 	}
-	const filename = path.resolve(__dirname, '../index.js')
+	const filename = path.resolve(__dirname, '../src/index.js')
 	const localRequire = createRequire(filename)
 	vm.runInNewContext(
 		readFileSync(filename, 'utf8'),

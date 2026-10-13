@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
-const actions = require('../actions')
+const actions = require('../src/actions')
 
 function companion() {
 	const frames = []
