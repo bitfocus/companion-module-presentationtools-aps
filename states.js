@@ -1,10 +1,11 @@
-const { 
-	numberOfPresentationSlots, 
-	numberOfMediaPlayerSlots, 
-	minNumberOfPresentationFolderFiles, 
+const {
+	numberOfPresentationSlots,
+	numberOfMediaPlayerSlots,
+	minNumberOfPresentationFolderFiles,
 	numberOfPresentationFolders,
-	minNumberOfMediaFolderFiles, 
-	numberOfMediaFolders } = require('./constants')
+	minNumberOfMediaFolderFiles,
+	numberOfMediaFolders,
+} = require('./constants')
 var choices = require('./choices')
 var utils = require('./utils')
 exports.generateCaptureStates = function () {
@@ -152,44 +153,38 @@ exports.updatePresentationFileOpenStates = function (states, openedFileIndex, us
 		for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
 			const si = 'File' + i
 			filesState[si].opened = false
-			if(i == openedFileIndex + 1)
-				filesState[si].opened = true
+			if (i == openedFileIndex + 1) filesState[si].opened = true
 		}
-	}
-	else{
-        const numberedFiles = new Map();
-        
-        states.filesList.forEach(file => {
-			let fileName = utils.getNameFromPath(file)
-            const match = fileName.match(/^(\d+)/);
-            if (match) {
-                const slotNumber = parseInt(match[1], 10);
-                if (!numberedFiles.has(slotNumber)) {
-                    numberedFiles.set(slotNumber, file);
-                }
-            }
-        });
+	} else {
+		const numberedFiles = new Map()
 
+		states.filesList.forEach((file) => {
+			let fileName = utils.getNameFromPath(file)
+			const match = fileName.match(/^(\d+)/)
+			if (match) {
+				const slotNumber = parseInt(match[1], 10)
+				if (!numberedFiles.has(slotNumber)) {
+					numberedFiles.set(slotNumber, file)
+				}
+			}
+		})
 
 		for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
-			const si = 'File' + i;
+			const si = 'File' + i
 			if (filesState.hasOwnProperty(si)) {
-				filesState[si].opened = false;
+				filesState[si].opened = false
 			}
 		}
-		
-		
 
-		if(openedFileIndex >= 0){
+		if (openedFileIndex >= 0) {
 			let openedFilePath = states.originalFilesList[openedFileIndex]
 			numberedFiles.forEach((filePath, slotNumber) => {
-				if(openedFilePath == filePath){
-					const si = 'File' + slotNumber;
+				if (openedFilePath == filePath) {
+					const si = 'File' + slotNumber
 					states.filesState[si].opened = true
 				}
-			});
+			})
 		}
-
 	}
 }
 exports.updateMediaFolderStates = function (states, data) {
@@ -219,61 +214,59 @@ exports.updateFolderCaptureStates = function (states, index) {
 	}
 }
 exports.updateWatchedPresentationFolderState = function (states, data, useNumberedSystem = false) {
-    states.name = data.name
-    states.number = data.number
-    states.originalFilesList = data.files_list;
-    if (!useNumberedSystem) {
-        states.filesList = data.files_list
+	states.name = data.name
+	states.number = data.number
+	states.originalFilesList = data.files_list
+	if (!useNumberedSystem) {
+		states.filesList = data.files_list
 
-        let numberOfFiles = states.filesList.length
-        for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
-            const si = 'File' + i
-            states.filesState[si] = new Object()
-            states.filesState[si].opened = false
-            states.filesState[si].exists = false
+		let numberOfFiles = states.filesList.length
+		for (var i = Math.max(minNumberOfPresentationFolderFiles, numberOfFiles); i > 0; i--) {
+			const si = 'File' + i
+			states.filesState[si] = new Object()
+			states.filesState[si].opened = false
+			states.filesState[si].exists = false
 
-			if(i <= numberOfFiles)
-				states.filesState[si].exists = true
-        }
-    } else {
-        let maxFileNumberPrefix = 0;
-        const numberedFiles = new Map();
-        
-        data.files_list.forEach(file => {
+			if (i <= numberOfFiles) states.filesState[si].exists = true
+		}
+	} else {
+		let maxFileNumberPrefix = 0
+		const numberedFiles = new Map()
+
+		data.files_list.forEach((file) => {
 			let fileName = utils.getNameFromPath(file)
-            const match = fileName.match(/^(\d+)/);
-            if (match) {
-                const slotNumber = parseInt(match[1], 10);
-                maxFileNumberPrefix = Math.max(maxFileNumberPrefix, slotNumber);
-                if (!numberedFiles.has(slotNumber)) {
-                    numberedFiles.set(slotNumber, file);
-                }
-            }
-        });
+			const match = fileName.match(/^(\d+)/)
+			if (match) {
+				const slotNumber = parseInt(match[1], 10)
+				maxFileNumberPrefix = Math.max(maxFileNumberPrefix, slotNumber)
+				if (!numberedFiles.has(slotNumber)) {
+					numberedFiles.set(slotNumber, file)
+				}
+			}
+		})
 
-        for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, maxFileNumberPrefix); i++) {
-            const si = 'File' + i;
-            states.filesState[si] = {
-                opened: false,
-                exists: false
-            };
-        }
+		for (let i = 1; i <= Math.max(minNumberOfPresentationFolderFiles, maxFileNumberPrefix); i++) {
+			const si = 'File' + i
+			states.filesState[si] = {
+				opened: false,
+				exists: false,
+			}
+		}
 
-        states.filesList = new Array(Math.max(minNumberOfPresentationFolderFiles, maxFileNumberPrefix)).fill('');
-        numberedFiles.forEach((filename, slotNumber) => {
-                states.filesList[slotNumber - 1] = filename;
-                const si = 'File' + slotNumber;
-                states.filesState[si] = {
-                    exists: true
-                };
-            
-        });
-    }
+		states.filesList = new Array(Math.max(minNumberOfPresentationFolderFiles, maxFileNumberPrefix)).fill('')
+		numberedFiles.forEach((filename, slotNumber) => {
+			states.filesList[slotNumber - 1] = filename
+			const si = 'File' + slotNumber
+			states.filesState[si] = {
+				exists: true,
+			}
+		})
+	}
 }
 exports.updateWatchedMediaFolderState = function (states, data) {
-		states.name = data.name
-		states.number = data.number
-		states.filesList = data.files_list
+	states.name = data.name
+	states.number = data.number
+	states.filesList = data.files_list
 }
 
 exports.generateMediaSlotStates = function () {
@@ -344,7 +337,8 @@ exports.updatePresentationPreparationState = function (state, data) {
 		commandType === 'slot' && Number.isInteger(data.slot) && data.slot >= 1 && data.slot <= numberOfPresentationSlots
 			? data.slot
 			: null
-	const targetPath = typeof data.to === 'string' && data.to.trim() !== '' && data.to.trim() !== '-' ? data.to.trim() : null
+	const targetPath =
+		typeof data.to === 'string' && data.to.trim() !== '' && data.to.trim() !== '-' ? data.to.trim() : null
 	state.presentation = {
 		isPreparing: data.is_preparing,
 		commandType,

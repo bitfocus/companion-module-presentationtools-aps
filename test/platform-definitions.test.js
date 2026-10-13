@@ -92,6 +92,41 @@ function assertMediaShown(instance, shown) {
 	assert.equal(variableIds.includes('PowerPoint_media_time_left'), shown)
 }
 
+test('conditional fields register expressions while retaining saved option IDs and defaults', async () => {
+	const { instance } = await companion()
+	const fields = instance.getConfigFields()
+	for (const id of ['host', 'port', 'info-defaultport']) {
+		const field = fields.find((field) => field.id === id)
+		assert.equal(field.isVisibleExpression, '!$(options:bonjourHost)')
+		assert.equal(field.isVisible, undefined)
+	}
+	assert.equal(fields.find((field) => field.id === 'host').default, '127.0.0.1')
+	assert.equal(fields.find((field) => field.id === 'port').default, '31600')
+	const definitions = instance.actionDefinitions
+	assert.deepEqual(definitions.PresentationExit.options[0], {
+		id: 'Key',
+		type: 'textinput',
+		default: 'Key_Esc',
+		isVisibleExpression: 'false',
+		useVariables: true,
+	})
+	for (const id of ['Slot', 'Folder']) {
+		const field = definitions.CapturePresentation.options.find((field) => field.id === id)
+		assert.equal(field.isVisibleExpression, `$(options:destination) == '${id}'`)
+		assert.equal(field.default, `${id}1`)
+		assert.ok(field.choices.some((choice) => choice.id === field.default))
+	}
+	for (const id of ['StillImages', 'Media', 'SlotPresentations', 'PresentationFolders', 'MediaFolders']) {
+		const field = definitions.Clear.options.find((field) => field.id === id)
+		assert.equal(field.isVisibleExpression, `$(options:Key) == '${id}'`)
+		assert.equal(field.default, 'All')
+		assert.ok(field.choices.some((choice) => choice.id === 'All'))
+	}
+	for (const definition of Object.values(definitions)) {
+		for (const option of definition.options) assert.equal(option.isVisible, undefined)
+	}
+})
+
 test('media options are shown before APS identifies its platform', async () => {
 	const { instance } = await companion()
 	assertMediaShown(instance, true)

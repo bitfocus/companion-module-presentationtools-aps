@@ -579,7 +579,7 @@ class APSInstance extends InstanceBase {
 				default: '127.0.0.1',
 				width: 6,
 				regex: Regex.IP,
-				isVisible: (options) => !options['bonjourHost'],
+				isVisibleExpression: '!$(options:bonjourHost)',
 			},
 			{
 				type: 'textinput',
@@ -588,13 +588,13 @@ class APSInstance extends InstanceBase {
 				default: '31600',
 				width: 6,
 				regex: Regex.PORT,
-				isVisible: (options) => !options['bonjourHost'],
+				isVisibleExpression: '!$(options:bonjourHost)',
 			},
 			{
 				type: 'static-text',
 				id: 'info-defaultport',
 				width: 12,
-				isVisible: (options) => !options['bonjourHost'],
+				isVisibleExpression: '!$(options:bonjourHost)',
 				value:
 					'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
 			},

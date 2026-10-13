@@ -4,6 +4,7 @@ Controls APS by [PresentationTools](https://presentationtools.com/).
 
 ### Requirements
 
+- Companion 4.2 or later.
 - APS 4.0 or later on macOS or Windows. Some features, such as settings and PowerPoint sections, require APS 4.3 or later.
 - Download latest version of APS from this website: [www.presentationtools.com/aps](https://presentationtools.com/aps)
 
