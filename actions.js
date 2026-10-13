@@ -1054,10 +1054,8 @@ exports.getCommandV2 = async function (action, instance) {
 			}
 			break
 		case 'GoToSlide':
-			;((data.command = action.options.App),
-				(data.parameters = {
-					slideNr: parseInt(action.options.SlideNumber),
-				}))
+			data.command = action.options.App
+			data.parameters = { slideNr: parseInt(action.options.SlideNumber) }
 			break
 		case 'Powerpoint_Section_Go':
 			if (action.options.Section === 'Previous' || action.options.Section === 'Next') {

@@ -104,15 +104,53 @@ exports.supportsPowerPointSlideVariables = function (platform) {
 	return platform !== 'macos'
 }
 
-// Companion stores a discovered APS machine as "address:port"; null/empty means Manual.
+function normalizeTarget(host, port) {
+	if (typeof host !== 'string' || host.trim() === '') return null
+	if (typeof port !== 'number' && typeof port !== 'string') return null
+	port = Number(port)
+	if (!Number.isInteger(port) || port < 1 || port > 65535) return null
+	return { host: host.trim(), port }
+}
+
+// Companion stores a discovered APS machine as "address:port".
 exports.parseBonjourTarget = function (value) {
 	if (typeof value !== 'string') return null
 	const separator = value.lastIndexOf(':')
 	if (separator <= 0) return null
-	const host = value.slice(0, separator).replace(/^\[(.*)\]$/, '$1')
-	const port = Number(value.slice(separator + 1))
-	if (!host || !Number.isInteger(port) || port < 1 || port > 65535) return null
-	return { host, port }
+	const host = value
+		.slice(0, separator)
+		.trim()
+		.replace(/^\[(.*)\]$/, '$1')
+	if (host.includes('[') || host.includes(']')) return null
+	return normalizeTarget(host, value.slice(separator + 1))
+}
+
+// Resolve once per config update; an invalid discovery selection must not use hidden manual fields.
+exports.resolveConnectionTarget = function (config) {
+	const discovery = config?.bonjourHost
+	const manual = discovery === undefined || discovery === null || discovery === ''
+	const target = manual ? normalizeTarget(config?.host, config?.port) : exports.parseBonjourTarget(discovery)
+	return {
+		target,
+		error: target
+			? null
+			: manual
+				? 'Select an APS machine or enter a valid IP and port'
+				: 'Select the APS machine again or choose Manual',
+	}
+}
+
+exports.getSocketErrorMessage = function (error) {
+	try {
+		if (typeof error?.message === 'string' && error.message.trim()) return error.message.trim()
+		if (error !== null && error !== undefined) {
+			const text = String(error).trim()
+			if (text) return text
+		}
+	} catch {
+		// Unexpected error objects may not support string conversion.
+	}
+	return 'Unknown socket error'
 }
 
 // Human-readable name of the connected APS machine from aps_info: PC tag, then hostname.
