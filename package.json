@@ -1,11 +1,12 @@
 {
 	"name": "presentationtools-aps",
-	"version": "2.10.0",
-	"main": "index.js",
-	"prettier": "@companion-module/tools/.prettierrc.json",
+	"version": "2.11.0",
+	"main": "src/index.js",
+	"prettier": "./.prettierrc.cjs",
 	"scripts": {
 		"test": "node --test",
-		"format": "prettier -w ."
+		"format": "prettier -w .",
+		"package": "companion-module-build"
 	},
 	"license": "MIT",
 	"repository": {
@@ -13,10 +14,15 @@
 		"url": "git+https://github.com/bitfocus/companion-module-presentationtools-aps.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.7.0"
+		"@companion-module/base": "~1.14.1"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.8.0",
-		"prettier": "^3.3.3"
-	}
+		"prettier": "^3.7.4"
+	},
+	"engines": {
+		"node": "^22.20",
+		"yarn": "^4"
+	},
+	"packageManager": "yarn@4.12.0"
 }

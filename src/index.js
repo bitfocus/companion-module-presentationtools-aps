@@ -52,10 +52,22 @@ class APSInstance extends InstanceBase {
 		this.buildTotalSmoother = new BuildTotalSmoother((values) => this.setVariableValues(values))
 		// Last platform reported by APS. Kept across disconnects so options do not flicker while reconnecting.
 		this.apsPlatform = null
+		this.connectionTargetResolution = null
 	}
 
 	async configUpdated(config) {
+		if (this.trialTimer) clearInterval(this.trialTimer)
+		this.trialTimer = null
 		this.buildTotalSmoother.resetConnection()
+		const resolution = utils.resolveConnectionTarget(config)
+		const previousTarget = this.getConnectionTarget()
+		if (
+			!resolution.target ||
+			resolution.target.host !== previousTarget?.host ||
+			resolution.target.port !== previousTarget?.port
+		)
+			this.apsPlatform = null
+		this.connectionTargetResolution = resolution
 		this.config = config
 
 		this.apiVersionMapping = {
@@ -106,7 +118,6 @@ class APSInstance extends InstanceBase {
 		}
 		this.apsCapabilities = []
 		this.licenceStatus = null
-		this.trialTimer = null
 		this.preparationState = states.generatePreparationState()
 		this.settingsState = {
 			availableDisplays: [],
@@ -163,9 +174,11 @@ class APSInstance extends InstanceBase {
 		self.buildTotalSmoother.resetConnection()
 
 		if (self.socket !== undefined) {
-			self.socket.destroy()
+			const oldSocket = self.socket
 			delete self.socket
+			oldSocket.destroy()
 		}
+		self.setConnectedMachine(null)
 
 		const target = self.getConnectionTarget()
 		if (target) {
@@ -179,15 +192,16 @@ class APSInstance extends InstanceBase {
 					self.resetPreparationState()
 					self.setConnectedMachine(null)
 					self.setLicenceStatus(null)
+					self.updateStatus(status, message)
 				}
-				//self.log('debug', `Status ${status}, message: ${message}`)
-				//self.updateStatus(status)
 			})
 
-			self.socket.on('error', (_err) => {
+			self.socket.on('error', (err) => {
 				if (socket !== self.socket) return
 				self.buildTotalSmoother.resetConnection()
-				self.updateStatus(InstanceStatus.UnknownError)
+				const message = utils.getSocketErrorMessage(err)
+				self.updateStatus(InstanceStatus.ConnectionFailure, message)
+				self.log('error', `APS socket: ${message}`)
 			})
 
 			self.socket.on('connect', () => {
@@ -438,15 +452,14 @@ class APSInstance extends InstanceBase {
 					}
 				}
 			})
+		} else {
+			self.updateStatus(InstanceStatus.BadConfig, self.connectionTargetResolution.error)
 		}
 	}
 
-	// A machine picked from Bonjour discovery wins over the manual IP and port.
+	// Snapshot of the endpoint used to create this connection, independent of mutable config.
 	getConnectionTarget() {
-		const discovered = utils.parseBonjourTarget(this.config.bonjourHost)
-		if (discovered) return discovered
-		if (this.config.host && this.config.port) return { host: this.config.host, port: this.config.port }
-		return null
+		return this.connectionTargetResolution?.target ?? null
 	}
 
 	setConnectedMachine(info) {
@@ -579,7 +592,7 @@ class APSInstance extends InstanceBase {
 				default: '127.0.0.1',
 				width: 6,
 				regex: Regex.IP,
-				isVisible: (options) => !options['bonjourHost'],
+				isVisibleExpression: '!$(options:bonjourHost)',
 			},
 			{
 				type: 'textinput',
@@ -588,13 +601,13 @@ class APSInstance extends InstanceBase {
 				default: '31600',
 				width: 6,
 				regex: Regex.PORT,
-				isVisible: (options) => !options['bonjourHost'],
+				isVisibleExpression: '!$(options:bonjourHost)',
 			},
 			{
 				type: 'static-text',
 				id: 'info-defaultport',
 				width: 12,
-				isVisible: (options) => !options['bonjourHost'],
+				isVisibleExpression: '!$(options:bonjourHost)',
 				value:
 					'Check that the port in APS matches the target port shown here. To change the default port in APS, go to “Settings” in the app interface. Note that for earlier versions of APS, (2.2 and below) the default port is 4778. We recommend using port 31600 for connection. If this port is not available, try something else in the same range.',
 			},
@@ -1276,7 +1289,9 @@ class APSInstance extends InstanceBase {
 		self.trialTimer = null
 
 		if (self.socket !== undefined) {
-			self.socket.destroy()
+			const oldSocket = self.socket
+			delete self.socket
+			oldSocket.destroy()
 		}
 
 		self.log('debug', `destroy ${self.id}`)

@@ -36,7 +36,7 @@ async function companion() {
 		}
 		destroy() {}
 	}
-	const filename = path.resolve(__dirname, '../index.js')
+	const filename = path.resolve(__dirname, '../src/index.js')
 	const localRequire = createRequire(filename)
 	vm.runInNewContext(
 		readFileSync(filename, 'utf8'),

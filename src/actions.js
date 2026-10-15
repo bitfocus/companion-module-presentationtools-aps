@@ -206,7 +206,7 @@ exports.getActions = function (instance) {
 					id: 'Key',
 					type: 'textinput',
 					default: 'Key_Esc',
-					isVisible: (_o, _d) => false,
+					isVisibleExpression: 'false',
 					useVariables: true,
 				},
 			],
@@ -519,7 +519,7 @@ exports.getActions = function (instance) {
 					id: 'Slot',
 					default: 'Slot1',
 					choices: choices.getItemForSelectedOption().concat(choices.getChoicesForSlot()),
-					isVisible: (opt, _d) => opt.destination == 'Slot',
+					isVisibleExpression: "$(options:destination) == 'Slot'",
 				},
 				{
 					type: 'dropdown',
@@ -527,7 +527,7 @@ exports.getActions = function (instance) {
 					id: 'Folder',
 					default: 'Folder1',
 					choices: choices.getChoicesForPresentationFolder(),
-					isVisible: (opt, _d) => opt.destination == 'Folder',
+					isVisibleExpression: "$(options:destination) == 'Folder'",
 				},
 			],
 			callback: action_callback,
@@ -670,7 +670,7 @@ exports.getActions = function (instance) {
 					choices: [{ id: `All`, label: `All` }]
 						.concat(choices.getItemForSelectedOption())
 						.concat(choices.getChoicesForImage()),
-					isVisible: (opt, _d) => opt.Key == 'StillImages',
+					isVisibleExpression: "$(options:Key) == 'StillImages'",
 				},
 				{
 					type: 'dropdown',
@@ -681,7 +681,7 @@ exports.getActions = function (instance) {
 					choices: [{ id: `All`, label: `All` }]
 						.concat(choices.getItemForSelectedOption())
 						.concat(choices.getChoicesForMedia()),
-					isVisible: (opt, _d) => opt.Key == 'Media',
+					isVisibleExpression: "$(options:Key) == 'Media'",
 				},
 				{
 					type: 'dropdown',
@@ -692,7 +692,7 @@ exports.getActions = function (instance) {
 					choices: [{ id: `All`, label: `All` }]
 						.concat(choices.getItemForSelectedOption())
 						.concat(choices.getChoicesForSlot()),
-					isVisible: (opt, _d) => opt.Key == 'SlotPresentations',
+					isVisibleExpression: "$(options:Key) == 'SlotPresentations'",
 				},
 				{
 					type: 'dropdown',
@@ -701,7 +701,7 @@ exports.getActions = function (instance) {
 					tooltip: 'Set <<All>> to clear all slots',
 					default: 'All',
 					choices: [{ id: `All`, label: `All` }].concat(choices.getChoicesForPresentationFolder()),
-					isVisible: (opt, _d) => opt.Key == 'PresentationFolders',
+					isVisibleExpression: "$(options:Key) == 'PresentationFolders'",
 				},
 				{
 					type: 'dropdown',
@@ -710,7 +710,7 @@ exports.getActions = function (instance) {
 					tooltip: 'Set <<All>> to clear all slots',
 					default: 'All',
 					choices: [{ id: `All`, label: `All` }].concat(choices.getChoicesForMediaFolder()),
-					isVisible: (opt, _d) => opt.Key == 'MediaFolders',
+					isVisibleExpression: "$(options:Key) == 'MediaFolders'",
 				},
 			],
 			callback: action_callback,
@@ -943,7 +943,7 @@ exports.getCommandV2 = async function (action, instance) {
 	let slideNumber = 1
 	switch (action.actionId) {
 		case 'Navigation_NextFS':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
+			slideNumber = parseInt(action.options.SlideNumber)
 			if (slideNumber === 1 && !action.options.Fullscreen) {
 				data.command = 'Navigation_NextNoFS'
 			} else {
@@ -954,7 +954,7 @@ exports.getCommandV2 = async function (action, instance) {
 			}
 			break
 		case 'Navigation_PrevFS':
-			slideNumber = parseInt(await instance.parseVariablesInString(action.options.SlideNumber))
+			slideNumber = parseInt(action.options.SlideNumber)
 			if (slideNumber !== 1 || !action.options.Fullscreen) {
 				data.parameters = {
 					slideNr: slideNumber,
@@ -965,7 +965,7 @@ exports.getCommandV2 = async function (action, instance) {
 		case 'PresentationExit':
 		case 'SlideNext':
 		case 'SlidePrevious':
-			data.command = await instance.parseVariablesInString(action.options.Key)
+			data.command = action.options.Key
 			break
 		case 'Capture_Image':
 		case 'Display_Image':
@@ -1016,18 +1016,18 @@ exports.getCommandV2 = async function (action, instance) {
 			data.parameters = {
 				file_path:
 					instance.watchedPresentationFolderState.filesList[utils.extcractNumber(action.options.FileNumber) - 1],
-				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
+				slideNr: parseInt(action.options.SlideNumber),
 				isFullscreen: action.options.Fullscreen,
 			}
 			break
 		case 'OpenStart_Presentation':
-			let path = await instance.parseVariablesInString(action.options.Filename)
+			let path = action.options.Filename
 
 			if (!path) return
 
 			data.parameters = {
 				file_path: path,
-				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
+				slideNr: parseInt(action.options.SlideNumber),
 				isFullscreen: action.options.Fullscreen,
 			}
 			break
@@ -1050,14 +1050,12 @@ exports.getCommandV2 = async function (action, instance) {
 			data.parameters = {
 				slot: utils.extcractNumber(slot),
 				isFullscreen: action.options.Fullscreen,
-				slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
+				slideNr: parseInt(action.options.SlideNumber),
 			}
 			break
 		case 'GoToSlide':
-			;((data.command = action.options.App),
-				(data.parameters = {
-					slideNr: parseInt(await instance.parseVariablesInString(action.options.SlideNumber)),
-				}))
+			data.command = action.options.App
+			data.parameters = { slideNr: parseInt(action.options.SlideNumber) }
 			break
 		case 'Powerpoint_Section_Go':
 			if (action.options.Section === 'Previous' || action.options.Section === 'Next') {
@@ -1168,7 +1166,7 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 				data.parameters = {
 					slot: utils.extcractNumber(key),
-					file_path: await instance.parseVariablesInString(action.options.FilePath),
+					file_path: action.options.FilePath,
 				}
 
 				if (!data.parameters.file_path) {
@@ -1185,7 +1183,7 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 				data.parameters = {
 					bank_number: utils.extcractNumber(key),
-					file_path: await instance.parseVariablesInString(action.options.FilePath),
+					file_path: action.options.FilePath,
 				}
 
 				if (!data.parameters.file_path) {
@@ -1202,7 +1200,7 @@ exports.getCommandV2 = async function (action, instance) {
 				}
 				data.parameters = {
 					bank_number: utils.extcractNumber(key),
-					file_path: await instance.parseVariablesInString(action.options.FilePath),
+					file_path: action.options.FilePath,
 				}
 
 				if (!data.parameters.file_path) {
@@ -1214,7 +1212,7 @@ exports.getCommandV2 = async function (action, instance) {
 		case 'OpenWebPage':
 			{
 				data.parameters = {
-					url: await instance.parseVariablesInString(action.options.url),
+					url: action.options.url,
 					fullscreen: action.options.fullscreen,
 					new_tab: true, //action.options.newTab,
 				}

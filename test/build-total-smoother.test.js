@@ -5,7 +5,7 @@ const { readFileSync } = require('node:fs')
 const { createRequire } = require('node:module')
 const path = require('node:path')
 const vm = require('node:vm')
-const { BuildTotalSmoother } = require('../build-total-smoother')
+const { BuildTotalSmoother } = require('../src/build-total-smoother')
 
 function clock() {
 	let now = 0
@@ -184,7 +184,7 @@ async function companion() {
 		}
 		destroy() {}
 	}
-	const filename = path.resolve(__dirname, '../index.js')
+	const filename = path.resolve(__dirname, '../src/index.js')
 	const localRequire = createRequire(filename)
 	vm.runInNewContext(
 		readFileSync(filename, 'utf8'),

@@ -16,7 +16,7 @@ const MEDIA_PRESETS = [
 ]
 
 // Run the real module with a fake Companion base that records the registered definitions.
-async function companion() {
+async function companion(config = { host: '127.0.0.1', port: 31601 }) {
 	let Instance
 	class FakeBase {
 		constructor() {
@@ -48,7 +48,7 @@ async function companion() {
 		}
 		destroy() {}
 	}
-	const filename = path.resolve(__dirname, '../index.js')
+	const filename = path.resolve(__dirname, '../src/index.js')
 	const localRequire = createRequire(filename)
 	vm.runInNewContext(
 		readFileSync(filename, 'utf8'),
@@ -73,13 +73,13 @@ async function companion() {
 		{ filename },
 	)
 	const instance = new Instance()
-	await instance.configUpdated({ host: '127.0.0.1', port: 31601 })
+	await instance.configUpdated(config)
 	instance.socket.emit('connect')
-	const send = (action, data) => {
+	const send = (action, data, socket = instance.socket) => {
 		const body = Buffer.from(JSON.stringify({ action, data }))
 		const header = Buffer.alloc(4)
 		header.writeUInt32BE(body.length)
-		instance.socket.emit('data', Buffer.concat([header, body]))
+		socket.emit('data', Buffer.concat([header, body]))
 	}
 	return { instance, send }
 }
@@ -91,6 +91,41 @@ function assertMediaShown(instance, shown) {
 	const variableIds = instance.variableDefinitions.map((variable) => variable.variableId)
 	assert.equal(variableIds.includes('PowerPoint_media_time_left'), shown)
 }
+
+test('conditional fields register expressions while retaining saved option IDs and defaults', async () => {
+	const { instance } = await companion()
+	const fields = instance.getConfigFields()
+	for (const id of ['host', 'port', 'info-defaultport']) {
+		const field = fields.find((field) => field.id === id)
+		assert.equal(field.isVisibleExpression, '!$(options:bonjourHost)')
+		assert.equal(field.isVisible, undefined)
+	}
+	assert.equal(fields.find((field) => field.id === 'host').default, '127.0.0.1')
+	assert.equal(fields.find((field) => field.id === 'port').default, '31600')
+	const definitions = instance.actionDefinitions
+	assert.deepEqual(definitions.PresentationExit.options[0], {
+		id: 'Key',
+		type: 'textinput',
+		default: 'Key_Esc',
+		isVisibleExpression: 'false',
+		useVariables: true,
+	})
+	for (const id of ['Slot', 'Folder']) {
+		const field = definitions.CapturePresentation.options.find((field) => field.id === id)
+		assert.equal(field.isVisibleExpression, `$(options:destination) == '${id}'`)
+		assert.equal(field.default, `${id}1`)
+		assert.ok(field.choices.some((choice) => choice.id === field.default))
+	}
+	for (const id of ['StillImages', 'Media', 'SlotPresentations', 'PresentationFolders', 'MediaFolders']) {
+		const field = definitions.Clear.options.find((field) => field.id === id)
+		assert.equal(field.isVisibleExpression, `$(options:Key) == '${id}'`)
+		assert.equal(field.default, 'All')
+		assert.ok(field.choices.some((choice) => choice.id === 'All'))
+	}
+	for (const definition of Object.values(definitions)) {
+		for (const option of definition.options) assert.equal(option.isVisible, undefined)
+	}
+})
 
 test('media options are shown before APS identifies its platform', async () => {
 	const { instance } = await companion()
@@ -242,5 +277,66 @@ test('still-image delete is handled for both delete and deleteimage', async () =
 		header.writeUInt32BE(body.length)
 		instance.socket.emit('data', Buffer.concat([header, body]))
 		assert.equal(instance.displayStates.Display4.loaded, false, action)
+	}
+})
+
+test('changing endpoint restores unknown-platform definitions before older APS identifies itself', async (t) => {
+	for (const platform of ['macos', 'windows']) {
+		for (const changed of [
+			{ host: '127.0.0.2', port: 31601 },
+			{ host: '127.0.0.1', port: 31602 },
+			{ host: '', port: 31601 },
+		]) {
+			const config = { host: '127.0.0.1', port: 31601 }
+			const { instance, send } = await companion(config)
+			t.after(() => instance.destroy())
+			send('aps_info', { platform })
+			send('settings', { installed_presentation_apps: [platform === 'macos' ? 'skim' : 'okular'] })
+			const oldSocket = instance.socket
+			Object.assign(config, changed)
+			await instance.configUpdated(config)
+			assert.equal(instance.apsPlatform, null)
+			assert.equal(instance.settingsState.installedPresentationApps, null)
+			assertMediaShown(instance, true)
+			assertKeynoteShown(instance, true)
+			assert.ok(instance.variableDefinitions.some((v) => v.variableId === 'Powerpoint_slide_number'))
+			assert.deepEqual(pdfProgramChoices(instance), ['adobe_acrobat', 'skim', 'adobe_reader', 'okular', 'speedf'])
+			if (instance.socket) instance.socket.emit('connect') // Older APS sends no aps_info.
+			send('aps_info', { platform }, oldSocket)
+			send('settings', { installed_presentation_apps: ['skim'] }, oldSocket)
+			assert.equal(instance.apsPlatform, null)
+			assert.equal(instance.settingsState.installedPresentationApps, null)
+			if (!instance.socket) {
+				await instance.configUpdated({ host: '127.0.0.2', port: 31601 })
+				assert.equal(instance.apsPlatform, null)
+			}
+			assertMediaShown(instance, true)
+			assertKeynoteShown(instance, true)
+		}
+	}
+})
+
+test('same-endpoint saves retain platform but reset installed-app filtering', async (t) => {
+	for (const platform of ['macos', 'windows']) {
+		const { instance, send } = await companion()
+		t.after(() => instance.destroy())
+		send('aps_info', { platform })
+		for (const config of [
+			{ host: '127.0.0.1', port: '31601', sort: 'numbered' },
+			{ host: 'ignored', port: 1, bonjourHost: '127.0.0.1:31601' },
+			{ host: ' 127.0.0.1 ', port: 31601, bonjourHost: null },
+		]) {
+			send('settings', { installed_presentation_apps: [platform === 'macos' ? 'skim' : 'okular'] })
+			await instance.configUpdated(config)
+			instance.socket.emit('connect')
+			assert.equal(instance.apsPlatform, platform)
+			assert.equal(instance.settingsState.installedPresentationApps, null)
+			assertMediaShown(instance, platform !== 'macos')
+			assertKeynoteShown(instance, platform !== 'windows')
+			assert.deepEqual(
+				pdfProgramChoices(instance),
+				platform === 'macos' ? ['skim', 'adobe_acrobat'] : ['adobe_acrobat', 'adobe_reader', 'okular', 'speedf'],
+			)
+		}
 	}
 })

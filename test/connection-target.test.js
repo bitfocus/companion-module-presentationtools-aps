@@ -5,16 +5,35 @@ const { readFileSync } = require('node:fs')
 const { createRequire } = require('node:module')
 const path = require('node:path')
 const vm = require('node:vm')
-const utils = require('../utils')
+const utils = require('../src/utils')
 
 // Run the real module with a fake Companion base that records the TCP target, variables and status.
 async function companion(config) {
 	let Instance
+	const intervals = new Map()
+	const sockets = []
+	const clock = {
+		now: Date.now(),
+		intervals,
+		advance(ms) {
+			const end = this.now + ms
+			while (true) {
+				const next = [...intervals.values()].sort((a, b) => a.next - b.next)[0]
+				if (!next || next.next > end) break
+				this.now = next.next
+				next.next += next.delay
+				next.callback()
+			}
+			this.now = end
+		},
+	}
 	class FakeBase {
 		constructor() {
 			this.label = 'aps'
 			this.values = {}
 			this.statuses = []
+			this.updates = []
+			this.logs = []
 		}
 		setActionDefinitions() {}
 		setFeedbackDefinitions() {}
@@ -23,12 +42,15 @@ async function companion(config) {
 			this.variableDefinitions = definitions
 		}
 		setVariableValues(values) {
+			this.updates.push(values)
 			Object.assign(this.values, values)
 		}
 		getVariableValue(id) {
 			return this.values[id]
 		}
-		log() {}
+		log(level, message) {
+			this.logs.push({ level, message })
+		}
 		updateStatus(status, message) {
 			this.statuses.push({ status, message })
 		}
@@ -40,18 +62,24 @@ async function companion(config) {
 			this.host = host
 			this.port = port
 			this.isConnected = false
+			sockets.push(this)
 		}
 		send() {
 			return Promise.resolve()
 		}
-		destroy() {}
+		destroy() {
+			this.destroyed = true
+			this.isConnected = false
+		}
 	}
-	const filename = path.resolve(__dirname, '../index.js')
+	const filename = path.resolve(__dirname, '../src/index.js')
 	const localRequire = createRequire(filename)
 	vm.runInNewContext(
 		readFileSync(filename, 'utf8'),
 		{
 			require(name) {
+				if (name === './utils')
+					return { ...utils, getTrialTimeLeft: (expires) => utils.getTrialTimeLeft(expires, clock.now) }
 				if (name === '@companion-module/base')
 					return {
 						...localRequire(name),
@@ -67,8 +95,14 @@ async function companion(config) {
 			console,
 			setTimeout,
 			clearTimeout,
-			setInterval,
-			clearInterval,
+			setInterval(callback, delay) {
+				const handle = { unref() {} }
+				intervals.set(handle, { callback, delay, next: clock.now + delay })
+				return handle
+			},
+			clearInterval(handle) {
+				intervals.delete(handle)
+			},
 		},
 		{ filename },
 	)
@@ -78,17 +112,17 @@ async function companion(config) {
 		instance.socket.isConnected = true
 		instance.socket.emit('connect')
 	}
-	const sendMessage = (message) => {
+	const sendMessage = (message, socket = instance.socket) => {
 		const body = Buffer.from(JSON.stringify(message))
 		const header = Buffer.alloc(4)
 		header.writeUInt32BE(body.length)
-		instance.socket.emit('data', Buffer.concat([header, body]))
+		socket.emit('data', Buffer.concat([header, body]))
 	}
 	const send = (action, data) => sendMessage({ action, data })
-	return { instance, connect, send, sendMessage }
+	return { instance, connect, send, sendMessage, clock, sockets }
 }
 
-test('parseBonjourTarget reads Companion discovery values and treats anything else as Manual', () => {
+test('parseBonjourTarget reads valid discovery values and rejects unusable values', () => {
 	assert.deepEqual(utils.parseBonjourTarget('192.168.1.20:31600'), { host: '192.168.1.20', port: 31600 })
 	assert.deepEqual(utils.parseBonjourTarget('[2001:db8::20]:31600'), { host: '2001:db8::20', port: 31600 })
 	for (const value of [null, undefined, '', 'manual', '192.168.1.20', ':31600', '192.168.1.20:0', '192.168.1.20:x']) {
@@ -105,7 +139,7 @@ test('getAPSMachineName prefers the PC tag and falls back to the hostname', () =
 test('manual config connects to the entered IP and port', async () => {
 	const { instance } = await companion({ host: '10.0.0.5', port: '31600', bonjourHost: null })
 	assert.equal(instance.socket.host, '10.0.0.5')
-	assert.equal(instance.socket.port, '31600')
+	assert.equal(instance.socket.port, 31600)
 })
 
 test('existing configs without a discovery field still connect manually', async () => {
@@ -227,4 +261,240 @@ test('licence is ignored without the capability and reported as unsupported', as
 		instance.getConfigFields().find((f) => f.id === 'info-connected-machine').value,
 		/<b>Licence:<\/b> Not reported by this APS version/,
 	)
+})
+
+function startTrial(harness) {
+	harness.connect()
+	harness.send('aps_info', { platform: 'macos', capabilities: ['license_status'] })
+	harness.send('license_status', {
+		state: 'trial',
+		trial_expires_at: new Date(harness.clock.now + 120000).toISOString(),
+	})
+}
+
+test('trial refresh uses one 30-second interval and updates the countdown', async (t) => {
+	const h = await companion({ host: '127.0.0.1', port: 31600 })
+	t.after(() => h.instance.destroy())
+	startTrial(h)
+	const handle = h.instance.trialTimer
+	assert.equal(h.clock.intervals.size, 1)
+	assert.equal(h.clock.intervals.get(handle).delay, 30000)
+	h.send('license_status', h.instance.licenceStatus)
+	assert.equal(h.instance.trialTimer, handle)
+	assert.equal(h.clock.intervals.size, 1)
+	assert.equal(h.instance.values.connected_machine_trial_time_left, '2m')
+	h.clock.advance(60000)
+	assert.equal(h.instance.values.connected_machine_trial_time_left, '1m')
+})
+
+test('repeated config saves clear the trial interval before reconnecting', async (t) => {
+	const config = { host: '127.0.0.1', port: 31600 }
+	const h = await companion(config)
+	t.after(() => h.instance.destroy())
+	for (let cycle = 0; cycle < 4; cycle++) {
+		startTrial(h)
+		const oldSocket = h.instance.socket
+		const oldHandle = h.instance.trialTimer
+		assert.equal(h.clock.intervals.size, 1)
+		await h.instance.configUpdated(config)
+		assert.equal(h.clock.intervals.size, 0)
+		assert.equal(h.instance.trialTimer, null)
+		assert.equal(oldSocket.destroyed, true)
+		const updateCount = h.instance.updates.length
+		h.clock.advance(90000)
+		assert.equal(h.instance.updates.length, updateCount)
+		h.sendMessage({ action: 'aps_info', data: { capabilities: ['license_status'] } }, oldSocket)
+		h.sendMessage({ action: 'license_status', data: { state: 'trial' } }, oldSocket)
+		oldSocket.emit('connect')
+		oldSocket.emit('status_change', 'disconnected')
+		assert.equal(h.clock.intervals.size, 0)
+		assert.equal(h.instance.updates.length, updateCount)
+		assert.equal(h.clock.intervals.has(oldHandle), false)
+	}
+	startTrial(h)
+	assert.equal(h.clock.intervals.size, 1)
+	await h.instance.destroy()
+	assert.equal(h.clock.intervals.size, 0)
+})
+
+for (const cleanup of ['licensed', 'cleared', 'disconnect', 'destroy']) {
+	test(`trial interval stops after ${cleanup} without further refreshes`, async (t) => {
+		const h = await companion({ host: '127.0.0.1', port: 31600 })
+		t.after(() => h.instance.destroy())
+		startTrial(h)
+		if (cleanup === 'licensed') h.send('license_status', { state: 'licensed' })
+		if (cleanup === 'cleared') h.instance.setLicenceStatus(null)
+		if (cleanup === 'disconnect') {
+			h.instance.socket.isConnected = false
+			h.instance.socket.emit('status_change', 'disconnected')
+		}
+		if (cleanup === 'destroy') await h.instance.destroy()
+		assert.equal(h.clock.intervals.size, 0)
+		assert.equal(h.instance.trialTimer, null)
+		const updateCount = h.instance.updates.length
+		h.clock.advance(90000)
+		assert.equal(h.instance.updates.length, updateCount)
+	})
+}
+
+test('disconnect immediately reports its reason and clears connected state', async (t) => {
+	const h = await companion({ host: '127.0.0.1', port: 31600 })
+	t.after(() => h.instance.destroy())
+	startTrial(h)
+	h.send('aps_info', {
+		computer_tag: 'Old machine',
+		capabilities: ['license_status', 'presentation_preparation_feedback'],
+	})
+	h.send('presentation_preparing', { is_preparing: true, command_type: 'slot', slot: 1 })
+	assert.equal(h.instance.values.presentation_preparing, true)
+	h.instance.socket.isConnected = false
+	h.instance.socket.emit('status_change', 'disconnected', 'APS closed')
+	assert.deepEqual(h.instance.statuses.at(-1), { status: 'disconnected', message: 'APS closed' })
+	assert.equal(h.instance.values.connected_machine_name, '-')
+	assert.equal(h.instance.values.connected_machine_licence, '-')
+	assert.equal(h.instance.values.presentation_preparing, false)
+	assert.equal(h.clock.intervals.size, 0)
+	h.connect()
+	h.send('aps_info', { computer_tag: 'Reconnected' })
+	assert.deepEqual(h.instance.statuses.at(-1), { status: 'ok', message: 'Reconnected' })
+})
+
+test('socket errors expose safe reasons after underlying status events', async (t) => {
+	const h = await companion({ host: '127.0.0.1', port: 31600 })
+	t.after(() => h.instance.destroy())
+	for (const [error, message] of [
+		[new Error('connect ECONNREFUSED'), 'connect ECONNREFUSED'],
+		['Host unreachable', 'Host unreachable'],
+		[{ message: 'Timed out' }, 'Timed out'],
+		[42, '42'],
+		[null, 'Unknown socket error'],
+		[undefined, 'Unknown socket error'],
+		['  ', 'Unknown socket error'],
+		[Object.create(null), 'Unknown socket error'],
+	]) {
+		h.instance.socket.emit('status_change', 'unknown_error', message)
+		h.instance.socket.emit('error', error)
+		assert.deepEqual(h.instance.statuses.at(-1), { status: 'connection_failure', message })
+		assert.deepEqual(h.instance.logs.at(-1), { level: 'error', message: `APS socket: ${message}` })
+	}
+})
+
+test('generic OK events preserve machine descriptions and API warnings', async (t) => {
+	const h = await companion({ host: '127.0.0.1', port: 31600 })
+	t.after(() => h.instance.destroy())
+	h.connect()
+	h.send('aps_info', { computer_tag: 'FOH' })
+	for (const version of [2, 3]) {
+		h.sendMessage({ action: 'api_version', api_version: version })
+		const status = h.instance.statuses.at(-1)
+		h.instance.socket.emit('status_change', 'ok')
+		assert.deepEqual(h.instance.statuses.at(-1), status)
+	}
+})
+
+test('unusable manual targets report BadConfig without creating sockets', async () => {
+	for (const config of [
+		{},
+		{ port: 31600 },
+		{ host: '127.0.0.1' },
+		{ host: '   ', port: 31600 },
+		...[null, undefined, '', ' ', 0, -1, 65536, 1.5, 'x', '31600suffix', true, {}, []].map((port) => ({
+			host: '127.0.0.1',
+			port,
+		})),
+	]) {
+		const h = await companion(config)
+		assert.equal(h.sockets.length, 0, JSON.stringify(config))
+		assert.equal(h.instance.getConnectionTarget(), null)
+		assert.deepEqual(h.instance.statuses.at(-1), {
+			status: 'bad_config',
+			message: 'Select an APS machine or enter a valid IP and port',
+		})
+		await h.instance.destroy()
+	}
+})
+
+test('invalid discovery never falls back to valid hidden manual settings', async () => {
+	for (const bonjourHost of [
+		'manual',
+		'broken',
+		'   ',
+		':31600',
+		' :31600',
+		'[]:31600',
+		'[::1:31600',
+		'host:x',
+		'host:65536',
+		false,
+		123,
+		{},
+	]) {
+		const h = await companion({ host: '127.0.0.1', port: 31600, bonjourHost })
+		assert.equal(h.sockets.length, 0, JSON.stringify(bonjourHost))
+		assert.deepEqual(h.instance.statuses.at(-1), {
+			status: 'bad_config',
+			message: 'Select the APS machine again or choose Manual',
+		})
+		await h.instance.destroy()
+	}
+})
+
+test('valid targets normalize ports and preserve Manual, IPv4 and bracketed IPv6 discovery', async () => {
+	for (const bonjourHost of [undefined, null, '', '127.0.0.1:31600', '[2001:db8::20]:31600']) {
+		const h = await companion({ host: ' 127.0.0.1 ', port: '31600', bonjourHost })
+		assert.equal(h.sockets.length, 1)
+		assert.equal(h.instance.socket.host, bonjourHost?.startsWith('[') ? '2001:db8::20' : '127.0.0.1')
+		assert.equal(h.instance.socket.port, 31600)
+		await h.instance.destroy()
+	}
+	for (const port of [1, 65535, '1', '65535']) {
+		assert.deepEqual(utils.resolveConnectionTarget({ host: 'host.local', port }).target, {
+			host: 'host.local',
+			port: Number(port),
+		})
+	}
+})
+
+test('invalidating a target detaches the old connection before destroy and ignores its events', async () => {
+	const config = { host: '127.0.0.1', port: 31600 }
+	const h = await companion(config)
+	startTrial(h)
+	const oldSocket = h.instance.socket
+	const destroy = oldSocket.destroy.bind(oldSocket)
+	oldSocket.destroy = () => {
+		assert.notEqual(h.instance.socket, oldSocket)
+		oldSocket.emit('status_change', 'disconnected', 'old socket')
+		destroy()
+	}
+	config.host = ''
+	await h.instance.configUpdated(config)
+	assert.equal(oldSocket.destroyed, true)
+	assert.equal(h.instance.socket, undefined)
+	assert.equal(h.instance.apsPlatform, null)
+	assert.equal(h.instance.connectedMachine, null)
+	const statuses = h.instance.statuses.length
+	const updates = h.instance.updates.length
+	const logs = h.instance.logs.length
+	oldSocket.emit('error', new Error('old error'))
+	oldSocket.emit('connect')
+	h.sendMessage({ action: 'aps_info', data: { platform: 'windows', capabilities: ['license_status'] } }, oldSocket)
+	h.sendMessage({ action: 'license_status', data: { state: 'trial' } }, oldSocket)
+	assert.equal(h.instance.statuses.length, statuses)
+	assert.equal(h.instance.updates.length, updates)
+	assert.equal(h.instance.logs.length, logs)
+	assert.equal(h.clock.intervals.size, 0)
+	assert.equal(h.instance.apsPlatform, null)
+	await h.instance.destroy()
+})
+
+test('machine summary uses the endpoint snapshot until configuration is saved', async (t) => {
+	const config = { host: '127.0.0.1', port: '31600' }
+	const h = await companion(config)
+	t.after(() => h.instance.destroy())
+	h.connect()
+	h.send('aps_info', { computer_tag: 'FOH' })
+	config.host = '192.168.1.2'
+	const statuses = h.instance.statuses.length
+	assert.match(h.instance.getConnectedMachineSummary(), /127\.0\.0\.1:31600/)
+	assert.equal(h.instance.statuses.length, statuses)
 })
